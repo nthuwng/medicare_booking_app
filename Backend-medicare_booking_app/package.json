@@ -1,0 +1,13 @@
+{
+  "name": "backend-medicare_booking_app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "docker-compose up --build",
+    "down": "docker-compose down"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
