@@ -90,8 +90,6 @@ const handleGetUserById = async (id: string) => {
       id,
     },
   });
-
-  console.log(user);
   return user;
 };
 

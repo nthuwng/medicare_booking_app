@@ -101,7 +101,6 @@ const postVerifyTokenAPI = async (req: Request, res: Response) => {
 
 const getUserByIdApi = async (req: Request, res: Response) => {
   const { id } = req.params;
-  console.log(id);
   try {
     const user = await handleGetUserById(id);
     res.status(200).json({

@@ -4,7 +4,7 @@ import {
   postLoginAPI,
   postVerifyTokenAPI,
   getUserByIdApi,
-} from "../controller/auth.controller";
+} from "../controllers/auth.controller";
 
 const router = express.Router();
 
