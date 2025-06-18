@@ -1,25 +1,39 @@
 import express from "express";
 import "dotenv/config";
 import adminRoutes from "./routes/admin.routes";
-import { initRabbitMQ } from "@shared/utils/rabbitmq";
+import { connectRabbitMQ } from "./queue/connection";
+import patientRoutes from "./routes/patient.routes";
 
 const app = express();
-const PORT = process.env.PORT || 8081;
+const port = process.env.PORT || 8081;
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Parse form data
+app.use(express.urlencoded({ extended: true }));
 
-// Config Routes
+// Routes
 adminRoutes(app);
-
-// Initialize RabbitMQ
-initRabbitMQ().catch((err) => {
-  console.error("Failed to initialize RabbitMQ:", err);
-  process.exit(1);
-});
+patientRoutes(app);
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`User service is running on port ${PORT}`);
-});
+const startApplication = async () => {
+  try {
+    //Kết nối Message Broker (RabbitMQ)
+    await connectRabbitMQ();
+    console.log("✅ Connected to RabbitMQ");
+
+    //Khởi tạo tất cả Consumers
+    // await initializeAllRabbitMQConsumers();
+    // console.log("✅ All RabbitMQ consumers initialized successfully.");
+
+    //Khởi động HTTP Server (hoặc gRPC server)
+    app.listen(port, () => {
+      console.log(`✅ User_service listening on port ${port}`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start application:", error);
+    process.exit(1); // Thoát ứng dụng nếu có lỗi khởi động quan trọng
+  }
+};
+
+startApplication(); // Gọi hàm khởi động chính

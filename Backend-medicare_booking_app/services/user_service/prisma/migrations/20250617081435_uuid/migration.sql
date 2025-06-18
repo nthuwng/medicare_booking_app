@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE `admins` (
-    `admin_profile_id` INTEGER NOT NULL AUTO_INCREMENT,
+    `admin_profile_id` VARCHAR(191) NOT NULL,
     `user_id` VARCHAR(191) NOT NULL,
     `full_name` VARCHAR(255) NOT NULL,
     `phone` VARCHAR(20) NULL,
@@ -13,7 +13,7 @@ CREATE TABLE `admins` (
 
 -- CreateTable
 CREATE TABLE `patients` (
-    `patient_profile_id` INTEGER NOT NULL AUTO_INCREMENT,
+    `patient_profile_id` VARCHAR(191) NOT NULL,
     `user_id` VARCHAR(191) NOT NULL,
     `full_name` VARCHAR(255) NOT NULL,
     `phone` VARCHAR(20) NOT NULL,

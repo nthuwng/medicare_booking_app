@@ -1,12 +1,20 @@
 import express, { Express } from "express";
-import { createAdminController } from "../controllers/admin.controller";
+import {
+  createAdminController,
+  getAdminByIdController,
+  getAllAdmintController
+} from "../controllers/admin.controller";
 
 const router = express.Router();
 
 const adminRoutes = (app: Express) => {
-  router.post("/admins", createAdminController);
+  router.post("/", createAdminController);
+  router.get("/:id", getAdminByIdController);
+  router.get("/", getAllAdmintController);
 
-  app.use("/", router);
+  
+
+  app.use("/admins", router);
 };
 
 export default adminRoutes;

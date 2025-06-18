@@ -1,4 +1,22 @@
 services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP protocol port
+      - "15672:15672" # Management UI port
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - healthcare_network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   api-gateway:
     build: ./api_gateway_service
     ports:
@@ -10,6 +28,8 @@ services:
       - DOCTOR_SERVICE_URL=http://doctor-service:8083
       - NOTIFICATION_SERVICE_URL=http://notification-service:8084
       - PAYMENT_SERVICE_URL=http://payment-service:8085
+      - AUTH_SERVICE_URL=http://auth-service:8086
+      - RATING_SERVICE_URL=http://rating-service:8087
     depends_on:
       - user-service
       - appointment-service
@@ -39,21 +59,28 @@ services:
 
   # User service
   user-service:
-    build: ./services/user_service
+    build:
+      context: ./services/user_service
+      dockerfile: Dockerfile
     ports:
       - "8081:8081"
     environment:
       - PORT=8081
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DATABASE_URL=mysql://root:medicare_booking@user_db:3306/user_db # Fixed port
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
     volumes:
       - ./services/user_service:/app
       - /app/node_modules
+      - ./shared:/shared
     depends_on:
-      - user_db
+      rabbitmq:
+        condition: service_healthy
+      user_db:
+        condition: service_started
     networks:
       - healthcare_network
-    command: npm start
+    command: npm run dev
 
   # Appointment service
   appointment-service:
@@ -127,21 +154,32 @@ services:
       - healthcare_network
 
   auth-service:
-    build: ./services/auth_service
+    build:
+      context: ./services/auth_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
       - "8086:8086"
     environment:
       - PORT=8086
-      - NODE_ENV=production
-      - DATABASE_URL=mysql://root:medicare_booking@auth_db:3306/auth_db # Fixed port
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:medicare_booking@auth_db:3306/auth_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - JWT_SECRET=4a47a04c-579e-4585-889b-8129913ae93e
+      - JWT_EXPIRES_IN=1d
     volumes:
       - ./services/auth_service:/app
       - /app/node_modules
+      - ./shared:/shared
+
     depends_on:
-      - auth_db
+      rabbitmq:
+        condition: service_healthy
+      auth_db:
+        condition: service_started
     networks:
       - healthcare_network
-    command: npm start
+    command: npm run dev
 
   rating-service:
     build: ./services/rating_service
@@ -165,3 +203,4 @@ networks:
 volumes:
   user_mysql_data:
   auth_mysql_data:
+  rabbitmq_data:

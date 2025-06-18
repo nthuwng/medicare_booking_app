@@ -45,7 +45,6 @@
     { "path": "./services/rating_service" },
     { "path": "./services/notification_service" },
     { "path": "./api_gateway_service" },
-    { "path": "./shared" } // Tham chiếu đến gói shared
   ],
   "exclude": ["node_modules", "dist", "**/node_modules", "**/dist"], // Loại trừ các thư mục này khỏi việc biên dịch
   "include": [] // Không bao gồm file nào ở root, chỉ dùng để tham chiếu các project con

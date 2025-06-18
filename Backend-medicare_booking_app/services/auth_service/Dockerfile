@@ -12,11 +12,11 @@ COPY prisma ./prisma/
 RUN npx prisma generate
 
 # Copy source code
-COPY src/ ./src/
+COPY . .
 COPY tsconfig.json ./
 
 # Mở port container
 EXPOSE 8086
 
 # Chạy service
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

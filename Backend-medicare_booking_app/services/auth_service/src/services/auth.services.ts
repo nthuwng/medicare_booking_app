@@ -85,9 +85,16 @@ const verifyJwtToken = async (token: string): Promise<JwtPayload | null> => {
 };
 
 const handleGetUserById = async (id: string) => {
+  
   const user = await prisma.user.findUnique({
     where: {
       id,
+    },
+    select: {
+      id: true,
+      email: true,
+      userType: true,
+      isActive: true,
     },
   });
   return user;
