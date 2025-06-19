@@ -1,8 +1,10 @@
-import { initAuthConsumer } from "./user.consumer";
+import { initAuthGetUserConsumer } from "./authGetUser.consumer";
+import { initAuthVerifyTokenConsumer } from "./authVerifyToken.consumer";
 
 export const initializeAllRabbitMQConsumers = async () => {
   try {
-    await initAuthConsumer();
+    await initAuthGetUserConsumer();
+    await initAuthVerifyTokenConsumer();
     console.log("✅ 'auth.get_user' consumer initialized.");
 
     console.log("✅ All RabbitMQ consumers initialized successfully.");
@@ -14,4 +16,3 @@ export const initializeAllRabbitMQConsumers = async () => {
     throw error;
   }
 };
-

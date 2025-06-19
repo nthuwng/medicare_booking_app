@@ -2,12 +2,13 @@ import { Request, Response } from "express";
 import {
   createAdminProfile,
   getAdminByIdService,
-  getAllAdminService
+  getAllAdminService,
 } from "../services/admin.service";
 
 const createAdminController = async (req: Request, res: Response) => {
   try {
-    const admin = await createAdminProfile(req.body);
+    const userId = req.user?.userId || "";
+    const admin = await createAdminProfile(req.body, userId);
     res.status(201).json({
       success: true,
       message: "Tạo thông tin ADMIN thành công.",

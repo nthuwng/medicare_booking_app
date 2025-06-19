@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
-    "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts"
+    "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
+    "prisma": "prisma migrate dev --name"
   },
   "nodemonConfig": {
     "watch": [
@@ -39,6 +40,7 @@
     "@types/express": "5.0.0",
     "@types/jsonwebtoken": "9.0.9",
     "@types/node": "22.10.7",
+    "dayjs": "1.11.13",
     "nodemon": "3.1.9",
     "prisma": "6.3.0",
     "ts-node": "10.9.2",

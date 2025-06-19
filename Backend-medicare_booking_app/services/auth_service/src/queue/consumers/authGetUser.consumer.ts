@@ -3,7 +3,7 @@ import { handleGetUserById } from "../../services/auth.services";
 import { getChannel } from "../connection";
 
 // Khởi tạo consumer để lắng nghe queue "auth.get_user"
-export const initAuthConsumer = async () => {
+export const initAuthGetUserConsumer = async () => {
   const channel = getChannel(); // lấy channel đã connect trước đó
 
   await channel.assertQueue("auth.get_user", { durable: false });
@@ -29,21 +29,6 @@ export const initAuthConsumer = async () => {
     } catch (err) {
       console.error("Error processing auth.get_user:", err);
       channel.nack(msg, false, false); // bỏ qua message lỗi
-    }
-  });
-};
-
-// Optional: một consumer khác nếu bạn muốn lắng nghe auth.created
-export const consumeAuthCreated = async () => {
-  const channel = getChannel();
-
-  await channel.assertQueue("auth.created");
-
-  channel.consume("auth.created", (msg) => {
-    if (msg) {
-      const data = JSON.parse(msg.content.toString());
-      console.log("Received auth.created event:", data);
-      channel.ack(msg);
     }
   });
 };

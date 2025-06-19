@@ -1,3 +1,8 @@
+import {
+  JwtPayload,
+  LoginServiceResponse,
+  RegisterServiceResponse,
+} from "@shared/index";
 import bcrypt from "bcrypt";
 import { prisma } from "../config/client";
 import { UserType } from "@prisma/client";
@@ -5,7 +10,7 @@ const saltRounds = 10;
 import jwt from "jsonwebtoken";
 import "dotenv/config";
 import { config } from "../config/config.index";
-
+import dayjs from "dayjs";
 const hashPassword = async (password: string) => {
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   return hashedPassword;
@@ -19,7 +24,15 @@ const handleRegister = async (
   email: string,
   newPassword: string,
   userType: string
-) => {
+): Promise<RegisterServiceResponse> => {
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+  if (existingUser) {
+    return { success: false, message: "User already exists" };
+  }
   const user = await prisma.user.create({
     data: {
       email,
@@ -27,65 +40,76 @@ const handleRegister = async (
       userType: userType as UserType,
     },
   });
-  return user;
+  return { success: true, user };
 };
 
-const handleLoginApi = async (email: string, password: string) => {
-  const user = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
+const handleLoginApi = async (
+  email: string,
+  password: string
+): Promise<LoginServiceResponse> => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
 
-  if (!user) {
-    throw new Error(`Email: ${email} not found`);
+    if (!user) {
+      return { success: false, message: `Email: ${email} không tồn tại` };
+    }
+
+    const isMatch = await comparePassword(password, user.password);
+
+    if (!isMatch) {
+      return { success: false, message: `Mật khẩu không chính xác` };
+    }
+
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      userType: user.userType,
+    };
+
+    const secret = config.jwt.secret;
+    const expiresIn: any = config.jwt.expiresIn;
+    if (!secret) {
+      return {
+        success: false,
+        message: `JWT_SECRET is not defined in environment variables`,
+      };
+    }
+    const access_token = jwt.sign(payload, secret, {
+      expiresIn: expiresIn,
+    });
+    return access_token;
+  } catch (error) {
+    console.error("Error in handleLoginApi:", error);
+    return { success: false, message: "Error in handleLoginApi:" };
   }
+};
 
-  const isMatch = await comparePassword(password, user.password);
-
-  if (!isMatch) {
-    throw new Error(`Invalid password`);
+const verifyJwtToken = async (token: string): Promise<JwtPayload> => {
+  const secret = config.jwt.secret;
+  if (!secret)
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  const decoded = jwt.verify(token, secret);
+  if (typeof decoded === "string") {
+    throw new Error("Invalid token payload");
   }
-
-  const payload = {
-    userId: user.id,
-    email: user.email,
-    userType: user.userType,
+  const formatted = {
+    ...decoded,
+    iat: decoded.iat
+      ? dayjs.unix(decoded.iat).format("YYYY-MM-DD HH:mm:ss")
+      : undefined,
+    exp: decoded.exp
+      ? dayjs.unix(decoded.exp).format("YYYY-MM-DD HH:mm:ss")
+      : undefined,
   };
 
-  const secret = config.jwt.secret;
-  const expiresIn: any = config.jwt.expiresIn;
-  if (!secret) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
-  }
-  const access_token = jwt.sign(payload, secret, {
-    expiresIn: expiresIn,
-  });
-  return access_token;
-};
-
-interface JwtPayload {
-  userId: string;
-  email: string;
-  userType: UserType;
-}
-
-const verifyJwtToken = async (token: string): Promise<JwtPayload | null> => {
-  const secret = config.jwt.secret;
-  if (!secret) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
-  }
-
-  try {
-    const decoded = jwt.verify(token, secret) as JwtPayload;
-    return decoded;
-  } catch (error) {
-    throw error;
-  }
+  return formatted as JwtPayload;
 };
 
 const handleGetUserById = async (id: string) => {
-  
   const user = await prisma.user.findUnique({
     where: {
       id,

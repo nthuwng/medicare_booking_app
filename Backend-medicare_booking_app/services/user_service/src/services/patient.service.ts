@@ -1,20 +1,18 @@
 import {
-  CreatePatientProfileData,
-  UserInfo,
-} from "@shared/interfaces/user/user.interface";
-import { getUserByIdViaRabbitMQ } from "../queue/publishers/user.publisher";
-import {
   createPatient,
   findPatientByUserId,
   getAllPatient,
   getPatientById,
   getUserIdByPatientId,
 } from "src/repository/patient.repo";
-import { prisma } from "src/config/client";
+import { CreatePatientProfileData, UserInfo } from "@shared/index";
+import { getUserByIdViaRabbitMQ } from "src/queue/publishers/user.publisher";
 
-const createPatientProfile = async (body: CreatePatientProfileData) => {
+const createPatientProfile = async (
+  body: CreatePatientProfileData,
+  userId: string
+) => {
   const {
-    userId,
     fullName,
     phone,
     avatarUrl,
@@ -116,12 +114,12 @@ const getPatientByIdService = async (id: string) => {
 const getAllPatientService = async () => {
   const patients = await getAllPatient();
   return patients;
-}
+};
 
 export {
   createPatientProfile,
   checkTypeAndCreatePatientProfile,
   checkUserExits,
   getPatientByIdService,
-  getAllPatientService
+  getAllPatientService,
 };

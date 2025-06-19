@@ -1,14 +1,15 @@
 import express, { Express } from "express";
 import {
-    createPatientController,
-    getPatientByIdController,
-    getAllPatientController
+  createPatientController,
+  getPatientByIdController,
+  getAllPatientController,
 } from "../controllers/patient.controller";
+import { authenticateToken } from "src/middleware/auth.middleware";
 
 const router = express.Router();
 
 const patientRoutes = (app: Express) => {
-  router.post("/", createPatientController);
+  router.post("/", authenticateToken,createPatientController);
   router.get("/:id", getPatientByIdController);
   router.get("/", getAllPatientController);
   

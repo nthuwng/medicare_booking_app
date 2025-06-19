@@ -2,13 +2,14 @@ import { Request, Response } from "express";
 import {
   createPatientProfile,
   getPatientByIdService,
-  getAllPatientService
+  getAllPatientService,
 } from "../services/patient.service";
 import { count } from "node:console";
 
 const createPatientController = async (req: Request, res: Response) => {
   try {
-    const patient = await createPatientProfile(req.body);
+    const userId = req.user?.userId || "";
+    const patient = await createPatientProfile(req.body, userId);
     res.status(201).json({
       success: true,
       message: "Tạo thông tin bệnh nhân thành công.",

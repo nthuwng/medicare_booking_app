@@ -1,17 +1,17 @@
-import {
-  CreateAdminProfileData,
-  UserInfo,
-} from "@shared/interfaces/user/user.interface";
 import { prisma } from "../config/client";
-import { getUserByIdViaRabbitMQ } from "../queue/publishers/user.publisher";
 import {
   createAdmin,
   findAdminByUserId,
   getAllAdmin,
 } from "src/repository/admin.repo";
+import { CreateAdminProfileData, UserInfo } from "@shared/index";
+import { getUserByIdViaRabbitMQ } from "src/queue/publishers/user.publisher";
 
-const createAdminProfile = async (body: CreateAdminProfileData) => {
-  const { userId, fullName, phone, avatarUrl } = body;
+const createAdminProfile = async (
+  body: CreateAdminProfileData,
+  userId: string
+) => {
+  const { fullName, phone, avatarUrl } = body;
 
   //Kiểm tra user có tồn tại trong auth_service
   const userInfo = await checkUserExits(userId);
