@@ -4,15 +4,17 @@ import {
   getPatientByIdController,
   getAllPatientController,
 } from "../controllers/patient.controller";
-import { authenticateToken } from "src/middleware/auth.middleware";
+import {
+  authenticateToken,
+  authorizeAdmin,
+} from "src/middleware/auth.middleware";
 
 const router = express.Router();
 
 const patientRoutes = (app: Express) => {
-  router.post("/", authenticateToken,createPatientController);
-  router.get("/:id", getPatientByIdController);
-  router.get("/", getAllPatientController);
-  
+  router.post("/", authenticateToken, createPatientController);
+  router.get("/:id", authenticateToken, getPatientByIdController);
+  router.get("/", authenticateToken, authorizeAdmin, getAllPatientController);
 
   app.use("/patients", router);
 };

@@ -124,6 +124,24 @@ const handleGetUserById = async (id: string) => {
   return user;
 };
 
+const handleGetAccount = async (token: string) => {
+  const decoded = await verifyJwtToken(token);
+  if (!decoded || !decoded.userId) {
+    throw new Error("Token không hợp lệ");
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+    select: {
+      id: true,
+      email: true,
+      userType: true,
+      isActive: true,
+      createdAt: true,
+    },
+  });
+  return user;
+};
+
 export {
   hashPassword,
   handleRegister,
@@ -131,4 +149,5 @@ export {
   comparePassword,
   verifyJwtToken,
   handleGetUserById,
+  handleGetAccount,
 };

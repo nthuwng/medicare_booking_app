@@ -48,4 +48,15 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
   })();
 };
 
-export { authenticateToken };
+const authorizeAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user?.userType !== UserType.ADMIN) {
+    res.status(403).json({
+      success: false,
+      message: "Bạn không có quyền truy cập .",
+    });
+    return;
+  }
+  next();
+};
+
+export { authenticateToken, authorizeAdmin };

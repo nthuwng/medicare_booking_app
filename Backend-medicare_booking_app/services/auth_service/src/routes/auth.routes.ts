@@ -3,7 +3,7 @@ import {
   postRegisterAPI,
   postLoginAPI,
   postVerifyTokenAPI,
-  getUserByIdApi,
+  getAccountApi,
 } from "../controllers/auth.controller";
 
 const router = express.Router();
@@ -12,7 +12,8 @@ const authRoutes = (app: Express) => {
   router.post("/register", postRegisterAPI);
   router.post("/login", postLoginAPI);
   router.post("/verify-token", postVerifyTokenAPI);
-  router.get("/users/:id", getUserByIdApi);
+  router.get("/account", getAccountApi);
+
 
   app.use("/", router);
 };

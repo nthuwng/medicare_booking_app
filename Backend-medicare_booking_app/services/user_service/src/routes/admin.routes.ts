@@ -4,14 +4,17 @@ import {
   getAdminByIdController,
   getAllAdmintController,
 } from "../controllers/admin.controller";
-import { authenticateToken } from "src/middleware/auth.middleware";
+import {
+  authenticateToken,
+  authorizeAdmin,
+} from "src/middleware/auth.middleware";
 
 const router = express.Router();
 
 const adminRoutes = (app: Express) => {
-  router.post("/", authenticateToken, createAdminController);
-  router.get("/:id", authenticateToken, getAdminByIdController);
-  router.get("/", authenticateToken, getAllAdmintController);
+  router.post("/", authenticateToken, authorizeAdmin, createAdminController);
+  router.get("/:id", authenticateToken,authorizeAdmin, getAdminByIdController);
+  router.get("/", authenticateToken, authorizeAdmin, getAllAdmintController);
 
   app.use("/admins", router);
 };

@@ -4,7 +4,6 @@ import {
   getPatientByIdService,
   getAllPatientService,
 } from "../services/patient.service";
-import { count } from "node:console";
 
 const createPatientController = async (req: Request, res: Response) => {
   try {
