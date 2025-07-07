@@ -28,3 +28,14 @@ export interface AuthVerifyResponse {
     exp: string;
   };
 }
+
+export interface UserInfo {
+  id: string;
+  email: string;
+  userType: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  iat: string;
+  exp: string;
+}

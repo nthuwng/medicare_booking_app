@@ -7,6 +7,7 @@ import {
   putUpdatePasswordApi,
   postRefreshTokenApi,
   postRevokeRefreshTokenApi,
+  getAllUsersAPI
 } from "../controllers/auth.controller";
 import { authenticateToken } from "src/middleware/jwt.middleware";
 
@@ -14,6 +15,7 @@ const router = express.Router();
 
 const authRoutes = (app: Express) => {
   router.post("/register", postRegisterAPI);
+  router.get("/", authenticateToken, getAllUsersAPI);
   router.post("/login", postLoginAPI);
   router.post("/verify-token", postVerifyTokenAPI);
   router.get("/account", getAccountApi);

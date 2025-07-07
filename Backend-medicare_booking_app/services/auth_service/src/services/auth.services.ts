@@ -331,6 +331,20 @@ const handleRevokeRefreshToken = async (refreshToken: string) => {
   }
 };
 
+const handleGetAllUsers = async () => {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      userType: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  return users;
+};
+
 export {
   hashPassword,
   handleRegister,
@@ -344,4 +358,5 @@ export {
   handleRefreshToken,
   handleRevokeRefreshToken,
   verifyRefreshToken,
+  handleGetAllUsers,
 };

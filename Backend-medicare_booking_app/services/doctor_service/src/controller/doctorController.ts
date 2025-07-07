@@ -9,6 +9,9 @@ import {
   removeDoctorClinicService,
   getDoctorsBySpecialtyService,
   getDoctorsByClinicService,
+  handleGetAllDoctors,
+  countTotalDoctorPage,
+  handleGetAllApprovedDoctors,
 } from "src/services/doctorServices";
 
 const createDoctorController = async (req: Request, res: Response) => {
@@ -31,7 +34,7 @@ const getDoctorByIdController = async (req: Request, res: Response) => {
     const doctor = await getDoctorByIdService(req.params.id);
     res.status(200).json({
       success: true,
-      message: "Lấy thông tin DOCTOR thành công.",
+      message: "Lấy thông tin DOCTOR theo id thành công.",
       data: doctor,
     });
   } catch (error: any) {
@@ -173,6 +176,104 @@ const getDoctorsByClinicController = async (req: Request, res: Response) => {
   }
 };
 
+const getAllDoctorsController = async (req: Request, res: Response) => {
+  try {
+    const { page, pageSize } = req.query;
+    let currentPage = page ? +page : 1;
+    if (currentPage <= 0) {
+      currentPage = 1;
+    }
+    const totalPages = await countTotalDoctorPage(parseInt(pageSize as string));
+    const { doctors, totalDoctors } = await handleGetAllDoctors(
+      currentPage,
+      parseInt(pageSize as string)
+    );
+
+    if (doctors.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: "Không có bác sĩ nào được duyệt trong trang này",
+        data: {
+          meta: {
+            currentPage: currentPage,
+            pageSize: parseInt(pageSize as string),
+            pages: totalPages,
+            total: totalDoctors,
+          },
+          result: [],
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      length: doctors.length,
+      message: "Lấy danh sách tất cả bác sĩ thành công.",
+      data: {
+        meta: {
+          currentPage: currentPage,
+          pageSize: parseInt(pageSize as string),
+          pages: totalPages,
+          total: totalDoctors,
+        },
+        result: doctors,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getAllApprovedDoctorsController = async (req: Request, res: Response) => {
+  try {
+    const { page, pageSize } = req.query;
+    let currentPage = page ? +page : 1;
+    if (currentPage <= 0) {
+      currentPage = 1;
+    }
+    const totalPages = await countTotalDoctorPage(parseInt(pageSize as string));
+    const { doctors, totalDoctors } = await handleGetAllApprovedDoctors(
+      currentPage,
+      parseInt(pageSize as string)
+    );
+
+    if (doctors.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: "Không có bác sĩ nào được duyệt trong trang này",
+        data: {
+          meta: {
+            currentPage: currentPage,
+            pageSize: parseInt(pageSize as string),
+            pages: totalPages,
+            total: totalDoctors,
+          },
+          result: [],
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      length: doctors.length,
+      message: "Lấy danh sách tất cả bác sĩ đã được duyệt thành công.",
+      data: {
+        meta: {
+          currentPage: currentPage,
+          pageSize: parseInt(pageSize as string),
+          pages: totalPages,
+          total: totalDoctors,
+        },
+        result: doctors,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export {
   createDoctorController,
   getDoctorByIdController,
@@ -183,4 +284,6 @@ export {
   removeDoctorClinicController,
   getDoctorsBySpecialtyController,
   getDoctorsByClinicController,
+  getAllDoctorsController,
+  getAllApprovedDoctorsController,
 };

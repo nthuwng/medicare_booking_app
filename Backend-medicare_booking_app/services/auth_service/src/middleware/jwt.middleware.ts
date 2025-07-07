@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { UserType } from "@shared/index";
 import "dotenv/config";
-import { verifyJwtToken } from "src/services/auth.services";
+import {verifyJwtToken } from "src/services/auth.services";
 
-const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  (async () => {
+const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const token = req.headers["authorization"]?.split(" ")[1];
 
@@ -33,7 +32,6 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
         message: "Authentication service error",
       });
     }
-  })();
 };
 
 export { authenticateToken };

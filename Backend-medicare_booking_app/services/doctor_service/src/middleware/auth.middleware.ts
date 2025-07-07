@@ -5,8 +5,7 @@ import {
   verifyTokenViaRabbitMQ,
 } from "src/queue/publishers/doctor.publisher";
 
-const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  (async () => {
+const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const token = req.headers["authorization"]?.split(" ")[1];
 
@@ -48,7 +47,6 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
         message: "Authentication service error",
       });
     }
-  })();
 };
 
 const authorizeAdmin = async (

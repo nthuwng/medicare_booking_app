@@ -9,7 +9,10 @@ import {
   RemoveDoctorClinicData,
 } from "@shared/index";
 import { prisma } from "src/config/client";
-import { getUserByIdViaRabbitMQ } from "src/queue/publishers/doctor.publisher";
+import {
+  getAllDoctorsViaRabbitMQ,
+  getUserByIdViaRabbitMQ,
+} from "src/queue/publishers/doctor.publisher";
 import {
   createDoctor,
   findDoctorByUserId,
@@ -327,6 +330,81 @@ const getDoctorsByClinicService = async (clinicId: number) => {
   return await getDoctorsByClinic(clinicId);
 };
 
+const handleGetAllDoctors = async (page: number, pageSize: number) => {
+  const skip = (page - 1) * pageSize;
+  const doctors = await prisma.doctor.findMany({
+    include: {
+      clinics: true,
+      specialties: true,
+    },
+    skip: skip,
+    take: pageSize,
+  });
+
+  const userAllUsers = await getAllDoctorsViaRabbitMQ();
+
+  const doctorsWithUserInfo = doctors.map((doctor) => {
+    const userInfo = userAllUsers.find(
+      (user: UserInfo) => user.id === doctor.userId
+    );
+    return { ...doctor, userInfo };
+  });
+
+  return {
+    doctors: doctorsWithUserInfo,
+    totalDoctors: doctorsWithUserInfo.length,
+  };
+};
+
+const countTotalDoctorPage = async (pageSize: number) => {
+  const totalItems = await prisma.doctor.count();
+
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  return totalPages;
+};
+
+const handleGetAllApprovedDoctors = async (page: number, pageSize: number) => {
+  const skip = (page - 1) * pageSize;
+  const doctors = await prisma.doctor.findMany({
+    include: {
+      clinics: true,
+      specialties: true,
+    },
+    where: {
+      approvalStatus: ApprovalStatus.Approved,
+    },
+    skip: skip,
+    take: pageSize,
+  });
+  const userAllUsers = await getAllDoctorsViaRabbitMQ();
+
+  if (!userAllUsers || userAllUsers.length === 0) {
+    console.warn("Không thể lấy thông tin user từ auth service");
+    return {
+      doctors: doctors.map((doctor) => ({ ...doctor, userInfo: null })),
+      totalDoctors: doctors.length,
+      warning: "Không thể lấy thông tin user từ auth service",
+    };
+  }
+  const doctorsWithUserInfo = doctors.map((doctor) => {
+    const userInfo = userAllUsers.find(
+      (user: UserInfo) => user.id === doctor.userId
+    );
+
+    if (!userInfo) {
+      console.warn(
+        `Không tìm thấy user info cho doctor ${doctor.id} với userId ${doctor.userId}`
+      );
+    }
+    return { ...doctor, userInfo };
+  });
+
+  return {
+    doctors: doctorsWithUserInfo,
+    totalDoctors: doctorsWithUserInfo.length,
+  };
+};
 export {
   createDoctorProfile,
   getDoctorByIdService,
@@ -337,4 +415,7 @@ export {
   removeDoctorClinicService,
   getDoctorsBySpecialtyService,
   getDoctorsByClinicService,
+  handleGetAllDoctors,
+  countTotalDoctorPage,
+  handleGetAllApprovedDoctors,
 };

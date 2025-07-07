@@ -9,6 +9,8 @@ import {
   removeDoctorClinicController,
   getDoctorsBySpecialtyController,
   getDoctorsByClinicController,
+  getAllDoctorsController,
+  getAllApprovedDoctorsController,
 } from "../controller/doctorController";
 import {
   authenticateToken,
@@ -20,7 +22,10 @@ const router = express.Router();
 const doctorRoutes = (app: Express) => {
   // Basic doctor operations
   router.post("/", authenticateToken, createDoctorController);
+  router.get("/", authenticateToken, getAllDoctorsController);
+  router.get("/approved", authenticateToken, getAllApprovedDoctorsController);
   router.get("/:id", authenticateToken, getDoctorByIdController);
+
   router.put(
     "/:id",
     authenticateToken,

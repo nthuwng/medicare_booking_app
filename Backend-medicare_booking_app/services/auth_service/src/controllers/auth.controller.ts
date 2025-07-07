@@ -11,6 +11,7 @@ import {
   handleGetUserByIdAndPassword,
   handleRefreshToken,
   handleRevokeRefreshToken,
+  handleGetAllUsers,
 } from "../services/auth.services";
 import {
   changePasswordSchema,
@@ -376,6 +377,15 @@ const getRefreshTokenApi = async (req: Request, res: Response) => {
   }
 };
 
+const getAllUsersAPI = async (req: Request, res: Response) => {
+  const users = await handleGetAllUsers();
+  res.status(200).json({
+    success: true,
+    length: users.length,
+    message: "Lấy danh sách tất cả người dùng thành công.",
+    data: users,
+  });
+};
 export {
   postRegisterAPI,
   postLoginAPI,
@@ -384,4 +394,5 @@ export {
   putUpdatePasswordApi,
   postRefreshTokenApi,
   postRevokeRefreshTokenApi,
+  getAllUsersAPI
 };
