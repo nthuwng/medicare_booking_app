@@ -27,7 +27,6 @@ const startApplication = async () => {
 
     //Khởi tạo tất cả Consumers
     await initializeAllRabbitMQConsumers();
-    console.log("✅ All RabbitMQ consumers initialized successfully.");
 
     //Khởi động HTTP Server (hoặc gRPC server)
     app.listen(port, () => {

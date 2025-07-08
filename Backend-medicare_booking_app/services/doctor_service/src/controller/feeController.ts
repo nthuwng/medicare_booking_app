@@ -22,7 +22,7 @@ const getFeeController = async (req: Request, res: Response) => {
         const fee = await getFeeService(doctorProfileId);
         res.status(200).json({
             success: true,
-            message: "Lấy thông tin fee thành công.",
+            message: "Lấy thông tin fee thành công. ",
             data: fee,
         });
     } catch (error: any) {

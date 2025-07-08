@@ -56,4 +56,34 @@ const getScheduleByDoctorId = async (doctorId: string) => {
   });
 };
 
-export { createSchedule, getScheduleByDoctorId };
+const getScheduleById = async (scheduleId: string) => {
+  return await prisma.schedule.findUnique({
+    where: { id: scheduleId },
+    include: {
+      doctor: {
+        select: {
+          id: true,
+          fullName: true,
+          phone: true,
+          gender: true,
+          avatarUrl: true,
+          licenseNumber: true,
+          approvalStatus: true,
+          experienceYears: true,
+        },
+      },
+      clinic: {
+        select: {
+          id: true,
+          clinicName: true,
+          city: true,
+          district: true,
+          street: true,
+          phone: true,
+        },
+      },
+    },
+  });
+};
+
+export { createSchedule, getScheduleByDoctorId, getScheduleById };

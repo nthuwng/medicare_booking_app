@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:20
 
 # Tạo thư mục làm việc
 WORKDIR /app
@@ -12,11 +12,11 @@ COPY prisma ./prisma/
 RUN npx prisma generate
 
 # Copy source code
-COPY src/ ./src/
+COPY . .
 COPY tsconfig.json ./
 
 # Mở port container
 EXPOSE 8082
 
 # Chạy service
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

@@ -110,7 +110,7 @@ model DoctorClinic {
 
 // Schedules table - Updated to work with new structure
 model Schedule {
-  id          Int      @id @default(autoincrement()) @map("schedule_id")
+  id          String   @id @default(uuid()) @map("schedule_id")
   doctorId    String   @map("doctor_profile_id")
   clinicId    Int      @map("clinic_id")
   date        DateTime @db.Date

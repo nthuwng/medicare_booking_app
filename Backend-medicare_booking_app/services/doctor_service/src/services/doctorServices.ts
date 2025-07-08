@@ -405,6 +405,14 @@ const handleGetAllApprovedDoctors = async (page: number, pageSize: number) => {
     totalDoctors: doctorsWithUserInfo.length,
   };
 };
+
+const checkDoctorViaRabbitMQ = async (doctorId: string) => {
+  const doctor = await findDoctorById(doctorId);
+  if (!doctor) {
+    throw new Error("Doctor không tồn tại");
+  }
+  return doctor;
+};
 export {
   createDoctorProfile,
   getDoctorByIdService,
@@ -418,4 +426,5 @@ export {
   handleGetAllDoctors,
   countTotalDoctorPage,
   handleGetAllApprovedDoctors,
+  checkDoctorViaRabbitMQ,
 };

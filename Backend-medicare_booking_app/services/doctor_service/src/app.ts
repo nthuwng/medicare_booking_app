@@ -6,6 +6,7 @@ import { connectRabbitMQ } from "./queue/connection";
 import clinicRoutes from "./routes/clinicRoutes";
 import feeRoutes from "./routes/feeRoutes";
 import scheduleRoutes from "./routes/schedule";
+import { initializeAllRabbitMQConsumers } from "./queue/consumers";
 
 const app = express();
 const port = process.env.PORT || 8083;
@@ -28,8 +29,7 @@ const startApplication = async () => {
     console.log("✅ Connected to RabbitMQ");
 
     //Khởi tạo tất cả Consumers
-    // await initializeAllRabbitMQConsumers();
-    // console.log("✅ All RabbitMQ consumers initialized successfully.");
+    await initializeAllRabbitMQConsumers();
 
     //Khởi động HTTP Server (hoặc gRPC server)
     app.listen(port, () => {
