@@ -1,5 +1,8 @@
 import express, { Express } from "express";
-import { createScheduleController,getScheduleByDoctorIdController } from "src/controller/scheduleController";
+import {
+  createScheduleController,
+  getScheduleByDoctorIdController,
+} from "src/controller/scheduleController";
 
 import {
   authenticateToken,
@@ -8,16 +11,17 @@ import {
 
 const router = express.Router();
 
-const scheduleRoutes = (app: Express) => {
-  router.post(
-    "/schedules",
-    authenticateToken,
-    authorizeAdmin,
-    createScheduleController
-  );
-  router.get("/schedules/:doctorId", authenticateToken, authorizeAdmin, getScheduleByDoctorIdController);
+router.post(
+  "/schedules",
+  authenticateToken,
+  authorizeAdmin,
+  createScheduleController
+);
+router.get(
+  "/schedules/:doctorId",
+  authenticateToken,
+  authorizeAdmin,
+  getScheduleByDoctorIdController
+);
 
-  app.use("/", router);
-};
-
-export default scheduleRoutes;
+export default router;
