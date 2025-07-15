@@ -87,6 +87,23 @@ const findDoctorById = async (id: string) => {
   return doctor;
 };
 
+const getDoctorProfileBasicInfo = async (id: string) => {
+  const doctor = await prisma.doctor.findUnique({
+    where: { id: id },
+    select: {
+      id: true,
+      fullName: true,
+      gender: true,
+      phone: true,
+      experienceYears: true,
+      avatarUrl: true,
+      title: true,
+      approvalStatus: true,
+    },
+  });
+  return doctor;
+};
+
 const addDoctorSpecialty = async (doctorId: string, specialtyId: number) => {
   return prisma.doctorSpecialty.create({
     data: {
@@ -237,4 +254,5 @@ export {
   removeDoctorClinic,
   getDoctorsBySpecialty,
   getDoctorsByClinic,
+  getDoctorProfileBasicInfo,
 };

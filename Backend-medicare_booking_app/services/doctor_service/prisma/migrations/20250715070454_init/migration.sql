@@ -60,37 +60,6 @@ CREATE TABLE `doctor_clinics` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `schedules` (
-    `schedule_id` VARCHAR(191) NOT NULL,
-    `doctor_profile_id` VARCHAR(191) NOT NULL,
-    `clinic_id` INTEGER NOT NULL,
-    `date` DATE NOT NULL,
-    `is_available` BOOLEAN NOT NULL DEFAULT true,
-
-    UNIQUE INDEX `schedules_doctor_profile_id_clinic_id_date_key`(`doctor_profile_id`, `clinic_id`, `date`),
-    PRIMARY KEY (`schedule_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `time_slots` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `start_time` TIME NOT NULL,
-    `end_time` TIME NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `schedule_time_slots` (
-    `schedule_id` VARCHAR(191) NOT NULL,
-    `time_slot_id` INTEGER NOT NULL,
-    `maxBooking` INTEGER NOT NULL DEFAULT 3,
-    `currentBooking` INTEGER NOT NULL DEFAULT 0,
-
-    PRIMARY KEY (`schedule_id`, `time_slot_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `fees` (
     `fee_id` INTEGER NOT NULL AUTO_INCREMENT,
     `doctor_profile_id` VARCHAR(191) NOT NULL,
@@ -113,18 +82,6 @@ ALTER TABLE `doctor_clinics` ADD CONSTRAINT `doctor_clinics_doctor_id_fkey` FORE
 
 -- AddForeignKey
 ALTER TABLE `doctor_clinics` ADD CONSTRAINT `doctor_clinics_clinic_id_fkey` FOREIGN KEY (`clinic_id`) REFERENCES `clinics`(`clinic_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `schedules` ADD CONSTRAINT `schedules_doctor_profile_id_fkey` FOREIGN KEY (`doctor_profile_id`) REFERENCES `doctors`(`doctor_profile_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `schedules` ADD CONSTRAINT `schedules_clinic_id_fkey` FOREIGN KEY (`clinic_id`) REFERENCES `clinics`(`clinic_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `schedule_time_slots` ADD CONSTRAINT `schedule_time_slots_schedule_id_fkey` FOREIGN KEY (`schedule_id`) REFERENCES `schedules`(`schedule_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `schedule_time_slots` ADD CONSTRAINT `schedule_time_slots_time_slot_id_fkey` FOREIGN KEY (`time_slot_id`) REFERENCES `time_slots`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `fees` ADD CONSTRAINT `fees_doctor_profile_id_fkey` FOREIGN KEY (`doctor_profile_id`) REFERENCES `doctors`(`doctor_profile_id`) ON DELETE RESTRICT ON UPDATE CASCADE;

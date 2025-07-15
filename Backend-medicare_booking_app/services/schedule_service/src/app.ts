@@ -1,17 +1,20 @@
 import express from "express";
 import "dotenv/config";
+import initDatabase from "./config/seed";
+import scheduleRoutes from "./routes/schedule";
+import timeSlotRoutes from "./routes/timeSlotRoutes";
 import { connectRabbitMQ } from "./queue/connection";
-import { initializeAllRabbitMQConsumers } from "./queue/consumers";
-import routers from "./routes/index.routes";
 
 const app = express();
-const port = process.env.PORT || 8083;
+const port = process.env.PORT || 8088;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //config Routes
-routers(app);
+scheduleRoutes(app);
+timeSlotRoutes(app);
+
 // Start server
 const startApplication = async () => {
   try {
@@ -20,13 +23,13 @@ const startApplication = async () => {
     console.log("✅ Connected to RabbitMQ");
 
     //Khởi tạo tất cả Consumers
-    await initializeAllRabbitMQConsumers();
 
     //Khởi động HTTP Server (hoặc gRPC server)
     app.listen(port, () => {
-      console.log(`✅ User_service listening on port ${port}`);
+      console.log(`✅ Schedule_service listening on port ${port}`);
     });
 
+    initDatabase();
   } catch (error) {
     console.error("❌ Failed to start application:", error);
     process.exit(1); // Thoát ứng dụng nếu có lỗi khởi động quan trọng

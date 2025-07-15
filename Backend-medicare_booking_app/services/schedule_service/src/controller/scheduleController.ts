@@ -1,22 +1,22 @@
 import { Request, Response } from "express";
 import {
-  scheduleService,
-  handleGetSchedule,
   countTotalSchedulePage,
+  handleGetAllSchedule,
+  scheduleService,
+  getScheduleByDoctorId
 } from "src/services/scheduleServices";
 import { length } from "zod";
 
 const createScheduleController = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId || "";
     const schedule = await scheduleService(req.body);
-    // if (!schedule) {
-    //   res.status(400).json({
-    //     success: false,
-    //     message: "Tạo lịch khám thất bại.",
-    //   });
-    //   return;
-    // }
+    if (!schedule) {
+      res.status(400).json({
+        success: false,
+        message: "Tạo lịch khám thất bại.",
+      });
+      return;
+    }
     res.status(200).json({
       success: true,
       message: "Tạo lịch khám thành công.",
@@ -31,7 +31,7 @@ const createScheduleController = async (req: Request, res: Response) => {
   }
 };
 
-const getScheduleByDoctorIdController = async (req: Request, res: Response) => {
+const getAllScheduleController = async (req: Request, res: Response) => {
   try {
     const { page, pageSize } = req.query;
     let currentPage = page ? +page : 1;
@@ -42,7 +42,7 @@ const getScheduleByDoctorIdController = async (req: Request, res: Response) => {
       parseInt(pageSize as string)
     );
 
-    const schedules = await handleGetSchedule(
+    const schedules = await handleGetAllSchedule(
       currentPage,
       parseInt(pageSize as string)
     );
@@ -92,4 +92,32 @@ const getScheduleByDoctorIdController = async (req: Request, res: Response) => {
   }
 };
 
-export { createScheduleController, getScheduleByDoctorIdController };
+const getScheduleByDoctorIdController = async (req: Request, res: Response) => {
+  try {
+    const { doctorId } = req.params;
+    const schedule = await getScheduleByDoctorId(doctorId);
+    if (schedule.length === 0) {
+      res.status(200).json({
+        success: true,
+        length: 0,
+        message: "Bác sĩ này chưa có lịch khám",
+        data: [],
+      });
+      return;
+    }
+    res.status(200).json({
+      success: true,
+      length: schedule.length,
+      message: "Lấy lịch khám của bác sĩ thành công.",
+      data: schedule,
+    });
+  } catch (error: any) {
+    console.error("Error getting schedule by doctorId:", error.message);
+  }
+};
+
+export {
+  createScheduleController,
+  getAllScheduleController,
+  getScheduleByDoctorIdController,
+};

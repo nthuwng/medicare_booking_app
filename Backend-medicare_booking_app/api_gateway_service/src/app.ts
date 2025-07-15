@@ -18,6 +18,8 @@ const SERVICES = {
   AUTH_SERVICE: process.env.AUTH_SERVICE_URL || "http://auth-service:8086",
   RATING_SERVICE:
     process.env.RATING_SERVICE_URL || "http://rating-service:8087",
+  SCHEDULE_SERVICE:
+    process.env.SCHEDULE_SERVICE_URL || "http://schedule-service:8088",
 };
 
 app.use(
@@ -96,6 +98,18 @@ app.use(
     },
   })
 );
+
+app.use(
+  "/api/schedule",
+  createProxyMiddleware({
+    target: SERVICES.SCHEDULE_SERVICE,
+    changeOrigin: true,
+    pathRewrite: {
+      "^/api/schedule": "",
+    },
+  })
+);
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

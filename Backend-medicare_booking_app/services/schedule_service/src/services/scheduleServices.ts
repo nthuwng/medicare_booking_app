@@ -6,6 +6,10 @@ import { prisma } from "src/config/client";
 import { createSchedule } from "src/repository/schedule.repo";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import {
+  checkClinicViaRabbitMQ,
+  checkDoctorProfileViaRabbitMQ,
+} from "src/queue/publishers/schedule.publisher";
 
 // Config timezone cho dayjs
 dayjs.extend(utc);
@@ -14,18 +18,19 @@ dayjs.extend(timezone);
 const scheduleService = async (body: CreateScheduleData) => {
   const { doctorId, date, timeSlotId, clinicId } = body;
 
-  const checkClinic = await prisma.clinic.findUnique({
-    where: { id: +clinicId },
-  });
-  if (!checkClinic) {
-    throw new Error("Phòng khám không tồn tại.");
-  }
+  const checkDoctor = await checkDoctorProfileViaRabbitMQ(doctorId);
 
-  const checkDoctor = await prisma.doctor.findUnique({
-    where: { id: doctorId },
-  });
   if (!checkDoctor) {
     throw new Error("Bác sĩ không tồn tại.");
+  }
+
+  if (checkDoctor.isApproved === false) {
+    throw new Error("Bác sĩ chưa được phê duyệt. Vui lòng đợi phê duyệt.");
+  }
+
+  const checkClinic = await checkClinicViaRabbitMQ(clinicId.toString());
+  if (!checkClinic) {
+    throw new Error("Phòng khám không tồn tại 111.");
   }
 
   // Kiểm tra và validate các time slots
@@ -103,7 +108,10 @@ const scheduleService = async (body: CreateScheduleData) => {
   } else {
     // Tạo schedule mới
     schedule = await createSchedule(doctorId, formatSelectedDay, +clinicId);
-    console.log("Created new schedule:", schedule.id);
+  }
+
+  if (!schedule) {
+    throw new Error("Không thể tạo hoặc lấy schedule");
   }
 
   // Tạo các bản ghi schedule_time_slots
@@ -145,29 +153,11 @@ const scheduleService = async (body: CreateScheduleData) => {
   };
 };
 
-const handleGetSchedule = async (page: number, pageSize: number) => {
+const handleGetAllSchedule = async (page: number, pageSize: number) => {
   const skip = (page - 1) * pageSize;
+
   const schedules = await prisma.schedule.findMany({
     include: {
-      doctor: {
-        select: {
-          id: true,
-          fullName: true,
-          phone: true,
-          title: true,
-          avatarUrl: true,
-        },
-      },
-      clinic: {
-        select: {
-          id: true,
-          clinicName: true,
-          city: true,
-          district: true,
-          street: true,
-          phone: true,
-        },
-      },
       timeSlots: {
         include: {
           timeSlot: {
@@ -184,22 +174,45 @@ const handleGetSchedule = async (page: number, pageSize: number) => {
     take: pageSize,
   });
 
-  // Format thời gian sau khi lấy dữ liệu
-  const formattedSchedules = schedules.map((schedule) => ({
-    ...schedule,
-    timeSlots: schedule.timeSlots.map((ts) => ({
-      ...ts,
-      timeSlot: {
-        ...ts.timeSlot,
-        startTime: dayjs(ts.timeSlot.startTime).format("HH:mm"),
-        endTime: dayjs(ts.timeSlot.endTime).format("HH:mm"),
-      },
-    })),
-  }));
+  // Lấy thông tin doctor profile cho mỗi schedule
+  const schedulesWithDoctorInfo = await Promise.all(
+    schedules.map(async (schedule) => {
+      try {
+        // Lấy thông tin doctor qua RabbitMQ
+        const doctorProfile = await checkDoctorProfileViaRabbitMQ(
+          schedule.doctorId
+        );
+
+        // Lấy thông tin clinic qua RabbitMQ
+        const clinicInfo = await checkClinicViaRabbitMQ(
+          schedule.clinicId.toString()
+        );
+
+        return {
+          ...schedule,
+          doctorProfile: doctorProfile || null,
+          clinicInfo: clinicInfo || null,
+          timeSlots: schedule.timeSlots.map((ts) => ({
+            ...ts,
+            timeSlot: {
+              ...ts.timeSlot,
+              startTime: dayjs(ts.timeSlot.startTime).format("HH:mm"),
+              endTime: dayjs(ts.timeSlot.endTime).format("HH:mm"),
+            },
+          })),
+        };
+      } catch (error) {
+        console.error(
+          `Error fetching doctor/clinic info for schedule ${schedule.id}:`,
+          error
+        );
+      }
+    })
+  );
 
   return {
-    schedules: formattedSchedules,
-    totalSchedules: formattedSchedules.length,
+    schedules: schedulesWithDoctorInfo,
+    totalSchedules: schedulesWithDoctorInfo.length,
   };
 };
 
@@ -211,4 +224,29 @@ const countTotalSchedulePage = async (pageSize: number) => {
   return totalPages;
 };
 
-export { scheduleService, handleGetSchedule,countTotalSchedulePage };
+const getScheduleByDoctorId = async (doctorId: string) => {
+  const schedule = await prisma.schedule.findMany({
+    where: { doctorId },
+    include: {
+      timeSlots: {
+        include: {
+          timeSlot: {
+            select: {
+              id: true,
+              startTime: true,
+              endTime: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  return schedule;
+};
+
+export {
+  scheduleService,
+  countTotalSchedulePage,
+  getScheduleByDoctorId,
+  handleGetAllSchedule,
+};

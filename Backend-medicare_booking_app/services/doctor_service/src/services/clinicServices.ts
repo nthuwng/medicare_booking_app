@@ -29,4 +29,11 @@ const handleCreateClinicProfile = async (body: CreateClinicProfileData) => {
   return clinic;
 };
 
-export { handleCreateClinicProfile };
+const findClinicById = async (id: string) => {
+  const clinic = await prisma.clinic.findUnique({
+    where: { id: +id },
+  });
+  return clinic;
+};
+
+export { handleCreateClinicProfile, findClinicById };

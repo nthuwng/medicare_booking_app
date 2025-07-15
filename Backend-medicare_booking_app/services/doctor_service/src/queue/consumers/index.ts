@@ -1,13 +1,13 @@
 
 
+import { initCheckClinicConsumer } from "./checkClinic.consumer";
 import { initCheckDoctorConsumer } from "./checkDoctor.consumer";
-import { initCheckScheduleConsumer } from "./checkSchedule.consumer";
 
 
 export const initializeAllRabbitMQConsumers = async () => {
   try {
     await initCheckDoctorConsumer();
-    await initCheckScheduleConsumer();
+    await initCheckClinicConsumer();
 
     console.log("✅ All RabbitMQ consumers doctor_service initialized successfully.");
   } catch (error) {

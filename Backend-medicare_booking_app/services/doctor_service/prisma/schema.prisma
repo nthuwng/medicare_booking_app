@@ -57,7 +57,6 @@ model Clinic {
 
   // Relations (many-to-many with Doctor)
   doctors   DoctorClinic[]
-  schedules Schedule[]
   fees      Fee[]
 
   @@map("clinics")
@@ -80,7 +79,6 @@ model Doctor {
   // Relations (many-to-many)
   specialties DoctorSpecialty[]
   clinics     DoctorClinic[]
-  schedules   Schedule[]
   fees        Fee[]
 
   @@map("doctors")
@@ -114,45 +112,6 @@ model DoctorClinic {
 
   @@id([doctorId, clinicId])
   @@map("doctor_clinics")
-}
-
-// Schedules table - Updated to work with new structure
-model Schedule {
-  id          String   @id @default(uuid()) @map("schedule_id")
-  doctorId    String   @map("doctor_profile_id")
-  clinicId    Int      @map("clinic_id")
-  date        DateTime @db.Date
-  isAvailable Boolean  @default(true) @map("is_available")
-
-  doctor    Doctor             @relation(fields: [doctorId], references: [id])
-  clinic    Clinic             @relation(fields: [clinicId], references: [id])
-  timeSlots ScheduleTimeSlot[]
-
-  @@unique([doctorId, clinicId, date])
-  @@map("schedules")
-}
-
-model TimeSlot {
-  id        Int      @id @default(autoincrement())
-  startTime DateTime @map("start_time") @db.Time
-  endTime   DateTime @map("end_time") @db.Time
-
-  scheduleTimeSlots ScheduleTimeSlot[]
-
-  @@map("time_slots")
-}
-
-model ScheduleTimeSlot {
-  scheduleId     String @map("schedule_id")
-  timeSlotId     Int    @map("time_slot_id")
-  maxBooking     Int    @default(3)
-  currentBooking Int    @default(0)
-
-  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  timeSlot TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
-
-  @@id([scheduleId, timeSlotId])
-  @@map("schedule_time_slots")
 }
 
 // Fees table - Updated to work with new structure
