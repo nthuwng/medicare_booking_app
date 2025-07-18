@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import AdminDashboardPage from "../modules/admin/pages/AdminDashboardPage";
 import DoctorManagementPage from "../modules/admin/pages/DoctorManagementPage";
 import { Button, Result } from "antd";
+import SpecialitiesManagementPage from "../modules/admin/pages/SpecialitiesManagementPage";
 
 const AdminRoutes = () => {
   return (
@@ -11,6 +12,7 @@ const AdminRoutes = () => {
       <Route path="/" element={<LayoutAdmin />}>
         <Route index element={<AdminDashboardPage />} />
         <Route path="doctor" element={<DoctorManagementPage />} />
+        <Route path="specialities" element={<SpecialitiesManagementPage />} />
       </Route>
       <Route
         path="*"

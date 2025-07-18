@@ -6,12 +6,14 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
+import { Users } from "lucide-react";
 import { Layout, Menu, Dropdown, Space } from "antd";
 import { Outlet } from "react-router-dom";
 import { Link } from "react-router-dom";
 import type { MenuProps } from "antd";
 import { RiAdminFill } from "react-icons/ri";
-
+import { FaUserDoctor } from 'react-icons/fa6';
+import { AiOutlineUser } from "react-icons/ai";
 type MenuItem = Required<MenuProps>["items"][number];
 
 const { Content, Footer, Sider } = Layout;
@@ -28,30 +30,30 @@ const LayoutAdmin = () => {
     {
       label: <Link to="/admin">Dashboard</Link>,
       key: "dashboard",
-      icon: <AppstoreOutlined />,
+      icon: <AppstoreOutlined style={{ fontSize: "20px" }} />,
     },
     {
       label: <span>Manage Users</span>,
       key: "user",
-      icon: <UserOutlined />,
+      icon: <Users size={20} />,
       children: [
         {
           label: <Link to="/admin/doctor">Doctor</Link>,
           key: "doctor",
-          icon: <TeamOutlined />,
+          icon: <FaUserDoctor />,
         },
         {
           label: <Link to="/admin/admins">Admin</Link>,
           key: "admin",
-          icon: <TeamOutlined />,
+          icon: <RiAdminFill />,
         },
       ],
     },
-    // {
-    //     label: <Link to='/admin/book'>Manage Books</Link>,
-    //     key: 'book',
-    //     icon: <ExceptionOutlined />
-    // },
+    {
+      label: <Link to="/admin/specialities">Specialities</Link>,
+      key: "specialities",
+      icon: <AiOutlineUser size={20} />,
+    },
   ];
 
   const itemsDropdown = [

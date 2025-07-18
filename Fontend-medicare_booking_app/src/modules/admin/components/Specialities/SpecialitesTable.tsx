@@ -8,17 +8,28 @@ import {
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
+import { getAllSpecialties } from "../../services/admin.api";
+import type { ISpecialtyTable } from "../../types";
+import SpecialitesCreate from "./SpecialitesCreate";
 
-const DoctorTable = () => {
+const SpecialitesTable = () => {
   const actionRef = useRef<ActionType>(null);
+  const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
+  const [meta, setMeta] = useState({
+    current: 1,
+    pageSize: 5,
+    pages: 0,
+    total: 0,
+  });
 
   const refreshTable = () => {
     actionRef.current?.reload();
   };
-  const columns: ProColumns<any>[] = [
+
+  const columns: ProColumns<ISpecialtyTable>[] = [
     {
       title: "Id",
-      dataIndex: "_id",
+      dataIndex: "id",
       hideInSearch: true,
       render(dom, entity, index, action, schema) {
         return (
@@ -29,51 +40,27 @@ const DoctorTable = () => {
               // setOpenViewDetail(true);
             }}
           >
-            {entity._id}
+            {entity.id}
           </a>
         );
       },
     },
     {
-      title: "Tên sách",
-      dataIndex: "mainText",
+      title: "Tên chuyên khoa",
+      dataIndex: "specialtyName",
+      hideInSearch: true,
       sorter: true,
     },
     {
-      title: "Thể loại",
-      dataIndex: "category",
+      title: "Hình ảnh",
+      dataIndex: "iconPath",
       hideInSearch: true,
     },
     {
-      title: "Tác giả",
-      dataIndex: "author",
-      sorter: true,
-    },
-    {
-      title: "Giá tiền",
-      dataIndex: "price",
-      hideInSearch: true,
-      sorter: true,
-      // https://stackoverflow.com/questions/37985642/vnd-currency-formatting
-      render(dom, entity, index, action, schema) {
-        return (
-          <>
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND",
-            }).format(entity.price)}
-          </>
-        );
-      },
-    },
-    {
-      title: "Ngày cập nhật",
-      dataIndex: "updatedAt",
-      sorter: true,
-      valueType: "date",
+      title: "Mô tả",
+      dataIndex: "description",
       hideInSearch: true,
     },
-
     {
       title: "Action",
       hideInSearch: true,
@@ -88,8 +75,8 @@ const DoctorTable = () => {
 
             <Popconfirm
               placement="leftTop"
-              title={"Xác nhận xóa book"}
-              description={"Bạn có chắc chắn muốn xóa book này ?"}
+              title={"Xác nhận xóa chuyên khoa"}
+              description={"Bạn có chắc chắn muốn xóa chuyên khoa này ?"}
               onConfirm={() => {}}
               okText="Xác nhận"
               cancelText="Hủy"
@@ -106,21 +93,19 @@ const DoctorTable = () => {
 
   return (
     <>
-      <ProTable<any, any>
+      <ProTable<ISpecialtyTable>
         columns={columns}
         actionRef={actionRef}
         cardBordered
         request={async (params, sort, filter) => {
-          const res = {
-            data: {
-              result: [],
-              meta: {
-                current: 1,
-                pageSize: 10,
-                total: 0,
-              },
-            },
-          };
+          let query = "";
+          if (params) {
+            query += `current=${params.current}&pageSize=${params.pageSize}`;
+          }
+          const res = await getAllSpecialties(query);
+          if (res.data) {
+            setMeta(res.data.meta);
+          }
           return {
             data: res.data?.result,
             page: 1,
@@ -130,10 +115,10 @@ const DoctorTable = () => {
         }}
         rowKey="_id"
         pagination={{
-          current: 1,
-          pageSize: 10,
+          current: meta.current,
+          pageSize: meta.pageSize,
           showSizeChanger: true,
-          total: 0,
+          total: meta.total,
           showTotal: (total, range) => {
             return (
               <div>
@@ -143,7 +128,7 @@ const DoctorTable = () => {
             );
           },
         }}
-        headerTitle="Danh sách bác sĩ"
+        headerTitle="Danh sách chuyên khoa"
         toolBarRender={() => [
           <Button icon={<ExportOutlined />} type="primary">
             Export
@@ -151,7 +136,9 @@ const DoctorTable = () => {
           <Button
             key="button"
             icon={<PlusOutlined />}
-            onClick={() => {}}
+            onClick={() => {
+              setOpenModalCreate(true);
+            }}
             type="primary"
           >
             Add new
@@ -159,14 +146,13 @@ const DoctorTable = () => {
         ]}
       />
 
-      {/* <DetailBook
-        openViewDetail={openViewDetail}
-        setOpenViewDetail={setOpenViewDetail}
-        dataViewDetail={dataViewDetail}
-        setDataViewDetail={setDataViewDetail}
-      /> */}
+      <SpecialitesCreate
+        openModalCreate={openModalCreate}
+        setOpenModalCreate={setOpenModalCreate}
+        refreshTable={refreshTable}
+      />
     </>
   );
 };
 
-export default DoctorTable;
+export default SpecialitesTable;
