@@ -1,9 +1,16 @@
 import express from "express";
 import "dotenv/config";
 import { createProxyMiddleware } from "http-proxy-middleware";
-
+import cors from "cors";
 const app = express();
 const port = process.env.PORT || 8080;
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 const SERVICES = {
   USER_SERVICE: process.env.USER_SERVICE_URL || "http://user-service:8081",
@@ -109,7 +116,6 @@ app.use(
     },
   })
 );
-
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

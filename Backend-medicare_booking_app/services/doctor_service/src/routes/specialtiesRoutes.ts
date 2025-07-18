@@ -1,8 +1,9 @@
 import express, { Express } from "express";
-import { createSpecialtiesController } from "src/controller/specialtiesController";
+import { createSpecialtiesController ,getSpecialtiesController} from "src/controller/specialtiesController";
 import {
   authenticateToken,
   authorizeAdmin,
+  
 } from "src/middleware/auth.middleware";
 
 const router = express.Router();
@@ -13,5 +14,7 @@ router.post(
   authorizeAdmin,
   createSpecialtiesController
 );
+
+router.get("/", getSpecialtiesController);
 
 export default router;

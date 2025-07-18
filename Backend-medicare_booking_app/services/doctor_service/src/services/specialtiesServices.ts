@@ -28,4 +28,27 @@ const handleCreateSpecialtiesProfile = async (
   return specialties;
 };
 
-export { handleCreateSpecialtiesProfile };
+const handleGetAllSpecialties = async (page: number, pageSize: number) => {
+  const skip = (page - 1) * pageSize;
+
+  const specialties = await prisma.specialty.findMany({
+    skip: skip,
+    take: pageSize,
+  });
+
+  return specialties;
+};
+
+const countTotalSpecialtiesPage = async (pageSize: number) => {
+  const totalItems = await prisma.specialty.count();
+
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  return totalPages;
+};
+
+export {
+  handleCreateSpecialtiesProfile,
+  handleGetAllSpecialties,
+  countTotalSpecialtiesPage,
+};
