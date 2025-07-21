@@ -7,14 +7,17 @@ import { BrowserRouter } from "react-router-dom";
 import "./styles/global.css";
 import { ConfigProvider } from "antd";
 import viVN from "antd/locale/vi_VN";
+import { AppProvider } from "./components/contexts/app.context.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AntdApp>
-        <ConfigProvider locale={viVN}>
-          <App />
-        </ConfigProvider>
+        <AppProvider>
+          <ConfigProvider locale={viVN}>
+            <App />
+          </ConfigProvider>
+        </AppProvider>
       </AntdApp>
     </BrowserRouter>
   </StrictMode>

@@ -17,4 +17,24 @@ declare global {
     };
     result: T[];
   }
+
+  interface ILogin {
+    access_token: string;
+    user: {
+      id: string;
+      email: string;
+      userType: string;
+      isActive: boolean;
+    };
+  }
+
+  interface IUser {
+    id: string;
+    email: string;
+    userType: string;
+    isActive: boolean;
+  }
+  interface IFetchAccount {
+    user: IUser;
+  }
 }

@@ -17,6 +17,7 @@
       "styles*": ["./src/styles/*"],
       "services*": ["./src/services/*"],
       "types*": ["./src/types/*"],
+      "contexts*": ["./src/components/contexts/*"],
     },
 
     /* Bundler mode */
