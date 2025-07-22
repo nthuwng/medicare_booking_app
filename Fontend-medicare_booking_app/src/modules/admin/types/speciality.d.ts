@@ -5,6 +5,8 @@ export interface ISpecialty {
   description: string;
 }
 
+
+
 export interface ISpecialtyTable {
   id: string;
   specialtyName: string;

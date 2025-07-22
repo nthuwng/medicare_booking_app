@@ -8,11 +8,11 @@ import {
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
-import { getAllSpecialties } from "../../services/admin.api";
-import type { ISpecialtyTable } from "../../types";
-import SpecialitesCreate from "./SpecialitesCreate";
+import { getAllClinics } from "../../services/admin.api";
+import type { IClinicTable } from "../../types";
+import ClinicCreate from "./ClinicCreate";
 
-const SpecialitesTable = () => {
+const ClinicTable = () => {
   const actionRef = useRef<ActionType>(null);
   const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
   const [meta, setMeta] = useState({
@@ -26,11 +26,12 @@ const SpecialitesTable = () => {
     actionRef.current?.reload();
   };
 
-  const columns: ProColumns<ISpecialtyTable>[] = [
+  const columns: ProColumns<IClinicTable>[] = [
     {
       title: "Id",
       dataIndex: "id",
       hideInSearch: true,
+      width: 100,
       render(dom, entity, index, action, schema) {
         return (
           <a
@@ -46,40 +47,45 @@ const SpecialitesTable = () => {
       },
     },
     {
-      title: "Tên chuyên khoa",
-      dataIndex: "specialtyName",
+      title: "Tên phòng khám",
+      dataIndex: "clinicName",
       hideInSearch: true,
+      sorter: true,
+      width: 150,
     },
     {
-      title: "Tìm kiếm chuyên khoa",
-      dataIndex: "specialtyName",
-      hideInTable: true,
-      fieldProps: {
-        placeholder: "Nhập tên chuyên khoa để tìm kiếm",
-        style: {
-          width: "280px",
-        },
+      title: "Địa chỉ",
+      dataIndex: "address",
+      hideInSearch: true,
+      width: 250,
+      render: (_, record) => {
+        const { street, district, city } = record;
+        return `${street}, ${district}, ${city}`;
       },
     },
     {
-      title: "Hình ảnh",
-      dataIndex: "iconPath",
+      title: "Số điện thoại",
+      dataIndex: "phone",
       hideInSearch: true,
+      width: 100,
     },
     {
       title: "Mô tả",
       dataIndex: "description",
       hideInSearch: true,
+      ellipsis: true,
+      width: 200,
     },
     {
       title: "Action",
       hideInSearch: true,
+      width: 100,
       render(dom, entity, index, action, schema) {
         return (
           <>
             <EditTwoTone
               twoToneColor="#f57800"
-              style={{ cursor: "pointer", margin: "0 5px" }}
+              style={{ cursor: "pointer", marginRight: 15 }}
               onClick={() => {}}
             />
 
@@ -103,22 +109,16 @@ const SpecialitesTable = () => {
 
   return (
     <>
-      <ProTable<ISpecialtyTable>
+      <ProTable<IClinicTable>
         columns={columns}
         actionRef={actionRef}
         cardBordered
-        search={{
-          labelWidth: 150,
-        }}
         request={async (params, sort, filter) => {
           let query = "";
           if (params) {
             query += `current=${params.current}&pageSize=${params.pageSize}`;
-            if (params.specialtyName) {
-              query += `&specialtyName=${params.specialtyName}`;
-            }
           }
-          const res = await getAllSpecialties(query);
+          const res = await getAllClinics(query);
           if (res.data) {
             setMeta(res.data.meta);
           }
@@ -144,7 +144,7 @@ const SpecialitesTable = () => {
             );
           },
         }}
-        headerTitle="Danh sách chuyên khoa"
+        headerTitle="Danh sách phòng khám"
         toolBarRender={() => [
           <Button icon={<ExportOutlined />} type="primary">
             Export
@@ -162,7 +162,7 @@ const SpecialitesTable = () => {
         ]}
       />
 
-      <SpecialitesCreate
+      <ClinicCreate
         openModalCreate={openModalCreate}
         setOpenModalCreate={setOpenModalCreate}
         refreshTable={refreshTable}
@@ -171,4 +171,4 @@ const SpecialitesTable = () => {
   );
 };
 
-export default SpecialitesTable;
+export default ClinicTable;

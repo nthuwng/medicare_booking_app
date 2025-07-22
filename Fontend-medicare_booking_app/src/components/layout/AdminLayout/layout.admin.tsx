@@ -12,8 +12,10 @@ import { Outlet } from "react-router-dom";
 import { Link } from "react-router-dom";
 import type { MenuProps } from "antd";
 import { RiAdminFill } from "react-icons/ri";
-import { FaUserDoctor } from 'react-icons/fa6';
+import { FaUserDoctor } from "react-icons/fa6";
 import { AiOutlineUser } from "react-icons/ai";
+import { LiaClinicMedicalSolid } from "react-icons/lia";
+
 type MenuItem = Required<MenuProps>["items"][number];
 
 const { Content, Footer, Sider } = Layout;
@@ -53,6 +55,11 @@ const LayoutAdmin = () => {
       label: <Link to="/admin/specialities">Specialities</Link>,
       key: "specialities",
       icon: <AiOutlineUser size={20} />,
+    },
+    {
+      label: <Link to="/admin/clinic">Clinic</Link>,
+      key: "clinic",
+      icon: <LiaClinicMedicalSolid size={20} />,
     },
   ];
 

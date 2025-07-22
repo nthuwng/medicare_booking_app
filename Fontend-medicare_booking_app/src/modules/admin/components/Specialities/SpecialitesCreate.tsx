@@ -88,7 +88,7 @@ const SpecialitesCreate = (props: IProps) => {
                   { required: true, message: "Vui lòng nhập tên chuyên khoa!" },
                 ]}
               >
-                <Input />
+                <Input  />
               </Form.Item>
             </Col>
             <Col span={24}>
