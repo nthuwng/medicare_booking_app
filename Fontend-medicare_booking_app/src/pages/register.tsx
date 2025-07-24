@@ -1,29 +1,35 @@
-import { Button, Divider, Form, Input, message } from "antd";
+import { App, Button, Divider, Form, Input, message, Select } from "antd";
 import type { FormProps } from "antd";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./register.scss";
+import { registerAPI } from "@/services/api";
 
 type FieldType = {
-  fullName: string;
   email: string;
   password: string;
-  phone: string;
+  userType: string;
 };
 
 const RegisterPage = () => {
   const [isSubmit, setIsSubmit] = useState(false);
   const navigate = useNavigate();
+  const { message, notification } = App.useApp();
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
-    // const { fullName, email, password, phone } = values;
-
-    // const res = await registerAPI(fullName, email, password, phone);
-    // if (res.statusCode === 201) {
-    //   message.success("Đăng ký thành công!");
-    //   navigate("/login");
-    // } else {
-    //   message.error("Đăng ký thất bại!");
-    // }
+    const { email, password, userType } = values;
+    const res = await registerAPI(email, password, userType);
+    if (res.success === true) {
+      message.success(
+        "Đăng ký tài khoản thành công! Vui lòng đăng nhập để tiếp tục!"
+      );
+      navigate("/login");
+    } else {
+      notification.error({
+        message: "Đăng ký tài khoản thất bại!",
+        description: res.message,
+        placement: "topRight",
+      });
+    }
   };
 
   return (
@@ -36,17 +42,6 @@ const RegisterPage = () => {
               <Divider />
             </div>
             <Form name="form-register" onFinish={onFinish} autoComplete="off">
-              <Form.Item<FieldType>
-                labelCol={{ span: 24 }} //whole column
-                label="Họ tên"
-                name="fullName"
-                rules={[
-                  { required: true, message: "Họ tên không được để trống!" },
-                ]}
-              >
-                <Input />
-              </Form.Item>
-
               <Form.Item<FieldType>
                 labelCol={{ span: 24 }} //whole column
                 label="Email"
@@ -71,16 +66,19 @@ const RegisterPage = () => {
               </Form.Item>
               <Form.Item<FieldType>
                 labelCol={{ span: 24 }} //whole column
-                label="Số điện thoại"
-                name="phone"
+                label="Vai trò"
+                name="userType"
                 rules={[
                   {
                     required: true,
-                    message: "Số điện thoại không được để trống!",
+                    message: "Vai trò không được để trống!",
                   },
                 ]}
               >
-                <Input />
+                <Select>
+                  <Select.Option value="DOCTOR">Bác sĩ</Select.Option>
+                  <Select.Option value="PATIENT">Bệnh nhân</Select.Option>
+                </Select>
               </Form.Item>
 
               <Form.Item>

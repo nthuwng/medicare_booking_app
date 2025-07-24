@@ -2,6 +2,7 @@ export {};
 
 declare global {
   interface IBackendRes<T> {
+    success: boolean;
     error?: string | string[];
     message: string;
     statusCode: number | string;
@@ -28,6 +29,12 @@ declare global {
     };
   }
 
+  interface IRegister {
+    email: string;
+    password: string;
+    userType: string;
+  }
+
   interface IUser {
     id: string;
     email: string;
@@ -36,5 +43,17 @@ declare global {
   }
   interface IFetchAccount {
     user: IUser;
+  }
+
+  interface INotification {
+    id: string;
+    userId: string;
+    type: string;
+    title: string;
+    message: string;
+    data: any;
+    read: boolean;
+    createdAt: string;
+    updatedAt: string;
   }
 }

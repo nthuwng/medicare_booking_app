@@ -5,7 +5,6 @@ import {
   UserOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  BellOutlined,
 } from "@ant-design/icons";
 import { Users } from "lucide-react";
 import { Layout, Menu, Dropdown, Space } from "antd";
@@ -16,8 +15,7 @@ import { RiAdminFill } from "react-icons/ri";
 import { FaUserDoctor } from "react-icons/fa6";
 import { AiOutlineUser } from "react-icons/ai";
 import { LiaClinicMedicalSolid } from "react-icons/lia";
-// import NotificationBell from "../../common/NotificationBell";
-import NotificationAdmin from "@/components/admin/NotificationAdmin";
+
 type MenuItem = Required<MenuProps>["items"][number];
 
 const { Content, Footer, Sider } = Layout;
@@ -25,7 +23,6 @@ const { Content, Footer, Sider } = Layout;
 const LayoutAdmin = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [activeMenu, setActiveMenu] = useState("dashboard");
-  const [modalNotification, setModalNotification] = useState(false);
 
   const handleLogout = async () => {
     //todo
@@ -129,45 +126,11 @@ const LayoutAdmin = () => {
                 }
               )}
             </span>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                height: "40px",
-              }}
-            >
-              {/* Notification - tích hợp trực tiếp */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                }}
-              >
-                <NotificationAdmin
-                  setModalNotification={setModalNotification}
-                  modalNotification={modalNotification}
-                />
-              </div>
-
-              {/* User Dropdown */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                }}
-              >
-                <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
-                  <Space style={{ cursor: "pointer" }}>
-                    <RiAdminFill fontSize={20} />
-                  </Space>
-                </Dropdown>
-              </div>
-            </div>
+            <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
+              <Space style={{ cursor: "pointer" }}>
+                <RiAdminFill fontSize={20} />
+              </Space>
+            </Dropdown>
           </div>
           <Content style={{ padding: "15px" }}>
             <Outlet />

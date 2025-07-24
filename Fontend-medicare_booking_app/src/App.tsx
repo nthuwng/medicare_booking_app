@@ -6,6 +6,8 @@ import RegisterPage from "./pages/register";
 import { useCurrentApp } from "./components/contexts/app.context";
 import AdminProtectedRoute from "./components/auth/AdminProtectedRoute";
 import NotFoundPage from "./components/common/error";
+import DoctorProtectedRoute from "./components/auth/DoctorProtectedRoute";
+import DoctorRoutes from "./routes/DoctorRoutes";
 
 function App() {
   const { user } = useCurrentApp();
@@ -23,15 +25,26 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* admin */}
-      <Route
-        path="admin/*"
-        element={
-          <AdminProtectedRoute>
-            <AdminRoutes />
-          </AdminProtectedRoute>
-        }
-      />
+        {/* admin */}
+        <Route
+          path="admin/*"
+          element={
+            <AdminProtectedRoute>
+              <AdminRoutes />
+            </AdminProtectedRoute>
+          }
+        />
+
+        {/* doctor */}
+        <Route
+          path="doctor/*"
+          element={
+            <DoctorProtectedRoute>
+              <DoctorRoutes />
+            </DoctorProtectedRoute>
+          }
+        />
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

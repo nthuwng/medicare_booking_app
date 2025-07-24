@@ -9,3 +9,21 @@ export const fetchAccountAPI = () => {
   const urlBackend = "/api/auth/account";
   return axios.get<IBackendRes<IFetchAccount>>(urlBackend);
 };
+
+export const registerAPI = (
+  email: string,
+  password: string,
+  userType: string
+) => {
+  const urlBackend = "/api/auth/register";
+  return axios.post<IBackendRes<IRegister>>(urlBackend, {
+    email,
+    password,
+    userType,
+  });
+};
+
+export const getNotificationAPI = () => {
+  const urlBackend = "/api/notification/get-notification";
+  return axios.get<IBackendRes<INotification[]>>(urlBackend);
+};
