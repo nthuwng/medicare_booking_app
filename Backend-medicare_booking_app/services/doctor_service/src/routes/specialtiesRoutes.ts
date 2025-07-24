@@ -2,7 +2,7 @@ import express, { Express } from "express";
 import {
   createSpecialtiesController,
   getSpecialtiesController,
-} from "src/controller/specialtiesController";
+} from "src/controllers/specialtiesController";
 import {
   authenticateToken,
   authorizeAdmin,

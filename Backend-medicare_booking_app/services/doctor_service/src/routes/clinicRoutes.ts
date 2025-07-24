@@ -2,7 +2,7 @@ import express, { Express } from "express";
 import {
   createClinicController,
   getClinicsController,
-} from "src/controller/clinicController";
+} from "src/controllers/clinicController";
 
 import {
   authenticateToken,

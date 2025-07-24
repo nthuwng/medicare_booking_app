@@ -30,6 +30,7 @@ services:
       - PAYMENT_SERVICE_URL=http://payment-service:8085
       - AUTH_SERVICE_URL=http://auth-service:8086
       - RATING_SERVICE_URL=http://rating-service:8087
+      - WEBSOCKET_SERVICE_URL=http://websocket-service:9000
     depends_on:
       - user-service
       - appointment-service
@@ -38,6 +39,7 @@ services:
       - payment-service
       - auth-service
       - rating-service
+      - websocket-service
     networks:
       - healthcare_network
 
@@ -162,19 +164,44 @@ services:
       - healthcare_network
     command: npm run dev
 
+  notification_db:
+    image: mysql:8.0
+    container_name: notification_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: medicare_booking
+      MYSQL_DATABASE: notification_db
+    ports:
+      - "3312:3306"
+    volumes:
+      - notification_mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - healthcare_network
   # Notification service
   notification-service:
-    build: ./services/notification_service
+    build:
+      context: ./services/notification_service
+      dockerfile: Dockerfile
     ports:
       - "8084:8084"
     environment:
       - PORT=8084
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:medicare_booking@notification_db:3306/notification_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
     volumes:
       - ./services/notification_service:/app
       - /app/node_modules
+      - ./shared:/shared
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      notification_db:
+        condition: service_started
     networks:
       - healthcare_network
-    command: npm start
+    command: npm run dev
 
   # Payment service
   payment-service:
@@ -240,7 +267,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: medicare_booking
-      MYSQL_DATABASE: schedule_db 
+      MYSQL_DATABASE: schedule_db
     ports:
       - "3311:3306" # Fixed: MySQL default port is 3306
     volumes:
@@ -287,6 +314,27 @@ services:
       - healthcare_network
     command: npm start
 
+  websocket-service:
+    build:
+      context: ./services/websocket_service
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000" # Cổng cho WebSocket
+    environment:
+      - PORT=9000
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - FRONTEND_URL=http://localhost:3000 # Thay thế bằng URL frontend của bạn
+    volumes:
+      - ./services/websocket_service:/app
+      - /app/node_modules
+      - ./shared:/shared
+    depends_on:
+      rabbitmq:
+        condition: service_healthy # Đảm bảo RabbitMQ hoạt động trước khi WebSocket service khởi động
+    networks:
+      - healthcare_network
+    command: npm run dev
+
 # Define networks
 networks:
   healthcare_network:
@@ -300,3 +348,4 @@ volumes:
   appointment_mysql_data:
   rabbitmq_data:
   schedule_mysql_data:
+  notification_mysql_data:

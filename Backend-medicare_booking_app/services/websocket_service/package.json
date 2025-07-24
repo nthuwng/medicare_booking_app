@@ -4,9 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
-    "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
-    "prisma": "prisma migrate dev --name"
+    "start": "nodemon",
+    "dev": "nodemon"
   },
   "nodemonConfig": {
     "watch": [
@@ -25,7 +24,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "6.3.0",
     "amqplib": "0.10.8",
     "cors": "2.8.5",
     "dotenv": "16.4.7",
@@ -33,14 +31,11 @@
   },
   "devDependencies": {
     "@types/amqplib": "0.10.7",
-    "@types/cors": "2.8.17",
     "@types/express": "5.0.0",
     "@types/node": "22.10.7",
     "nodemon": "3.1.9",
-    "prisma": "6.3.0",
     "socket.io": "4.8.1",
     "ts-node": "10.9.2",
-    "tsconfig-paths": "4.2.0",
     "typescript": "5.7.3"
   }
 }

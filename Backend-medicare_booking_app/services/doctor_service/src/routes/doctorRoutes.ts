@@ -5,7 +5,7 @@ import {
   updateDoctorStatusController,
   getAllDoctorsController,
   getAllApprovedDoctorsController,
-} from "../controller/doctorController";
+} from "../controllers/doctorController";
 import {
   authenticateToken,
   authorizeAdmin,

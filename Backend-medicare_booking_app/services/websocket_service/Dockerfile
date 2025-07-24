@@ -7,16 +7,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy Prisma schema và generate Prisma client
-COPY prisma ./prisma/
-RUN npx prisma generate
-
 # Copy source code
 COPY . .
 COPY tsconfig.json ./
 
 # Mở port container
-EXPOSE 8084
+EXPOSE 9000
 
 # Chạy service
 CMD ["npm", "run", "dev"]

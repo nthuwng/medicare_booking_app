@@ -8,7 +8,9 @@ import { prisma } from "src/config/client";
 import {
   getAllDoctorsViaRabbitMQ,
   getUserByIdViaRabbitMQ,
+  sendMessageRegisterDoctorViaRabbitMQ,
 } from "src/queue/publishers/doctor.publisher";
+import { publishNewDoctorRegistered } from "src/queue/publishers/sendMessageRegisterDoctor";
 import {
   createDoctor,
   findDoctorByUserId,
@@ -68,6 +70,15 @@ const createDoctorProfile = async (
     title || "",
     bookingFee || 0
   );
+
+  try {
+    await sendMessageRegisterDoctorViaRabbitMQ(userId,doctor.id ,fullName, phone);
+  } catch (publishError) {
+    console.error(
+      `[Doctor Service] Failed to publish new doctor registration for ${fullName}:`,
+      publishError
+    );
+  }
 
   return {
     ...doctor,

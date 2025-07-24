@@ -1,4 +1,5 @@
 import { rpcRequest } from "./rpcRequest";
+import { publishNewDoctorRegistered } from "./sendMessageRegisterDoctor";
 
 const getUserByIdViaRabbitMQ = async (userId: string) => {
   return rpcRequest("auth.get_user", { userId });
@@ -20,10 +21,24 @@ const checkDoctorViaRabbitMQ = async (userId: string) => {
   return rpcRequest("auth.checkDoctor", { userId });
 };
 
+const sendMessageRegisterDoctorViaRabbitMQ = async (
+  userId: string,
+  doctorId: string,
+  fullName: string,
+  phone: string
+) => {
+  return publishNewDoctorRegistered("doctor.exchange", "doctor.registered", {
+    userId,
+    doctorId,
+    fullName,
+    phone,
+  });
+};
 export {
   verifyTokenViaRabbitMQ,
   checkAdminViaRabbitMQ,
   getUserByIdViaRabbitMQ,
   getAllDoctorsViaRabbitMQ,
   checkDoctorViaRabbitMQ,
+  sendMessageRegisterDoctorViaRabbitMQ,
 };
