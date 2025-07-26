@@ -3,7 +3,8 @@ import {
   createAdminProfile,
   getAdminByIdService,
   getAllAdminService,
-  deleteAdminService
+  deleteAdminService,
+  countTotalAdminPage,
 } from "../services/admin.service";
 
 const createAdminController = async (req: Request, res: Response) => {
@@ -38,15 +39,52 @@ const getAdminByIdController = async (req: Request, res: Response) => {
 
 const getAllAdmintController = async (req: Request, res: Response) => {
   try {
-    const admins = await getAllAdminService();
-    res.status(201).json({
+    const { page, pageSize, fullName, phone } = req.query;
+    let currentPage = page ? +page : 1;
+    if (currentPage <= 0) {
+      currentPage = 1;
+    }
+    const totalPages = await countTotalAdminPage(parseInt(pageSize as string));
+
+    const admins = await getAllAdminService(
+      currentPage,
+      parseInt(pageSize as string),
+      fullName as string,
+      phone as string
+    );
+    if (admins.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: "Không có thông tin admin nào trong trang này",
+        data: {
+          meta: {
+            currentPage: currentPage,
+            pageSize: parseInt(pageSize as string),
+            pages: totalPages,
+            total: admins.length,
+          },
+          result: [],
+        },
+      });
+      return;
+    }
+  
+    res.status(200).json({
       success: true,
-      count: admins.length,
-      message: "Lấy tất cả thông tin patient thành công.",
-      data: admins,
+      length: admins.length,
+      message: "Lấy danh sách tất cả thông tin admin thành công.",
+      data: {
+        meta: {
+          currentPage: currentPage,
+          pageSize: parseInt(pageSize as string),
+          pages: totalPages,
+          total: admins.length,
+        },
+        result: admins,
+      },
     });
   } catch (error: any) {
-    console.error("Error creating patient:", error.message);
+    console.error("Error getting all admins:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -69,5 +107,5 @@ export {
   createAdminController,
   getAdminByIdController,
   getAllAdmintController,
-  deleteAdminController
+  deleteAdminController,
 };

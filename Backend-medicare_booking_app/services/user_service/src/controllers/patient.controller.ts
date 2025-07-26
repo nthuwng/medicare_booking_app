@@ -3,7 +3,8 @@ import {
   createPatientProfile,
   getPatientByIdService,
   getAllPatientService,
-  deletePatientService
+  deletePatientService,
+  countTotalPatientPage
 } from "../services/patient.service";
 
 const createPatientController = async (req: Request, res: Response) => {
@@ -38,15 +39,52 @@ const getPatientByIdController = async (req: Request, res: Response) => {
 
 const getAllPatientController = async (req: Request, res: Response) => {
   try {
-    const patients = await getAllPatientService();
-    res.status(201).json({
+    const { page, pageSize, fullName, phone } = req.query;
+    let currentPage = page ? +page : 1;
+    if (currentPage <= 0) {
+      currentPage = 1;
+    }
+    const totalPages = await countTotalPatientPage(parseInt(pageSize as string));
+
+    const patients = await getAllPatientService(
+      currentPage,
+      parseInt(pageSize as string),
+      fullName as string,
+      phone as string
+    );
+    if (patients.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: "Không có thông tin patient nào trong trang này",
+        data: {
+          meta: {
+            currentPage: currentPage,
+            pageSize: parseInt(pageSize as string),
+            pages: totalPages,
+            total: patients.length,
+          },
+          result: [],
+        },
+      });
+      return;
+    }
+  
+    res.status(200).json({
       success: true,
-      count: patients.length,
-      message: "Lấy tất cả thông tin patient thành công.",
-      data: patients,
+      length: patients.length,
+      message: "Lấy danh sách tất cả thông tin patient thành công.",
+      data: {
+        meta: {
+          currentPage: currentPage,
+          pageSize: parseInt(pageSize as string),
+          pages: totalPages,
+          total: patients.length,
+        },
+        result: patients,
+      },
     });
   } catch (error: any) {
-    console.error("Error creating patient:", error.message);
+    console.error("Error getting all patients:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };

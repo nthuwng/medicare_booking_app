@@ -331,6 +331,40 @@ const handleRevokeRefreshToken = async (refreshToken: string) => {
   }
 };
 
+const countTotalUserPage = async (pageSize: number) => {
+  const totalItems = await prisma.user.count();
+
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  return totalPages;
+};
+
+const handleGetAllUsersAPI = async (
+  page: number,
+  pageSize: number,
+  email: string
+) => {
+  const skip = (page - 1) * pageSize;
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      userType: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    where: {
+      email: {
+        contains: email || "",
+      },
+    },
+    skip: skip,
+    take: pageSize,
+  });
+  return users;
+};
+
 const handleGetAllUsers = async () => {
   const users = await prisma.user.findMany({
     select: {
@@ -344,7 +378,6 @@ const handleGetAllUsers = async () => {
   });
   return users;
 };
-
 export {
   hashPassword,
   handleRegister,
@@ -359,4 +392,6 @@ export {
   handleRevokeRefreshToken,
   verifyRefreshToken,
   handleGetAllUsers,
+  handleGetAllUsersAPI,
+  countTotalUserPage,
 };

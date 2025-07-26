@@ -7,11 +7,11 @@ import {
   handleGetAccount,
   handleChangePassword,
   comparePassword,
-  handleGetUserById,
   handleGetUserByIdAndPassword,
   handleRefreshToken,
   handleRevokeRefreshToken,
-  handleGetAllUsers,
+  handleGetAllUsersAPI,
+  countTotalUserPage,
 } from "../services/auth.services";
 import {
   changePasswordSchema,
@@ -380,12 +380,46 @@ const getRefreshTokenApi = async (req: Request, res: Response) => {
 };
 
 const getAllUsersAPI = async (req: Request, res: Response) => {
-  const users = await handleGetAllUsers();
+  const { page, pageSize, email } = req.query;
+  let currentPage = page ? +page : 1;
+  if (currentPage <= 0) {
+    currentPage = 1;
+  }
+  const totalPages = await countTotalUserPage(parseInt(pageSize as string));
+  const users = await handleGetAllUsersAPI(
+    currentPage,
+    parseInt(pageSize as string),
+    email as string
+  );
+  if (users.length === 0) {
+    res.status(200).json({
+      success: true,
+      message: "Không có người dùng nào trong trang này",
+      data: {
+        meta: {
+          currentPage: currentPage,
+          pageSize: parseInt(pageSize as string),
+          pages: totalPages,
+          total: users.length,
+        },
+        result: [],
+      },
+    });
+    return;
+  }
   res.status(200).json({
     success: true,
     length: users.length,
     message: "Lấy danh sách tất cả người dùng thành công.",
-    data: users,
+    data: {
+      meta: {
+        currentPage: currentPage,
+        pageSize: parseInt(pageSize as string),
+        pages: totalPages,
+        total: users.length,
+      },
+      result: users,
+    },
   });
 };
 export {
@@ -397,4 +431,5 @@ export {
   postRefreshTokenApi,
   postRevokeRefreshTokenApi,
   getAllUsersAPI,
+  getRefreshTokenApi,
 };

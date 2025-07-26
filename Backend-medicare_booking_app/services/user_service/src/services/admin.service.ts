@@ -88,9 +88,22 @@ const getAdminByIdService = async (id: string) => {
     userInfo,
   };
 };
+const countTotalAdminPage = async (pageSize: number) => {
+  const totalItems = await prisma.admin.count();
 
-const getAllAdminService = async () => {
-  const admins = await getAllAdmin();
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  return totalPages;
+};
+
+const getAllAdminService = async (
+  page: number,
+  pageSize: number,
+  fullName: string,
+  phone: string
+) => {
+  const skip = (page - 1) * pageSize;
+  const admins = await getAllAdmin(skip, pageSize, fullName, phone);
   return admins;
 };
 
@@ -106,4 +119,5 @@ export {
   checkUserExits,
   getAllAdminService,
   deleteAdminService,
+  countTotalAdminPage
 };

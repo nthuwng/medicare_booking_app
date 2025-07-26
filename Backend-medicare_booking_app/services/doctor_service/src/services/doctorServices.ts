@@ -1,4 +1,4 @@
-import { ApprovalStatus } from "@prisma/client";
+import { ApprovalStatus, Title } from "@prisma/client";
 import {
   CreateDoctorProfileData,
   UpdateDoctorStatusInput,
@@ -72,7 +72,12 @@ const createDoctorProfile = async (
   );
 
   try {
-    await sendMessageRegisterDoctorViaRabbitMQ(userId,doctor.id ,fullName, phone);
+    await sendMessageRegisterDoctorViaRabbitMQ(
+      userId,
+      doctor.id,
+      fullName,
+      phone
+    );
   } catch (publishError) {
     console.error(
       `[Doctor Service] Failed to publish new doctor registration for ${fullName}:`,
@@ -183,13 +188,71 @@ const updateDoctorStatusService = async (
   return doctorUpdated;
 };
 
-const handleGetAllDoctors = async (page: number, pageSize: number) => {
+const handleGetAllDoctors = async (
+  page: number,
+  pageSize: number,
+  fullName: string,
+  phone: string,
+  title: string
+) => {
   const skip = (page - 1) * pageSize;
+
+  // Build where conditions
+  const whereConditions: any[] = [];
+
+  if (fullName && fullName.trim() !== "") {
+    whereConditions.push({
+      fullName: { contains: fullName },
+    });
+  }
+
+  if (phone && phone.trim() !== "") {
+    whereConditions.push({
+      phone: { contains: phone },
+    });
+  }
+
+  if (title && title.trim() !== "") {
+    // Map Vietnamese titles to enum values
+    const titleMapping: { [key: string]: string } = {
+      "bác sĩ": "BS",
+      "bac si": "BS",
+      "thạc sĩ": "ThS",
+      "thac si": "ThS",
+      "tiến sĩ": "TS",
+      "tien si": "TS",
+      "phó giáo sư": "PGS",
+      "pho giao su": "PGS",
+      "giáo sư": "GS",
+      "giao su": "GS",
+    };
+
+    let searchTitle = title.trim();
+
+    // Check if it's a Vietnamese title
+    if (titleMapping[searchTitle.toLowerCase()]) {
+      searchTitle = titleMapping[searchTitle.toLowerCase()];
+    }
+
+    // Validate title enum values
+    const validTitles = ["BS", "ThS", "TS", "PGS", "GS"];
+    if (!validTitles.includes(searchTitle)) {
+      throw new Error(
+        `Chức vụ "${title}" không hợp lệ. Các giá trị hợp lệ: Bác sĩ, Thạc sĩ, Tiến sĩ, Phó Giáo sư, Giáo sư hoặc BS, ThS, TS, PGS, GS`
+      );
+    }
+
+    whereConditions.push({
+      title: { equals: searchTitle as Title },
+    });
+  }
+
   const doctors = await prisma.doctor.findMany({
     include: {
       clinic: true,
       specialty: true,
     },
+    where: whereConditions.length > 0 ? { AND: whereConditions } : {},
     skip: skip,
     take: pageSize,
   });

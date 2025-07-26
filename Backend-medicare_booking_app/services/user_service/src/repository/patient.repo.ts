@@ -62,11 +62,28 @@ const getUserIdByPatientId = async (id: string) => {
   return userId;
 };
 
-const getAllPatient = async () => {
-  const patients = await prisma.patient.findMany();
+const getAllPatient = async (
+  skip: number,
+  pageSize: number,
+  fullName: string,
+  phone: string
+) => {
+  const patients = await prisma.patient.findMany({
+    where: {
+      AND: [
+        {
+          full_name: { contains: fullName },
+        },
+        {
+          phone: { contains: phone },
+        },
+      ],
+    },
+    skip,
+    take: pageSize,
+  });
   return patients;
 };
-
 const deletePatient = async (id: string) => {
   const patient = await prisma.patient.delete({
     where: { id: id },
@@ -80,5 +97,5 @@ export {
   getUserIdByPatientId,
   getPatientById,
   getAllPatient,
-  deletePatient
+  deletePatient,
 };

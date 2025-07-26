@@ -57,7 +57,7 @@ const updateDoctorStatusController = async (req: Request, res: Response) => {
 
 const getAllDoctorsController = async (req: Request, res: Response) => {
   try {
-    const { page, pageSize } = req.query;
+    const { page, pageSize, fullName, phone , title } = req.query;
     let currentPage = page ? +page : 1;
     if (currentPage <= 0) {
       currentPage = 1;
@@ -65,7 +65,10 @@ const getAllDoctorsController = async (req: Request, res: Response) => {
     const totalPages = await countTotalDoctorPage(parseInt(pageSize as string));
     const { doctors, totalDoctors } = await handleGetAllDoctors(
       currentPage,
-      parseInt(pageSize as string)
+      parseInt(pageSize as string),
+      fullName as string,
+      phone as string,
+      title as string
     );
 
     if (doctors.length === 0) {

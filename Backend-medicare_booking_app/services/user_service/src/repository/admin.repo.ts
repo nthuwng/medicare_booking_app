@@ -25,8 +25,26 @@ const findAdminByUserId = async (userId: string) => {
   return admin;
 };
 
-const getAllAdmin = async () => {
-  const admins = await prisma.admin.findMany();
+const getAllAdmin = async (
+  skip: number,
+  pageSize: number,
+  fullName: string,
+  phone: string
+) => {
+  const admins = await prisma.admin.findMany({
+    where: {
+      AND: [
+        {
+          full_name: { contains: fullName },
+        },
+        {
+          phone: { contains: phone },
+        },
+      ],
+    },
+    skip,
+    take: pageSize,
+  });
   return admins;
 };
 
