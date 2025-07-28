@@ -4,6 +4,7 @@ import {
   DeleteTwoTone,
   EditTwoTone,
   ExportOutlined,
+  EyeOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
@@ -11,10 +12,15 @@ import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { getAllClinics } from "../../services/admin.api";
 import type { IClinicTable } from "../../types";
 import ClinicCreate from "./ClinicCreate";
+import ClinicDetail from "./ClinicDetail";
 
 const ClinicTable = () => {
   const actionRef = useRef<ActionType>(null);
   const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
+  const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
+  const [dataViewDetail, setDataViewDetail] = useState<IClinicTable | null>(
+    null
+  );
   const [meta, setMeta] = useState({
     current: 1,
     pageSize: 5,
@@ -31,14 +37,13 @@ const ClinicTable = () => {
       title: "Id",
       dataIndex: "id",
       hideInSearch: true,
-      width: 100,
       render(dom, entity, index, action, schema) {
         return (
           <a
             href="#"
             onClick={() => {
-              // setDataViewDetail(entity);
-              // setOpenViewDetail(true);
+              setDataViewDetail(entity);
+              setOpenViewDetail(true);
             }}
           >
             {entity.id}
@@ -50,14 +55,11 @@ const ClinicTable = () => {
       title: "Tên phòng khám",
       dataIndex: "clinicName",
       hideInSearch: true,
-      sorter: true,
-      width: 150,
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
       hideInSearch: true,
-      width: 250,
       render: (_, record) => {
         const { street, district, city } = record;
         return `${street}, ${district}, ${city}`;
@@ -67,25 +69,34 @@ const ClinicTable = () => {
       title: "Số điện thoại",
       dataIndex: "phone",
       hideInSearch: true,
-      width: 100,
     },
     {
       title: "Mô tả",
       dataIndex: "description",
       hideInSearch: true,
       ellipsis: true,
-      width: 200,
     },
     {
       title: "Action",
       hideInSearch: true,
-      width: 100,
       render(dom, entity, index, action, schema) {
         return (
           <>
+            <EyeOutlined
+              style={{
+                cursor: "pointer",
+                marginRight: 10,
+                color: "#1890ff",
+                fontSize: 15,
+              }}
+              onClick={() => {
+                setDataViewDetail(entity);
+                setOpenViewDetail(true);
+              }}
+            />
             <EditTwoTone
               twoToneColor="#f57800"
-              style={{ cursor: "pointer", marginRight: 15 }}
+              style={{ cursor: "pointer", marginRight: 10, fontSize: 15 }}
               onClick={() => {}}
             />
 
@@ -98,7 +109,10 @@ const ClinicTable = () => {
               cancelText="Hủy"
             >
               <span style={{ cursor: "pointer" }}>
-                <DeleteTwoTone twoToneColor="#ff4d4f" />
+                <DeleteTwoTone
+                  twoToneColor="#ff4d4f"
+                  style={{ fontSize: 15 }}
+                />
               </span>
             </Popconfirm>
           </>
@@ -166,6 +180,13 @@ const ClinicTable = () => {
         openModalCreate={openModalCreate}
         setOpenModalCreate={setOpenModalCreate}
         refreshTable={refreshTable}
+      />
+
+      <ClinicDetail
+        openViewDetail={openViewDetail}
+        setOpenViewDetail={setOpenViewDetail}
+        dataViewDetail={dataViewDetail}
+        setDataViewDetail={setDataViewDetail}
       />
     </>
   );

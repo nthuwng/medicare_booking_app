@@ -14,6 +14,7 @@ export interface IAdminProfile {
   phone: string;
   avatar_url: string;
   created_at: string;
+  userInfo: IManageUser;
 }
 
 export interface IPatientProfile {
@@ -28,6 +29,7 @@ export interface IPatientProfile {
   address: string;
   city: string;
   district: string;
+  userInfo: IManageUser;
 }
 
 export interface IDoctorProfile {
@@ -48,7 +50,7 @@ export interface IDoctorProfile {
   createdAt: string;
   clinic: IClinicDoctor;
   specialty: ISpecialtyDoctor;
-  userInfo: IManageUserDoctor;
+  userInfo: IManageUser;
 }
 
 export interface IClinicDoctor {
@@ -68,7 +70,7 @@ export interface ISpecialtyDoctor {
   description: string;
 }
 
-export interface IManageUserDoctor {
+export interface IManageUser {
   id: string;
   email: string;
   userType: string;

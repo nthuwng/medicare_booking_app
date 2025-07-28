@@ -11,6 +11,7 @@ import {
   DeleteTwoTone,
   EditTwoTone,
   ExportOutlined,
+  EyeOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
@@ -20,10 +21,15 @@ import {
   getAllPatientsProfile,
 } from "../../services/admin.api";
 import type { IAdminProfile, IPatientProfile } from "../../types";
+import PatientDetail from "./PatientDetail";
 
 const PatientTable = () => {
   const actionRef = useRef<ActionType>(null);
   const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
+  const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
+  const [dataViewDetail, setDataViewDetail] = useState<IPatientProfile | null>(
+    null
+  );
   const [meta, setMeta] = useState({
     current: 1,
     pageSize: 5,
@@ -45,8 +51,8 @@ const PatientTable = () => {
           <a
             href="#"
             onClick={() => {
-              // setDataViewDetail(entity);
-              // setOpenViewDetail(true);
+              setDataViewDetail(entity);
+              setOpenViewDetail(true);
             }}
           >
             {entity.id}
@@ -100,22 +106,37 @@ const PatientTable = () => {
       render(dom, entity, index, action, schema) {
         return (
           <>
+            <EyeOutlined
+              style={{
+                cursor: "pointer",
+                marginRight: 10,
+                color: "#1890ff",
+                fontSize: 15,
+              }}
+              onClick={() => {
+                setDataViewDetail(entity);
+                setOpenViewDetail(true);
+              }}
+            />
             <EditTwoTone
               twoToneColor="#f57800"
-              style={{ cursor: "pointer", margin: "0 5px" }}
+              style={{ cursor: "pointer", marginRight: 10, fontSize: 15 }}
               onClick={() => {}}
             />
 
             <Popconfirm
               placement="leftTop"
-              title={"Xác nhận xóa tài khoản"}
-              description={"Bạn có chắc chắn muốn xóa tài khoản này ?"}
+              title={"Xác nhận xóa chuyên khoa"}
+              description={"Bạn có chắc chắn muốn xóa chuyên khoa này ?"}
               onConfirm={() => {}}
               okText="Xác nhận"
               cancelText="Hủy"
             >
               <span style={{ cursor: "pointer" }}>
-                <DeleteTwoTone twoToneColor="#ff4d4f" />
+                <DeleteTwoTone
+                  twoToneColor="#ff4d4f"
+                  style={{ fontSize: 15 }}
+                />
               </span>
             </Popconfirm>
           </>
@@ -188,6 +209,12 @@ const PatientTable = () => {
         ]}
       />
 
+      <PatientDetail
+        openViewDetail={openViewDetail}
+        setOpenViewDetail={setOpenViewDetail}
+        dataViewDetail={dataViewDetail}
+        setDataViewDetail={setDataViewDetail}
+      />
       {/* <SpecialitesCreate
         openModalCreate={openModalCreate}
         setOpenModalCreate={setOpenModalCreate}
