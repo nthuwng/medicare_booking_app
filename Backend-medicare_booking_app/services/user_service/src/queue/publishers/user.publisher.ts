@@ -12,4 +12,13 @@ const checkAdminViaRabbitMQ = async (userId: string) => {
   return rpcRequest("auth.checkAdmin", { userId });
 };
 
-export { getUserByIdViaRabbitMQ, verifyTokenViaRabbitMQ ,checkAdminViaRabbitMQ};
+const getAllUserViaRabbitMQ = async () => {
+  return rpcRequest("auth.get_all_users", {});
+};
+
+export {
+  getUserByIdViaRabbitMQ,
+  verifyTokenViaRabbitMQ,
+  checkAdminViaRabbitMQ,
+  getAllUserViaRabbitMQ,
+};

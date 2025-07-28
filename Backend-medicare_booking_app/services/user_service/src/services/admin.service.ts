@@ -6,7 +6,10 @@ import {
   getAllAdmin,
 } from "src/repository/admin.repo";
 import { CreateAdminProfileData, UserInfo } from "@shared/index";
-import { getUserByIdViaRabbitMQ } from "src/queue/publishers/user.publisher";
+import {
+  getAllUserViaRabbitMQ,
+  getUserByIdViaRabbitMQ,
+} from "src/queue/publishers/user.publisher";
 
 const createAdminProfile = async (
   body: CreateAdminProfileData,
@@ -104,7 +107,20 @@ const getAllAdminService = async (
 ) => {
   const skip = (page - 1) * pageSize;
   const admins = await getAllAdmin(skip, pageSize, fullName, phone);
-  return admins;
+
+  const userAllUsers = await getAllUserViaRabbitMQ();
+
+  const adminsWithUserInfo = admins.map((admin) => {
+    const userInfo = userAllUsers.find(
+      (user: UserInfo) => user.id === admin.user_id
+    );
+    return { ...admin, userInfo };
+  });
+
+  return {
+    admins: adminsWithUserInfo,
+    totalAdmins: adminsWithUserInfo.length,
+  };
 };
 
 const deleteAdminService = async (id: string) => {
@@ -119,5 +135,5 @@ export {
   checkUserExits,
   getAllAdminService,
   deleteAdminService,
-  countTotalAdminPage
+  countTotalAdminPage,
 };

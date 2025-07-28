@@ -46,7 +46,7 @@ const getAllAdmintController = async (req: Request, res: Response) => {
     }
     const totalPages = await countTotalAdminPage(parseInt(pageSize as string));
 
-    const admins = await getAllAdminService(
+    const { admins, totalAdmins } = await getAllAdminService(
       currentPage,
       parseInt(pageSize as string),
       fullName as string,

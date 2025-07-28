@@ -7,7 +7,10 @@ import {
   getUserIdByPatientId,
 } from "src/repository/patient.repo";
 import { CreatePatientProfileData, UserInfo } from "@shared/index";
-import { getUserByIdViaRabbitMQ } from "src/queue/publishers/user.publisher";
+import {
+  getAllUserViaRabbitMQ,
+  getUserByIdViaRabbitMQ,
+} from "src/queue/publishers/user.publisher";
 import { prisma } from "src/config/client";
 
 const createPatientProfile = async (
@@ -129,7 +132,20 @@ const getAllPatientService = async (
 ) => {
   const skip = (page - 1) * pageSize;
   const patients = await getAllPatient(skip, pageSize, fullName, phone);
-  return patients;
+
+  const userAllUsers = await getAllUserViaRabbitMQ();
+
+  const patientsWithUserInfo = patients.map((patient) => {
+    const userInfo = userAllUsers.find(
+      (user: UserInfo) => user.id === patient.user_id
+    );
+    return { ...patient, userInfo };
+  });
+
+  return {
+    patients: patientsWithUserInfo,
+    totalPatients: patientsWithUserInfo.length,
+  };
 };
 
 const deletePatientService = async (id: string) => {
@@ -144,5 +160,5 @@ export {
   getPatientByIdService,
   getAllPatientService,
   countTotalPatientPage,
-  deletePatientService
+  deletePatientService,
 };
