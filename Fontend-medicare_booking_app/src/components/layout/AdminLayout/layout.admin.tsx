@@ -110,9 +110,7 @@ const LayoutAdmin = () => {
           collapsed={collapsed}
           onCollapse={(value) => setCollapsed(value)}
         >
-          <div style={{ height: 32, margin: 16, textAlign: "center" }}>
-            Medicare Booking App
-          </div>
+          <div className="sidebar-logo">Medicare Booking App</div>
           <Menu
             defaultSelectedKeys={[activeMenu]}
             mode="inline"
@@ -122,17 +120,7 @@ const LayoutAdmin = () => {
           />
         </Sider>
         <Layout>
-          <div
-            className="admin-header"
-            style={{
-              height: "50px",
-              borderBottom: "1px solid #ebebeb",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 25px",
-            }}
-          >
+          <div className="admin-header">
             <span>
               {React.createElement(
                 collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
@@ -150,7 +138,6 @@ const LayoutAdmin = () => {
                   modalNotificationLayout={modalNotificationLayout}
                 />
               </div>
-
               {/* User Dropdown */}
               <div className="notification-icon">
                 <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
@@ -161,7 +148,7 @@ const LayoutAdmin = () => {
               </div>
             </div>
           </div>
-          <Content style={{ padding: "15px" }}>
+          <Content>
             <Outlet />
           </Content>
         </Layout>
