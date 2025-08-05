@@ -4,7 +4,6 @@ import App from "./App.tsx";
 import { App as AntdApp } from "antd";
 
 import { BrowserRouter } from "react-router-dom";
-import "./styles/global.css";
 import "./index.css";
 import { ConfigProvider } from "antd";
 import viVN from "antd/locale/vi_VN";

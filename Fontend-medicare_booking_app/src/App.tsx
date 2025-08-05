@@ -8,18 +8,16 @@ import AdminProtectedRoute from "./components/auth/AdminProtectedRoute";
 import NotFoundPage from "./components/common/error";
 import DoctorProtectedRoute from "./components/auth/DoctorProtectedRoute";
 import DoctorRoutes from "./routes/DoctorRoutes";
+import ClientHeader from "./components/layout/ClientLayout/ClientHeader";
+import ClientRoutes from "./routes/ClientRoutes";
+import ClientFooter from "./components/layout/ClientLayout/ClientFooter";
 
 function App() {
   const { user } = useCurrentApp();
   return (
     <Routes>
       {/* public */}
-      <Route
-        path="/"
-        element={
-          <h1>Welcome to the Medicare Booking App! {JSON.stringify(user)}</h1>
-        }
-      />
+      <Route path="/" element={<ClientRoutes />} />
 
       {/* auth */}
       <Route path="/login" element={<LoginPage />} />
@@ -44,6 +42,9 @@ function App() {
           </DoctorProtectedRoute>
         }
       />
+
+      {/* coding */}
+      <Route path="code/*" element={<ClientFooter />} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
