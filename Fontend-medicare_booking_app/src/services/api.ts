@@ -22,8 +22,3 @@ export const registerAPI = (
     userType,
   });
 };
-
-export const getNotificationAPI = () => {
-  const urlBackend = "/api/notification/get-notification";
-  return axios.get<IBackendRes<INotification[]>>(urlBackend);
-};

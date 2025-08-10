@@ -19,12 +19,12 @@ import {
   connectAdminSocket,
   disconnectAdminSocket,
 } from "@/sockets/admin.socket";
-import NotificationModal from "./NotificationModal";
-import type { INotificationDataAdmin } from "../../types";
 import {
   getNotificationByUserId,
   markAsReadNotification,
-} from "../../services/admin.api";
+} from "../../services/doctor.api";
+import type { INotificationDataDoctor } from "../../types";
+import { useCurrentApp } from "@/components/contexts/app.context";
 
 const { Title, Text } = Typography;
 
@@ -33,32 +33,29 @@ interface IProps {
   modalNotificationLayout: boolean;
 }
 
-const NotificationAdmin = (props: IProps) => {
+const NotificationDoctor = (props: IProps) => {
   const { modalNotificationLayout, setModalNotificationLayout } = props;
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [openModalNotification, setOpenModalNotification] = useState(false);
   const [dataNotificationModal, setDataNotificationModal] =
-    useState<INotificationDataAdmin | null>(null);
+    useState<INotificationDataDoctor | null>(null);
+  const { user } = useCurrentApp();
 
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const res = await getNotificationByUserId("admin");
+      const response = await getNotificationByUserId(user?.id || "");
 
-      if (res?.success && Array.isArray(res.data)) {
-        setNotifications(res.data);
+      if (response && response.success) {
+        setNotifications(response.data || []);
       } else {
-        setNotifications([]); // không có thì để mảng rỗng
+        console.error("Failed to fetch notifications:", response.message);
       }
-    } catch (err: any) {
-      if (err?.response?.status === 404) {
-        setNotifications([]); // coi 404 là empty
-      } else {
-        console.error("Error fetching notifications:", err);
-        message.error("Không thể tải thông báo");
-      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      message.error("Không thể tải thông báo");
     } finally {
       setLoading(false);
     }
@@ -66,16 +63,20 @@ const NotificationAdmin = (props: IProps) => {
 
   // SOCKET + API SETUP
   useEffect(() => {
+    if (!user?.id) return;
     fetchNotifications();
-    const socketConnection = connectAdminSocket();
 
-    socketConnection.emit("join-admin-room");
+    // 1) kết nối socket doctor
+    const socket = connectAdminSocket();
 
-    // Listen for doctor registration notifications
+    // 2) join phòng riêng theo userId
+    socket.emit("join-user-room", { userId: user.id });
+
+    // 3) nhận realtime và cập nhật badge + list ngay (không cần bấm chuông)
     const isValidNotification = (n: any) =>
       n && typeof n === "object" && "id" in n && "title" in n;
 
-    const handleDoctorRegistration = (payload: any) => {
+    const onApproved = (payload: any) => {
       const notif = payload?.notification;
 
       if (!isValidNotification(notif)) {
@@ -87,19 +88,15 @@ const NotificationAdmin = (props: IProps) => {
       setNotifications((prev) => [notif, ...prev.filter(Boolean)]);
     };
 
-    socketConnection.on("doctor.registered", handleDoctorRegistration);
+    socket.on("doctor.approved", onApproved);
 
-    socketConnection.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
-      message.error("Lỗi kết nối thông báo realtime");
-    });
+    socket.on("connect_error", (err) => console.error("socket error", err));
 
     return () => {
-      socketConnection.off("doctor.registered", handleDoctorRegistration);
-
-      disconnectAdminSocket(socketConnection);
+      socket.off("doctor.approved", onApproved);
+      disconnectAdminSocket(socket);
     };
-  }, []);
+  }, [user?.id]);
 
   // Re-fetch khi dropdown mở
   useEffect(() => {
@@ -108,12 +105,18 @@ const NotificationAdmin = (props: IProps) => {
     }
   }, [modalNotificationLayout]);
 
+  useEffect(() => {
+  if (user?.id) {
+    fetchNotifications();
+  }
+}, [user?.id]);
+
   // Calculate unread count
   const unreadCount = (
     Array.isArray(notifications) ? notifications : []
   ).filter((n) => n && !n.read).length;
 
-  const handleNotificationClick = (notification: INotificationDataAdmin) => {
+  const handleNotificationClick = (notification: INotificationDataDoctor) => {
     setDataNotificationModal(notification);
     setOpenModalNotification(true);
     setModalNotificationLayout(false);
@@ -388,18 +391,8 @@ const NotificationAdmin = (props: IProps) => {
           />
         </Badge>
       </Dropdown>
-
-      {/* Modal */}
-      <NotificationModal
-        openModalNotification={openModalNotification}
-        setOpenModalNotification={setOpenModalNotification}
-        dataNotificationModal={dataNotificationModal}
-        setDataNotificationModal={setDataNotificationModal}
-        loading={loading}
-        setLoading={setLoading}
-      />
     </>
   );
 };
 
-export default NotificationAdmin;
+export default NotificationDoctor;

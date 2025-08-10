@@ -1,4 +1,4 @@
-export interface INotificationData {
+export interface INotificationDataAdmin {
   id: string;
   userId: string;
   type: string;

@@ -1,19 +1,17 @@
-import React from "react";
-import LayoutAdmin from "../components/layout/AdminLayout/layout.admin";
 import { Route, Routes } from "react-router-dom";
-import AdminDashboardPage from "../modules/admin/pages/AdminDashboardPage";
-import DoctorManagementPage from "../modules/admin/pages/DoctorManagementPage";
-import SpecialitiesManagementPage from "../modules/admin/pages/SpecialitiesManagementPage";
 import NotFoundPage from "@/components/common/error";
-import ClinicManagementPage from "@/modules/admin/pages/ClinicManagementPage";
+import LayoutDoctor from "@/components/layout/DoctorLayout/layout.doctor";
+import DoctorDashboardPage from "@/modules/doctor/pages/DoctorDashboardPage";
+import DoctorProFilePage from "@/modules/doctor/pages/DoctorProFileManagePage";
+import DoctorProFileManagePage from "@/modules/doctor/pages/DoctorProFileManagePage";
 
 const DoctorRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<LayoutAdmin />}>
-        {/* <Route index element={<AdminDashboardPage />} />
-        <Route path="doctor" element={<DoctorManagementPage />} />
-        <Route path="specialities" element={<SpecialitiesManagementPage />} />
+      <Route path="/" element={<LayoutDoctor />}>
+        <Route index element={<DoctorDashboardPage />} />
+        <Route path="profile-settings" element={<DoctorProFileManagePage />} />
+        {/*<Route path="specialities" element={<SpecialitiesManagementPage />} />
         <Route path="clinic" element={<ClinicManagementPage />} /> */}
       </Route>
       <Route path="*" element={<NotFoundPage />} />

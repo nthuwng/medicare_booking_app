@@ -74,7 +74,6 @@ const ClinicCreate = (props: IProps) => {
 
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
     const { clinic_name, city, district, street, phone, description } = values;
-    console.log("city", values.city);
     setIsSubmit(true);
 
     const res = await createClinic(

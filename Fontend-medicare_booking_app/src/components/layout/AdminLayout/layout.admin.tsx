@@ -110,7 +110,7 @@ const LayoutAdmin = () => {
           collapsed={collapsed}
           onCollapse={(value) => setCollapsed(value)}
         >
-          <div className="sidebar-logo">Medicare Booking App</div>
+          <div className="sidebar-logo">Admin Dashboard</div>
           <Menu
             defaultSelectedKeys={[activeMenu]}
             mode="inline"

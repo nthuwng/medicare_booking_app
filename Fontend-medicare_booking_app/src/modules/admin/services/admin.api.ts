@@ -4,6 +4,7 @@ import type {
   IClinic,
   IDoctorProfile,
   IManageUser,
+  INotificationDataAdmin,
   IPatientProfile,
   ISpecialty,
 } from "../types";
@@ -51,6 +52,11 @@ export const approveDoctor = (doctorId: string) => {
 export const markAsReadNotification = (notificationId: string) => {
   const urlBackend = `/api/notification/mark-as-read/${notificationId}`;
   return axios.put(urlBackend);
+};
+
+export const getNotificationByUserId = (userId: string) => {
+  const urlBackend = `/api/notification/get-notification-by-user-id/${userId}`;
+  return axios.get<IBackendRes<INotificationDataAdmin[]>>(urlBackend);
 };
 
 export const createSpecialty = (

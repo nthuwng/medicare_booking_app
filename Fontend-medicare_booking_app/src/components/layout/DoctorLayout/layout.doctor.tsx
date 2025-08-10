@@ -1,8 +1,7 @@
 import React, { useState } from "react";
+import "./layout.doctor.css";
 import {
   AppstoreOutlined,
-  TeamOutlined,
-  UserOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
@@ -15,14 +14,19 @@ import { RiAdminFill } from "react-icons/ri";
 import { FaUserDoctor } from "react-icons/fa6";
 import { AiOutlineUser } from "react-icons/ai";
 import { LiaClinicMedicalSolid } from "react-icons/lia";
+import { MdAccountCircle } from "react-icons/md";
+import NotificationAdmin from "@/modules/admin/components/NotificationAdmin.tsx/NotificationAdmin";
+import { FaUserInjured } from "react-icons/fa";
+import NotificationDoctor from "@/modules/doctor/components/NotificationDoctor.tsx/NotificationDoctor";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
 const { Content, Footer, Sider } = Layout;
 
-const LayoutAdmin = () => {
+const LayoutDoctor = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [activeMenu, setActiveMenu] = useState("dashboard");
+  const [modalNotificationLayout, setModalNotificationLayout] = useState(false);
 
   const handleLogout = async () => {
     //todo
@@ -30,36 +34,14 @@ const LayoutAdmin = () => {
 
   const items: MenuItem[] = [
     {
-      label: <Link to="/admin">Dashboard</Link>,
+      label: <Link to="/doctor">Dashboard</Link>,
       key: "dashboard",
       icon: <AppstoreOutlined style={{ fontSize: "20px" }} />,
     },
     {
-      label: <span>Manage Users</span>,
-      key: "user",
-      icon: <Users size={20} />,
-      children: [
-        {
-          label: <Link to="/admin/doctor">Doctor</Link>,
-          key: "doctor",
-          icon: <FaUserDoctor />,
-        },
-        {
-          label: <Link to="/admin/admins">Admin</Link>,
-          key: "admin",
-          icon: <RiAdminFill />,
-        },
-      ],
-    },
-    {
-      label: <Link to="/admin/specialities">Specialities</Link>,
-      key: "specialities",
-      icon: <AiOutlineUser size={20} />,
-    },
-    {
-      label: <Link to="/admin/clinic">Clinic</Link>,
-      key: "clinic",
-      icon: <LiaClinicMedicalSolid size={20} />,
+      label: <Link to="/doctor/profile-settings">Profile Settings</Link>,
+      key: "profile-settings",
+      icon: <MdAccountCircle size={20} />,
     },
   ];
 
@@ -95,28 +77,17 @@ const LayoutAdmin = () => {
           collapsed={collapsed}
           onCollapse={(value) => setCollapsed(value)}
         >
-          <div style={{ height: 32, margin: 16, textAlign: "center" }}>
-            Medicare Booking App
-          </div>
+          <div className="sidebar-logo">Doctor Dashboard</div>
           <Menu
             defaultSelectedKeys={[activeMenu]}
             mode="inline"
             items={items}
             onClick={(e) => setActiveMenu(e.key)}
+            className="admin-menu"
           />
         </Sider>
         <Layout>
-          <div
-            className="admin-header"
-            style={{
-              height: "50px",
-              borderBottom: "1px solid #ebebeb",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 15px",
-            }}
-          >
+          <div className="admin-header">
             <span>
               {React.createElement(
                 collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
@@ -126,13 +97,25 @@ const LayoutAdmin = () => {
                 }
               )}
             </span>
-            <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
-              <Space style={{ cursor: "pointer" }}>
-                <RiAdminFill fontSize={20} />
-              </Space>
-            </Dropdown>
+            <div className="header-icons-container">
+              {/* Notification - tích hợp trực tiếp */}
+              <div className="notification-icon">
+                <NotificationDoctor
+                  setModalNotificationLayout={setModalNotificationLayout}
+                  modalNotificationLayout={modalNotificationLayout}
+                />
+              </div>
+              {/* User Dropdown */}
+              <div className="notification-icon">
+                <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
+                  <Space style={{ cursor: "pointer" }}>
+                    <RiAdminFill fontSize={20} />
+                  </Space>
+                </Dropdown>
+              </div>
+            </div>
           </div>
-          <Content style={{ padding: "15px" }}>
+          <Content>
             <Outlet />
           </Content>
         </Layout>
@@ -141,4 +124,4 @@ const LayoutAdmin = () => {
   );
 };
 
-export default LayoutAdmin;
+export default LayoutDoctor;

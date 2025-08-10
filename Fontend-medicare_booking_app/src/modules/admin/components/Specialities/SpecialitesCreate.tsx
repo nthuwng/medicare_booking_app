@@ -36,7 +36,6 @@ const SpecialitesCreate = (props: IProps) => {
     setIsSubmit(true);
 
     const res = await createSpecialty(specialty_name, description, icon_path);
-    console.log("res", res);
     if (res && res.data) {
       message.success("Tạo mới chuyên khoa thành công");
       form.resetFields();

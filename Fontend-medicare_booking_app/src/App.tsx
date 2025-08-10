@@ -11,6 +11,7 @@ import DoctorRoutes from "./routes/DoctorRoutes";
 import ClientHeader from "./components/layout/ClientLayout/ClientHeader";
 import ClientRoutes from "./routes/ClientRoutes";
 import ClientFooter from "./components/layout/ClientLayout/ClientFooter";
+import LayoutDoctor from "./components/layout/DoctorLayout/layout.doctor";
 
 function App() {
   const { user } = useCurrentApp();
@@ -44,7 +45,7 @@ function App() {
       />
 
       {/* coding */}
-      <Route path="code/*" element={<ClientFooter />} />
+      <Route path="code/*" element={<LayoutDoctor />} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
