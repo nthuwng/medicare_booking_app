@@ -1,0 +1,17 @@
+.imgForYouSection-0 {
+    object-position: center 20% !important;
+    transform: scale(0.95);
+    border-radius: 10px;
+}
+
+.imgForYouSection-1 {
+    object-position: center 15% !important;
+    transform: scale(0.95);
+    border-radius: 10px;
+}
+
+.imgForYouSection-2 {
+    object-position: center 35% !important;
+    transform: scale(0.95);
+    border-radius: 10px;
+}

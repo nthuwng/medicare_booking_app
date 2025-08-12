@@ -1,0 +1,66 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Đảm bảo banner phủ toàn bộ chiều rộng */
+.banner-container {
+  width: 100%;
+  position: relative;
+}
+
+/* CSS riêng cho từng slide */
+.slide-0 img {
+  object-position: center 30% !important;
+  transform: scale(0.96);
+}
+
+.slide-1 img {
+  object-position: center 10% !important;
+  transform: scale(0.96);
+}
+
+.slide-2 img {
+  object-position: center 30% !important;
+  transform: scale(0.96);
+}
+
+/* Responsive cho mobile */
+@media (max-width: 640px) {
+  .slide-0 img {
+    object-position: center 30% !important;
+  }
+
+  .slide-1 img {
+    object-position: center 25% !important;
+  }
+
+  .slide-2 img {
+    object-position: center 35% !important;
+  }
+}
+
+/* Responsive cho tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .slide-0 img {
+    object-position: center 25% !important;
+  }
+
+  .slide-1 img {
+    object-position: center 15% !important;
+  }
+
+  .slide-2 img {
+    object-position: center 25% !important;
+  }
+}

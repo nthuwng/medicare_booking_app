@@ -1,7 +1,14 @@
-import React from "react";
+import Banner from "../components/Banner/Banner";
+import ForYouSection from "../components/ForYouSection/Foryousection";
 
 const HomePage = () => {
-  return <div>HomePage</div>;
+  return (
+    <>
+      <Banner />
+
+      <ForYouSection />
+    </>
+  );
 };
 
 export default HomePage;

@@ -18,7 +18,7 @@ function App() {
   return (
     <Routes>
       {/* public */}
-      <Route path="/" element={<ClientRoutes />} />
+      <Route path="/*" element={<ClientRoutes />} />
 
       {/* auth */}
       <Route path="/login" element={<LoginPage />} />
