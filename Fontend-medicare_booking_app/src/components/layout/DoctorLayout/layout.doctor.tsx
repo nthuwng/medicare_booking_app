@@ -5,18 +5,12 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
-import { Users } from "lucide-react";
 import { Layout, Menu, Dropdown, Space } from "antd";
 import { Outlet } from "react-router-dom";
 import { Link } from "react-router-dom";
 import type { MenuProps } from "antd";
 import { RiAdminFill } from "react-icons/ri";
-import { FaUserDoctor } from "react-icons/fa6";
-import { AiOutlineUser } from "react-icons/ai";
-import { LiaClinicMedicalSolid } from "react-icons/lia";
 import { MdAccountCircle } from "react-icons/md";
-import NotificationAdmin from "@/modules/admin/components/NotificationAdmin.tsx/NotificationAdmin";
-import { FaUserInjured } from "react-icons/fa";
 import NotificationDoctor from "@/modules/doctor/components/NotificationDoctor.tsx/NotificationDoctor";
 
 type MenuItem = Required<MenuProps>["items"][number];

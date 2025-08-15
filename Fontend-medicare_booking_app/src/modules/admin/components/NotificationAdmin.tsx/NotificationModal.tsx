@@ -24,7 +24,7 @@ import {
   CalendarOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
-import type { IDoctorProfile, INotificationData } from "../../types";
+import type { IDoctorProfile, INotificationDataAdmin } from "../../types";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { approveDoctor, getDoctorInfo } from "../../services/admin.api";
@@ -37,8 +37,8 @@ const { Title, Text, Paragraph } = Typography;
 interface IProps {
   openModalNotification: boolean;
   setOpenModalNotification: (v: boolean) => void;
-  dataNotificationModal: INotificationData | null;
-  setDataNotificationModal: (v: INotificationData | null) => void;
+  dataNotificationModal: INotificationDataAdmin | null;
+  setDataNotificationModal: (v: INotificationDataAdmin | null) => void;
   loading: boolean;
   setLoading: (v: boolean) => void;
 }
@@ -135,7 +135,7 @@ const NotificationModal = (props: IProps) => {
         loading={loading}
         title={
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center">
               <ExclamationCircleOutlined className="text-white text-xl" />
             </div>
             <div>
@@ -154,7 +154,7 @@ const NotificationModal = (props: IProps) => {
           setDataNotificationModal(null);
         }}
         footer={null}
-        width={700}
+        width={650}
         centered
         destroyOnClose
         styles={{
@@ -288,7 +288,7 @@ const NotificationModal = (props: IProps) => {
 
               {/* Action Buttons */}
               {dataDoctorNotification.approvalStatus === "Pending" ? (
-                <div className="flex justify-between gap-4 py-5 border-t border-gray-200 mt-5">
+                <div className="flex justify-between gap-4 border-gray-200 mt-5">
                   <Button
                     type="default"
                     size="large"

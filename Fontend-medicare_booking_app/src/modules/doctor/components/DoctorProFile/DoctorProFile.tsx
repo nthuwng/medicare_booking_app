@@ -54,6 +54,12 @@ const DoctorProFile = () => {
     if (user?.id) fetchDoctorProfile();
   }, [user?.id, fetchDoctorProfile]);
 
+  useEffect(() => {
+    const handler = () => { fetchDoctorProfile(); };
+    window.addEventListener("doctor:profile-refresh", handler);
+    return () => window.removeEventListener("doctor:profile-refresh", handler);
+  }, [fetchDoctorProfile]);
+
   if (loading) {
     return (
       <div className="h-fullbg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">

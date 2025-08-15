@@ -21,7 +21,7 @@
 
 /* CSS riêng cho từng slide */
 .slide-0 img {
-  object-position: center 30% !important;
+  object-position: center 12% !important;
   transform: scale(0.96);
 }
 

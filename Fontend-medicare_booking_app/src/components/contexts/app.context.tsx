@@ -10,6 +10,7 @@ interface IAppContext {
   user: IUser | null;
   isAppLoading: boolean;
   setIsAppLoading: (v: boolean) => void;
+  refreshUserData: () => Promise<void>;
 }
 
 const CurrentAppContext = createContext<IAppContext | null>(null);
@@ -23,21 +24,33 @@ export const AppProvider = (props: TProps) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isAppLoading, setIsAppLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    const fetchAccount = async () => {
-      const delay = new Promise((resolve) => setTimeout(resolve, 1500)); // Delay 3 giây
-
+  const fetchAccount = async () => {
+    try {
       const res = await fetchAccountAPI();
       if (res.data) {
         setUser(res.data.user);
         setIsAuthenticated(true);
       }
-      await delay;
+    } catch (error) {
+      console.log("Error fetching account:", error);
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
 
+  const refreshUserData = async () => {
+    await fetchAccount();
+  };
+
+  useEffect(() => {
+    const initApp = async () => {
+      const delay = new Promise((resolve) => setTimeout(resolve, 1500));
+      await fetchAccount();
+      await delay;
       setIsAppLoading(false);
     };
 
-    fetchAccount();
+    initApp();
   }, []);
 
   return (
@@ -51,6 +64,7 @@ export const AppProvider = (props: TProps) => {
             setUser,
             isAppLoading,
             setIsAppLoading,
+            refreshUserData,
           }}
         >
           {props.children}

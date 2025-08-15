@@ -104,24 +104,29 @@ const NotificationDoctor = (props: IProps) => {
       fetchNotifications();
     }
   }, [modalNotificationLayout]);
-
-  useEffect(() => {
-  if (user?.id) {
-    fetchNotifications();
-  }
-}, [user?.id]);
-
   // Calculate unread count
   const unreadCount = (
     Array.isArray(notifications) ? notifications : []
   ).filter((n) => n && !n.read).length;
-
-  const handleNotificationClick = (notification: INotificationDataDoctor) => {
+  
+  const handleNotificationClick = async (notification: INotificationDataDoctor) => {
+    setModalNotificationLayout(false);
+  
+    // mark as read (optimistic)
+    setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true } : n));
+    try { await markAsReadNotification(notification.id); } catch {}
+  
+    if (notification.type === "DOCTOR_APPROVED") {
+      // bắn event để Profile refetch, không F5
+      window.dispatchEvent(new CustomEvent("doctor:profile-refresh", {
+        detail: { userId: user?.id }
+      }));
+      return; // không cần mở modal gì cả cho case này
+    }
+  
     setDataNotificationModal(notification);
     setOpenModalNotification(true);
-    setModalNotificationLayout(false);
   };
-
   // Handle mark as read
   const handleMarkAsRead = async (notificationId: string) => {
     setNotifications((prev) =>

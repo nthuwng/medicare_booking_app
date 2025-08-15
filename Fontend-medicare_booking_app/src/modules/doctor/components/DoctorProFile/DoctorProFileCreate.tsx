@@ -128,7 +128,7 @@ const DoctorProFileCreate = (props: IProps) => {
       notification.success({
         message: "Tạo mới hồ sơ bác sĩ thành công",
         placement: "top",
-        duration: 3,
+        duration: 5,
         style: {
           fontSize: "16px",
         },

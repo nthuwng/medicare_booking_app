@@ -47,7 +47,7 @@ const Banner = () => {
 
   return (
     <>
-      <div className="banner-container relative w-full h-[40vh] sm:h-[45vh] md:h-[50vh] lg:h-[55vh] xl:h-[60vh] overflow-hidden text-white font-inter">
+      <div className="banner-container relative w-full h-[40vh] sm:h-[45vh] md:h-[50vh] lg:h-[55vh] xl:h-[60vh] overflow-hidden text-white font-inter mt-16 z-10">
         {/* Slides Container */}
         <div className="relative h-full w-full">
           {slides.map((slide, index) => (
@@ -71,11 +71,6 @@ const Banner = () => {
               <div className="absolute inset-0 bg-black/40"></div>
 
               {/* Slide Content */}
-              <div className="relative z-20 flex flex-col items-center justify-center h-full text-center px-4 sm:px-6 md:px-8">
-                <button className="relative text-xs sm:text-sm md:text-base lowercase tracking-wider border-2 border-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-full mt-4 hover:bg-white hover:text-black transition-colors duration-300">
-                  Book Appointment
-                </button>
-              </div>
             </div>
           ))}
         </div>
