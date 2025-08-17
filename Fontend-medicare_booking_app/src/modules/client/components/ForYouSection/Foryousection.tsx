@@ -19,7 +19,7 @@ const forYouItems: ForYouItem[] = [
       "Tra cứu thông tin, đặt lịch hẹn với các chuyên gia y tế hàng đầu.",
     image: "/src/assets/ForYouSection/Doctor-section.jpg",
     icon: <Stethoscope className="text-blue-600 h-8 w-8" />,
-    link: "#doctors",
+    link: "/booking-doctor",
   },
   {
     id: 2,

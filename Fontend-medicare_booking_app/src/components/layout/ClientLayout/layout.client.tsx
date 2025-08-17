@@ -7,7 +7,9 @@ const LayoutClient = () => {
   return (
     <>
       <ClientHeader />
-      <Outlet />
+      <main className="pt-16">
+        <Outlet />
+      </main>
       <ScrollToTopButton />
       <ClientFooter />
     </>

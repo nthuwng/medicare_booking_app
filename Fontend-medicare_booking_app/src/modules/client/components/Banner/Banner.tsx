@@ -47,8 +47,8 @@ const Banner = () => {
 
   return (
     <>
-      <section className="relative">
-        <div className="banner-container relative w-full h-[40vh] sm:h-[45vh] md:h-[50vh] lg:h-[55vh] xl:h-[60vh] overflow-hidden text-white font-inter mt-16">
+      <section className="relative h-[55vh]">
+        <div className="banner-container relative w-full h-[55vh] sm:h-[55vh] md:h-[55vh] lg:h-[55vh] xl:h-[60vh] overflow-hidden text-white font-inter">
           {/* Slides Container */}
           <div className="relative h-full w-full">
             {slides.map((slide, index) => (
@@ -74,19 +74,15 @@ const Banner = () => {
             ))}
           </div>
 
-          {/* Navigation Controls - Tách riêng và đặt z-index cao nhất */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ zIndex: 9999 }}
-          >
+          {/* Navigation Controls */}
+          <div className="absolute inset-0 pointer-events-none z-30">
             {/* Left Arrow */}
             <div className="absolute top-1/2 -translate-y-1/2 left-2 sm:left-4 md:left-8 lg:left-12 pointer-events-auto">
               <button
                 onClick={() => changeSlides(-1)}
-                className="p-2 sm:p-3 bg-white/30 hover:bg-white/50 transition-all duration-300 rounded-full shadow-lg hover:shadow-xl active:scale-95 cursor-pointer"
+                className="p-2 sm:p-3 bg-white/30 hover:bg-white/50 transition-all duration-300 rounded-full shadow-lg hover:shadow-xl active:scale-95 cursor-pointer z-50"
                 aria-label="Previous Slide"
                 type="button"
-                style={{ zIndex: 10000 }}
               >
                 <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
               </button>
@@ -96,35 +92,33 @@ const Banner = () => {
             <div className="absolute top-1/2 -translate-y-1/2 right-2 sm:right-4 md:right-8 lg:right-12 pointer-events-auto">
               <button
                 onClick={() => changeSlides(1)}
-                className="p-2 sm:p-3 bg-white/30 hover:bg-white/50 transition-all duration-300 rounded-full shadow-lg hover:shadow-xl active:scale-95 cursor-pointer"
+                className="p-2 sm:p-3 bg-white/30 hover:bg-white/50 transition-all duration-300 rounded-full shadow-lg hover:shadow-xl active:scale-95 cursor-pointer z-50"
                 aria-label="Next Slide"
                 type="button"
-                style={{ zIndex: 10000 }}
               >
                 <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
               </button>
             </div>
 
             {/* Slide Indicators */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 pointer-events-auto">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 pointer-events-auto z-50">
               {slides.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
+                  className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer z-50 ${
                     activeSlide === index
                       ? "bg-white scale-110"
                       : "bg-white/50 hover:bg-white/70"
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
                   type="button"
-                  style={{ zIndex: 10000 }}
                 />
               ))}
             </div>
           </div>
         </div>
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div className="text-center text-white px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Chăm sóc sức khỏe
