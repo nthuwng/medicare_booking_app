@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import "./Banner.css";
+import { Link } from "react-router-dom";
 
 // Define the type for a single slide object
 interface SlideItem {
@@ -128,9 +129,12 @@ const Banner = () => {
               Kết nối với các bác sĩ chuyên môn cao, nhận tư vấn y tế chất lượng
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pointer-events-auto">
-              <button className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-w-[200px]">
-                Đặt lịch ngay
-              </button>
+              <Link to="/booking">
+                <button className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-w-[200px]">
+                  Đặt lịch ngay
+                </button>
+              </Link>
+
               <button className="cursor-pointer border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 min-w-[200px]">
                 Tìm hiểu thêm
               </button>

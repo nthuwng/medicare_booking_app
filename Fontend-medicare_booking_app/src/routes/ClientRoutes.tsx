@@ -1,8 +1,10 @@
 import NotFoundPage from "@/components/common/error";
 import LayoutClient from "@/components/layout/ClientLayout/layout.client";
 import BookingPage from "@/modules/client/pages/BookingPage";
+import DoctorBookingPage from "@/modules/client/pages/DoctorBookingPage";
 
 import HomePage from "@/modules/client/pages/HomePage";
+import SpecialtyBookingPage from "@/modules/client/pages/SpecialtyBookingPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/register";
 import { Route, Routes } from "react-router-dom";
@@ -16,6 +18,8 @@ const ClientRoutes = () => {
         <Route path="/register" element={<RegisterPage />} />
 
         <Route path="/booking" element={<BookingPage />} />
+        <Route path="/booking/doctor" element={<DoctorBookingPage />} />
+        <Route path="/booking/specialty" element={<SpecialtyBookingPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

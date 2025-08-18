@@ -1,6 +1,6 @@
 import Banner from "../components/Banner/Banner";
-import ForYouSection from "../components/ForYouSection/Foryousection";
 import { Users, Clock, Award, Shield } from "lucide-react";
+import BookingOptions from "../components/BookingOptions/BookingOptions";
 
 const HomePage = () => {
   const stats = [
@@ -88,7 +88,7 @@ const HomePage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
@@ -121,8 +121,19 @@ const HomePage = () => {
       </section>
 
       {/* For You Section */}
-      <section className="bg-gray-50">
-        <ForYouSection />
+      <section className="bg-gray-50 py-12 font-sans w-full">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="mb-8 md:mb-12 text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
+              Dành cho bạn
+            </h2>
+            <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">
+              Khám phá các dịch vụ chăm sóc sức khỏe nổi bật và phù hợp với nhu
+              cầu của bạn.
+            </p>
+          </div>
+          <BookingOptions />
+        </div>
       </section>
 
       {/* CTA Section */}
