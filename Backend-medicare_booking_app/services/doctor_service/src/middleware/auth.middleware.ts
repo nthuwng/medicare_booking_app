@@ -93,6 +93,7 @@ const authorizeDoctor = async (
     }
 
     const isDoctor = await checkDoctorViaRabbitMQ(userId);
+
     if (isDoctor.isDoctor === false) {
       res.status(403).json({
         success: false,

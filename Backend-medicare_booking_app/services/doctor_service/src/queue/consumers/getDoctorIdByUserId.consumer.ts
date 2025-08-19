@@ -1,24 +1,26 @@
-
+import { getDoctorByUserIdService } from "src/services/doctorServices";
 import { getChannel } from "../connection";
 import { getDoctorProfileBasicInfo } from "src/repository/doctor.repo";
 
 // Khởi tạo consumer để lắng nghe queue "auth.get_user"
-export const initCheckDoctorConsumer = async () => {
+export const initGetDoctorIdByUserIdConsumer = async () => {
   const channel = getChannel();
 
-  await channel.assertQueue("doctor.check_doctor_profile", { durable: false });
+  await channel.assertQueue("doctor.get_doctor_id_by_user_id", {
+    durable: false,
+  });
 
-  channel.consume("doctor.check_doctor_profile", async (msg) => {
+  channel.consume("doctor.get_doctor_id_by_user_id", async (msg) => {
     if (!msg) return;
 
     try {
-      const { doctorId } = JSON.parse(msg.content.toString());
-      const doctor = await getDoctorProfileBasicInfo(doctorId);
+      const { userId } = JSON.parse(msg.content.toString());
+      const doctor = await getDoctorByUserIdService(userId);
 
-      const isApproved = doctor?.approvalStatus === "Approved";
+      const doctorId = doctor?.id;
       channel.sendToQueue(
         msg.properties.replyTo,
-        Buffer.from(JSON.stringify({ ...doctor, isApproved })),
+        Buffer.from(JSON.stringify({ doctorId })),
         {
           correlationId: msg.properties.correlationId,
         }

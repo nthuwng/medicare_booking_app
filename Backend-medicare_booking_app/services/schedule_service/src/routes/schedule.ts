@@ -21,14 +21,20 @@ const scheduleRoutes = (app: Express) => {
     createScheduleController
   );
   router.get("/", authenticateToken, authorizeAdmin, getAllScheduleController);
-  router.get("/:id", authenticateToken, authorizeAdmin, getScheduleByIdController);
+
   router.get(
-    "/by-doctor/:doctorId",
+    "/:id",
+    authenticateToken,
+    authorizeAdmin,
+    getScheduleByIdController
+  );
+
+  router.get(
+    "/by-doctorId/:userId",
     authenticateToken,
     authorizeDoctor,
     getScheduleByDoctorIdController
   );
-
   app.use("/schedules", router);
 };
 

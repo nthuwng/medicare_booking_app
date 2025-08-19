@@ -20,10 +20,15 @@ const checkClinicViaRabbitMQ = async (clinicId: string) => {
   return rpcRequest("doctor.check_clinic", { clinicId });
 };
 
+const getDoctorIdByUserIdViaRabbitMQ = async (userId: string) => {
+  return rpcRequest("doctor.get_doctor_id_by_user_id", { userId });
+};
+
 export {
   verifyTokenViaRabbitMQ,
   checkAdminViaRabbitMQ,
   checkDoctorViaRabbitMQ,
   checkDoctorProfileViaRabbitMQ,
-  checkClinicViaRabbitMQ
+  checkClinicViaRabbitMQ,
+  getDoctorIdByUserIdViaRabbitMQ,
 };

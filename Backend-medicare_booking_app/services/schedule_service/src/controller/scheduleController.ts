@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { getDoctorIdByUserIdViaRabbitMQ } from "src/queue/publishers/schedule.publisher";
 import {
   countTotalSchedulePage,
   handleGetAllSchedule,
@@ -95,8 +96,10 @@ const getAllScheduleController = async (req: Request, res: Response) => {
 
 const getScheduleByDoctorIdController = async (req: Request, res: Response) => {
   try {
-    const { doctorId } = req.params;
-    const schedule = await getScheduleByDoctorId(doctorId);
+
+    const { userId } = req.params;
+    const doctor = await getDoctorIdByUserIdViaRabbitMQ(userId as string);
+    const schedule = await getScheduleByDoctorId(doctor.id);
     if (schedule.length === 0) {
       res.status(200).json({
         success: true,
@@ -143,5 +146,5 @@ export {
   createScheduleController,
   getAllScheduleController,
   getScheduleByDoctorIdController,
-  getScheduleByIdController
+  getScheduleByIdController,
 };

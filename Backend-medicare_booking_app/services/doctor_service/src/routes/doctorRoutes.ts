@@ -10,6 +10,7 @@ import {
 import {
   authenticateToken,
   authorizeAdmin,
+  authorizeDoctor,
 } from "src/middleware/auth.middleware";
 
 const router = express.Router();
@@ -18,7 +19,7 @@ router.post("/", authenticateToken, createDoctorController);
 router.get("/", authenticateToken, getAllDoctorsController);
 router.get("/approved", authenticateToken, getAllApprovedDoctorsController);
 router.get("/:id", authenticateToken, getDoctorByIdController);
-router.get("/profile/:userId", authenticateToken, getDoctorByUserIdController);
+router.get("/profile/:userId", authenticateToken, authorizeDoctor,getDoctorByUserIdController);
 
 router.put(
   "/:id",

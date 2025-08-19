@@ -5,4 +5,5 @@ export interface CreateClinicProfileData {
   street: string;
   phone: string;
   description: string;
+  icon_path: string;
 }

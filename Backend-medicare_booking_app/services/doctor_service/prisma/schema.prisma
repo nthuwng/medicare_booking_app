@@ -55,6 +55,7 @@ model Clinic {
   id          Int     @id @default(autoincrement()) @map("clinic_id")
   clinicName  String  @map("clinic_name") @db.VarChar(255)
   city        City?   @map("city")
+  iconPath    String? @map("icon_path") @db.VarChar(255)
   district    String? @db.VarChar(100)
   street      String? @db.VarChar(100)
   phone       String? @db.VarChar(20)
