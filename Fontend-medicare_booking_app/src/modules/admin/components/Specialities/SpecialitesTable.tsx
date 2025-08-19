@@ -9,8 +9,8 @@ import {
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { getAllSpecialties } from "../../services/admin.api";
-import type { ISpecialtyTable } from "../../types";
 import SpecialitesCreate from "./SpecialitesCreate";
+import type { ISpecialtyTable } from "@/types";
 
 const SpecialitesTable = () => {
   const actionRef = useRef<ActionType>(null);

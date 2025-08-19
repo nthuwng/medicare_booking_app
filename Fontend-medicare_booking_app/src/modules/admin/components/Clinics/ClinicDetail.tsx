@@ -1,5 +1,6 @@
-import type { IClinicTable } from "../../types";
-import { Drawer, Descriptions } from "antd";
+
+import type { IClinicTable } from "@/types";
+import { Drawer, Descriptions, Avatar } from "antd";
 
 interface IProps {
   openViewDetail: boolean;
@@ -39,6 +40,9 @@ const ClinicDetail = (props: IProps) => {
         </Descriptions.Item>
         <Descriptions.Item label="Số điện thoại">
           {dataViewDetail?.phone}
+        </Descriptions.Item>
+        <Descriptions.Item label="Hình ảnh">
+          <Avatar src={dataViewDetail?.iconPath} alt="Ảnh đại diện" />
         </Descriptions.Item>
         <Descriptions.Item label="Mô tả">
           {dataViewDetail?.description}

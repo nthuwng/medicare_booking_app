@@ -20,7 +20,7 @@ import {
   disconnectAdminSocket,
 } from "@/sockets/admin.socket";
 import NotificationModal from "./NotificationModal";
-import type { INotificationDataAdmin } from "../../types";
+import type { INotificationDataAdmin } from "@/types";
 import {
   getNotificationByUserId,
   markAsReadNotification,

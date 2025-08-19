@@ -1,5 +1,5 @@
 import React from "react";
-import type { IDoctorProfile } from "../../types";
+import type { IDoctorProfile } from "@/types";
 import {
   Avatar,
   Card,

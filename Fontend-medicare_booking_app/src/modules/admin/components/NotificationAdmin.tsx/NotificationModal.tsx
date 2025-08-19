@@ -24,11 +24,11 @@ import {
   CalendarOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
-import type { IDoctorProfile, INotificationDataAdmin } from "../../types";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { approveDoctor, getDoctorInfo } from "../../services/admin.api";
 import { FaTransgender } from "react-icons/fa6";
+import type { IDoctorProfile, INotificationDataAdmin } from "@/types";
 
 dayjs.extend(relativeTime);
 

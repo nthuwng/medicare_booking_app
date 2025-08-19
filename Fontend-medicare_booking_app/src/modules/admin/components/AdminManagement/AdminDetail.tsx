@@ -1,5 +1,5 @@
 import React from "react";
-import type { IAdminProfile, IPatientProfile } from "../../types";
+import type { IAdminProfile } from "@/types";
 import {
   Avatar,
   Card,

@@ -10,9 +10,9 @@ import {
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { getAllClinics } from "../../services/admin.api";
-import type { IClinicTable } from "../../types";
 import ClinicCreate from "./ClinicCreate";
 import ClinicDetail from "./ClinicDetail";
+import type { IClinicTable } from "@/types";
 
 const ClinicTable = () => {
   const actionRef = useRef<ActionType>(null);
@@ -71,11 +71,17 @@ const ClinicTable = () => {
       hideInSearch: true,
     },
     {
+      title: "Hình ảnh",
+      dataIndex: "iconPath",
+      hideInSearch: true,
+    },
+    {
       title: "Mô tả",
       dataIndex: "description",
       hideInSearch: true,
       ellipsis: true,
     },
+
     {
       title: "Action",
       hideInSearch: true,

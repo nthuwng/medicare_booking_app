@@ -1,5 +1,11 @@
 import axios from "services/axios.customize";
-import type { IClinic, IDoctorProfile, INotificationDataDoctor, ISpecialty } from "../types";
+import type {
+  IClinic,
+  IDoctorProfile,
+  INotificationDataAdmin,
+  ISpecialty,
+} from "@/types";
+import type { ISchedule } from "@/types/schedule";
 
 export const getDoctorProfileByUserId = (userId: string) => {
   const urlBackend = `/api/doctor/doctors/profile/${userId}`;
@@ -23,7 +29,7 @@ export const markAsReadNotification = (notificationId: string) => {
 
 export const getNotificationByUserId = (userId: string) => {
   const urlBackend = `/api/notification/get-notification-by-user-id/${userId}`;
-  return axios.get<IBackendRes<INotificationDataDoctor[]>>(urlBackend);
+  return axios.get<IBackendRes<INotificationDataAdmin[]>>(urlBackend);
 };
 
 export const createDoctorProfile = (
@@ -53,4 +59,9 @@ export const createDoctorProfile = (
     consultationFee,
     bio,
   });
+};
+
+export const getScheduleByDoctorId = (userId: string) => {
+  const urlBackend = `/api/schedule/schedules/by-doctorId/${userId}`;
+  return axios.get<IBackendRes<ISchedule[]>>(urlBackend);
 };

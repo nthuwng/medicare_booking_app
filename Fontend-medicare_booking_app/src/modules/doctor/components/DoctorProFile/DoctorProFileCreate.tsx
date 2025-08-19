@@ -24,13 +24,12 @@ import {
   CalendarOutlined,
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
-import axios from "services/axios.customize";
 import {
   createDoctorProfile,
   getAllClinicsDoctorProFile,
   getAllSpecialtiesDoctorProFile,
 } from "../../services/doctor.api";
-import type { IClinic, ISpecialty } from "../../types";
+import type { IClinic, ISpecialty } from "@/types";
 import type { FormProps } from "antd/lib";
 
 const { TextArea } = Input;

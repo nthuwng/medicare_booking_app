@@ -7,7 +7,7 @@ import type {
   INotificationDataAdmin,
   IPatientProfile,
   ISpecialty,
-} from "../types";
+} from "@/types";
 
 export const getAllSpecialties = (query: string) => {
   const urlBackend = `/api/doctor/specialties?${query}`;

@@ -18,8 +18,8 @@ import {
   CalendarOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import type { IDoctorProfileBooking } from "../../types";
-import DoctorDetail from "./doctor.detail";
+import type { IDoctorProfile } from "@/types";
+import DoctorAppointment from "./doctor.appointment";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -31,21 +31,24 @@ const formatCurrency = (amount: number) => {
 };
 
 type DoctorCardProps = {
-  dataDoctors: IDoctorProfileBooking[];
-  setDataDoctors: (doctors: IDoctorProfileBooking[]) => void;
+  dataDoctors: IDoctorProfile[];
+  setDataDoctors: (doctors: IDoctorProfile[]) => void;
   searchText: string;
 };
 
 const DoctorCard = (props: DoctorCardProps) => {
   const { dataDoctors } = props;
   const navigate = useNavigate();
-
-  const [detailDoctor, setDetailDoctor] =
-    useState<IDoctorProfileBooking | null>(null);
+  const [openAppointment, setOpenAppointment] = useState(false);
 
   const handleBookAppointment = (doctorId: string) => {
     // Navigate to appointment booking page
     navigate(`/booking/appointment/${doctorId}`);
+  };
+
+  const handleViewDoctorDetail = (doctorId: string) => {
+    // Navigate to doctor detail page
+    navigate(`/booking/doctor/${doctorId}`);
   };
 
   return (
@@ -169,7 +172,7 @@ const DoctorCard = (props: DoctorCardProps) => {
                       <div className="flex items-center gap-2">
                         <Button
                           size="middle"
-                          onClick={() => setDetailDoctor(doctor)}
+                          onClick={() => handleViewDoctorDetail(doctor.id)}
                           className="border-blue-600 text-blue-600 hover:bg-blue-50"
                         >
                           Xem chi tiết
@@ -177,7 +180,7 @@ const DoctorCard = (props: DoctorCardProps) => {
                         <Button
                           type="primary"
                           size="middle"
-                          onClick={() => handleBookAppointment(doctor.id)}
+                          onClick={() => setOpenAppointment(true)}
                           className="bg-blue-600 hover:bg-blue-700 border-blue-600"
                           icon={<CalendarOutlined />}
                         >
@@ -193,11 +196,9 @@ const DoctorCard = (props: DoctorCardProps) => {
         </Row>
       )}
 
-      <DoctorDetail
-        open={!!detailDoctor}
-        doctor={detailDoctor}
-        onClose={() => setDetailDoctor(null)}
-        onBook={(id) => handleBookAppointment(id)}
+      <DoctorAppointment
+        openAppointment={openAppointment}
+        setOpenAppointment={setOpenAppointment}
       />
     </>
   );

@@ -26,6 +26,7 @@ type FieldType = {
   street: string;
   phone: string;
   description: string;
+  icon_path: string;
 };
 
 const ClinicCreate = (props: IProps) => {

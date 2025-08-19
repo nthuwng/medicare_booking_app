@@ -1,5 +1,5 @@
 import React from "react";
-import type { IPatientProfile } from "../../types";
+import type { IPatientProfile } from "@/types";
 import {
   Avatar,
   Card,

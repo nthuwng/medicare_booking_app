@@ -20,7 +20,7 @@ import {
   getAllAdminsProfile,
   getAllPatientsProfile,
 } from "../../services/admin.api";
-import type { IAdminProfile, IPatientProfile } from "../../types";
+import type { IPatientProfile } from "@/types";
 import PatientDetail from "./PatientDetail";
 
 const PatientTable = () => {

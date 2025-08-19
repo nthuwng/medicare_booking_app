@@ -17,7 +17,7 @@ import {
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { getAllUsers } from "../../services/admin.api";
-import type { IManageUser } from "../../types";
+import type { IManageUser } from "@/types";
 
 const AccountTable = () => {
   const actionRef = useRef<ActionType>(null);

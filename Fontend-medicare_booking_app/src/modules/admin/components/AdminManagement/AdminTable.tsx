@@ -17,7 +17,7 @@ import {
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { getAllAdminsProfile } from "../../services/admin.api";
-import type { IAdminProfile } from "../../types";
+import type { IAdminProfile } from "@/types";
 import AdminDetail from "./AdminDetail";
 
 const AdminTable = () => {

@@ -61,6 +61,7 @@ export interface IClinicDoctor {
   street: string;
   phone: string;
   description: string;
+  iconPath: string;
 }
 
 export interface ISpecialtyDoctor {

@@ -20,11 +20,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 
 import DoctorCard from "../components/BookingDoctor/doctor.card";
-import type {
-  IDoctorProfileBooking,
-  ISpecialtyBooking,
-  IClinicBooking,
-} from "../types";
+import type { IDoctorProfile, ISpecialty, IClinic } from "@/types";
 import {
   getAllApprovedDoctorsBooking,
   getAllSpecialtiesBooking,
@@ -41,9 +37,9 @@ const DoctorBookingPage = () => {
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  const [dataDoctors, setDataDoctors] = useState<IDoctorProfileBooking[]>([]);
-  const [specialties, setSpecialties] = useState<ISpecialtyBooking[]>([]);
-  const [clinics, setClinics] = useState<IClinicBooking[]>([]);
+  const [dataDoctors, setDataDoctors] = useState<IDoctorProfile[]>([]);
+  const [specialties, setSpecialties] = useState<ISpecialty[]>([]);
+  const [clinics, setClinics] = useState<IClinic[]>([]);
   const [selectedSpecialty, setSelectedSpecialty] = useState<
     string | undefined
   >(undefined);
@@ -93,6 +89,7 @@ const DoctorBookingPage = () => {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     // Preselect from URL query if available (coming from Specialty page)

@@ -25,7 +25,7 @@ import { useCurrentApp } from "@/components/contexts/app.context";
 import { FaTransgender } from "react-icons/fa6";
 import { Award, MapPin, Building2 } from "lucide-react";
 import { getDoctorProfileByUserId } from "../../services/doctor.api";
-import type { IDoctorProfile } from "../../types";
+import type { IDoctorProfile } from "@/types";
 import DoctorProFileCreate from "./DoctorProFileCreate";
 
 const { Title, Text, Paragraph } = Typography;

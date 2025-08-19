@@ -6,6 +6,7 @@ export interface IClinic {
   street: string;
   phone: string;
   description: string;
+  iconPath: string;
 }
 
 export interface IClinicTable {
@@ -16,4 +17,5 @@ export interface IClinicTable {
   street: string;
   phone: string;
   description: string;
+  iconPath: string;
 }

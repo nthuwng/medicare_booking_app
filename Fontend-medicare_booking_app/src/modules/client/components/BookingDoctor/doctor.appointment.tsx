@@ -1,22 +1,9 @@
-import {
-  Modal,
-  Form,
-  Divider,
-  Row,
-  Col,
-  Input,
-  InputNumber,
-  Select,
-  Upload,
-  App,
-} from "antd";
-import { useState } from "react";
-import type { FormProps } from "antd";
-import { createSpecialty } from "../../services/admin.api";
+import { Col, Divider, Form, Input, Modal, Row } from "antd";
+import React from "react";
+
 interface IProps {
-  openModalCreate: boolean;
-  setOpenModalCreate: (v: boolean) => void;
-  refreshTable: () => void;
+  openAppointment: boolean;
+  setOpenAppointment: (open: boolean) => void;
 }
 
 type FieldType = {
@@ -25,41 +12,25 @@ type FieldType = {
   description: string;
 };
 
-const SpecialitesCreate = (props: IProps) => {
-  const { openModalCreate, setOpenModalCreate, refreshTable } = props;
+const DoctorAppointment = (props: IProps) => {
   const [form] = Form.useForm();
-  const { message, notification } = App.useApp();
-  const [isSubmit, setIsSubmit] = useState(false);
+  const { openAppointment, setOpenAppointment } = props;
 
-  const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
-    const { specialty_name, description, icon_path } = values;
-    setIsSubmit(true);
-
-    const res = await createSpecialty(specialty_name, description, icon_path);
-    if (res && res.data) {
-      message.success("Tạo mới chuyên khoa thành công");
-      form.resetFields();
-      setOpenModalCreate(false);
-      refreshTable?.();
-    } else {
-      notification.error({
-        message: "Đã có lỗi xảy ra",
-        description: res.message,
-      });
-    }
-    setIsSubmit(false);
+  const onFinish = (values: any) => {
+    console.log("values", values);
   };
+  console.log("openAppointment", openAppointment);
   return (
     <>
       <Modal
         title="Thêm mới book"
-        open={openModalCreate}
+        open={openAppointment}
         onOk={() => {
           form.submit();
         }}
         onCancel={() => {
           form.resetFields();
-          setOpenModalCreate(false);
+          setOpenAppointment(false);
         }}
         destroyOnClose={true}
         // okButtonProps={{ loading: isSubmit }}
@@ -87,7 +58,7 @@ const SpecialitesCreate = (props: IProps) => {
                   { required: true, message: "Vui lòng nhập tên chuyên khoa!" },
                 ]}
               >
-                <Input  />
+                <Input />
               </Form.Item>
             </Col>
             <Col span={24}>
@@ -121,4 +92,4 @@ const SpecialitesCreate = (props: IProps) => {
   );
 };
 
-export default SpecialitesCreate;
+export default DoctorAppointment;

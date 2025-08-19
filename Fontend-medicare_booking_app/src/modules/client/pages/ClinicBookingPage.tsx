@@ -19,22 +19,23 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import SpecialtiesCard from "../components/BookingSpecialties/specialties.card";
-import type { ISpecialty } from "@/types";
-import { getAllSpecialtiesBooking } from "../services/client.api";
+import type { IClinic } from "@/types";
+import { getAllClinicsBooking, getAllSpecialtiesBooking } from "../services/client.api";
+import BookingClinic from "../components/BookingClinic/BookingClinic";
 
 const { Title, Text } = Typography;
 
-const SpecialtyBookingPage = () => {
+const ClinicBookingPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  const [dataSpecialties, setDataSpecialties] = useState<ISpecialty[]>(
+  const [dataClinics, setDataClinics] = useState<IClinic[]>(
     []
   );
 
-  const fetchSpecialties = async (searchQuery = "") => {
+  const fetchClinics = async (searchQuery = "") => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
@@ -46,21 +47,21 @@ const SpecialtyBookingPage = () => {
         queryParams.append("specialtyName", searchQuery.trim());
       }
 
-      const response = await getAllSpecialtiesBooking(queryParams.toString());
+      const response = await getAllClinicsBooking   (queryParams.toString());
       if (response.data) {
-        const specialties = response.data.result;
-        setDataSpecialties(specialties);
+        const clinics = response.data.result;
+        setDataClinics(clinics);
       }
     } catch (error) {
-      console.error("Error fetching specialties:", error);
-      message.error("Không thể tải danh sách chuyên khoa");
+      console.error("Error fetching clinics:", error);
+      message.error("Không thể tải danh sách phòng khám");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSpecialties();
+    fetchClinics();
   }, []);
 
   const handleSearch = async () => {
@@ -68,9 +69,9 @@ const SpecialtyBookingPage = () => {
     setLoading(true);
 
     try {
-      await fetchSpecialties(searchText);
+      await fetchClinics(searchText);
     } catch (error) {
-      console.error("Error searching specialties:", error);
+      console.error("Error searching clinics:", error);
       message.error("Có lỗi xảy ra khi tìm kiếm");
     } finally {
       setIsSearching(false);
@@ -81,15 +82,15 @@ const SpecialtyBookingPage = () => {
   const handleClearFilters = async () => {
     setSearchText("");
     setIsSearching(false);
-    await fetchSpecialties();
+    await fetchClinics();
   };
 
   const handleRefetch = async () => {
     setLoading(true);
     try {
-      await fetchSpecialties(searchText);
+      await fetchClinics(searchText);   
     } catch (error) {
-      console.error("Error refetching specialties:", error);
+      console.error("Error refetching clinics:", error);
       message.error("Có lỗi xảy ra khi làm mới dữ liệu");
     } finally {
       setLoading(false);
@@ -127,7 +128,7 @@ const SpecialtyBookingPage = () => {
               </Button>
             </Breadcrumb.Item>
             <Breadcrumb.Item className="text-blue-600 font-medium">
-              Chuyên khoa
+              Phòng khám
             </Breadcrumb.Item>
           </Breadcrumb>
         </div>
@@ -139,10 +140,10 @@ const SpecialtyBookingPage = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <Title level={2} className="!mb-2 !text-gray-800">
-                Chuyên khoa dành cho bạn
+                Phòng khám dành cho bạn
               </Title>
               <Text className="text-gray-600 text-lg">
-                Chọn chuyên khoa để xem các bác sĩ phù hợp
+                Chọn phòng khám để xem các bác sĩ phù hợp
               </Text>
             </div>
             <Button
@@ -162,7 +163,7 @@ const SpecialtyBookingPage = () => {
               <div className="flex-1">
                 <Input
                   size="large"
-                  placeholder="Tìm kiếm chuyên khoa..."
+                  placeholder="Tìm kiếm phòng khám..."
                   prefix={<SearchOutlined className="text-gray-400" />}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
@@ -207,9 +208,9 @@ const SpecialtyBookingPage = () => {
               <Text className="text-gray-600">
                 Tìm thấy{" "}
                 <span className="font-semibold text-blue-600">
-                  {dataSpecialties.length}
+                  {dataClinics.length}
                 </span>{" "}
-                chuyên khoa
+                phòng khám
               </Text>
             </div>
 
@@ -233,18 +234,18 @@ const SpecialtyBookingPage = () => {
         )}
 
         {/* Empty State */}
-        {!loading && dataSpecialties.length === 0 && (
+        {!loading && dataClinics.length === 0 && (
           <Empty
-            description="Không tìm thấy chuyên khoa phù hợp"
+            description="Không tìm thấy phòng khám phù hợp"
             className="py-12"
           />
         )}
 
         {/* Specialties List */}
-        {!loading && dataSpecialties.length > 0 && (
-          <SpecialtiesCard
-            dataSpecialties={dataSpecialties}
-            setDataSpecialties={setDataSpecialties}
+        {!loading && dataClinics.length > 0 && (
+          <BookingClinic
+            dataClinics={dataClinics}
+            setDataClinics={setDataClinics}
             searchText={searchText}
           />
         )}
@@ -253,4 +254,4 @@ const SpecialtyBookingPage = () => {
   );
 };
 
-export default SpecialtyBookingPage;
+export default ClinicBookingPage;

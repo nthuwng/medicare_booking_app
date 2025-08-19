@@ -21,7 +21,7 @@ import {
   getAllDoctorsProfile,
   getAllUsers,
 } from "../../services/admin.api";
-import type { IAdminProfile, IDoctorProfile, IManageUser } from "../../types";
+import type { IDoctorProfile } from "@/types";
 import DoctorDetail from "./DoctorDetail";
 
 const DoctorTable = () => {

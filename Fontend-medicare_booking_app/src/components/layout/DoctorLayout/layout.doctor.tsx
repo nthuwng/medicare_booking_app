@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./layout.doctor.css";
 import {
   AppstoreOutlined,
+  CalendarOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
@@ -33,6 +34,11 @@ const LayoutDoctor = () => {
       icon: <AppstoreOutlined style={{ fontSize: "20px" }} />,
     },
     {
+      label: <Link to="/doctor/schedule">Schedule</Link>,
+      key: "schedule",
+      icon: <CalendarOutlined style={{ fontSize: "17px" }} />,
+    },
+    {
       label: <Link to="/doctor/profile-settings">Profile Settings</Link>,
       key: "profile-settings",
       icon: <MdAccountCircle size={20} />,
@@ -41,16 +47,16 @@ const LayoutDoctor = () => {
 
   const itemsDropdown = [
     {
+      label: <Link to={"/"}>Trang chủ</Link>,
+      key: "home",
+    },
+    {
       label: (
         <label style={{ cursor: "pointer" }} onClick={() => alert("me")}>
           Quản lý tài khoản
         </label>
       ),
       key: "account",
-    },
-    {
-      label: <Link to={"/"}>Trang chủ</Link>,
-      key: "home",
     },
     {
       label: (
