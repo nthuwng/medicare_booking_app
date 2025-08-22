@@ -29,44 +29,40 @@ const SpecialtiesCard = (props: SpecialtiesCardProps) => {
       {dataSpecialties.length > 0 && (
         <Row gutter={[24, 24]}>
           {dataSpecialties.map((specialty) => (
-            <Col key={specialty.id} xs={24} md={12}>
+            <Col key={specialty.id} xs={24} sm={12} md={12} lg={6} xl={6}>
               <Card
-                className="hover:shadow-lg transition-all duration-300 border-0 shadow-sm cursor-pointer"
+                className="transition-all duration-300 border-0 shadow-sm hover:shadow-md cursor-pointer rounded-2xl"
                 onClick={() => handleViewDoctors(specialty)}
-                bodyStyle={{ padding: "20px" }}
+                bodyStyle={{ padding: "12px 12px 16px 12px" }}
               >
-                <div className="flex items-center gap-5">
-                  <Avatar
-                    size={104}
-                    src={specialty.iconPath || undefined}
-                    style={{
-                      backgroundImage: !specialty.iconPath
-                        ? "linear-gradient(135deg, #1890ff, #096dd9)"
-                        : undefined,
-                      color: "#fff",
-                      fontSize: "42px",
-                      fontWeight: 600,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: "4px solid #ffffff",
-                      boxShadow: "0 6px 20px rgba(24, 144, 255, 0.25)",
-                    }}
-                  >
-                    {!specialty.iconPath &&
-                      specialty.specialtyName?.charAt(0).toUpperCase()}
-                  </Avatar>
+                <div className="flex flex-col">
+                  {/* Image box */}
+                  <div className="w-full h-36 md:h-40 rounded-xl bg-gradient-to-b from-[#fff9f0] to-[#f3f9ff] flex items-center justify-center overflow-hidden">
+                    {specialty.iconPath ? (
+                      <img
+                        src={specialty.iconPath}
+                        alt={specialty.specialtyName}
+                        className="max-h-28 md:max-h-32 object-contain"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 text-white flex items-center justify-center text-xl font-semibold">
+                        {specialty.specialtyName?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
 
-                  <div className="flex-1 min-w-0">
-                    <Title level={4} className="!mb-1 !text-gray-800">
+                  {/* Title */}
+                  <div className="mt-3">
+                    <Title
+                      level={5}
+                      className="!m-0 !text-gray-900 !font-semibold"
+                    >
                       {specialty.specialtyName}
                     </Title>
                     <Text className="text-gray-500">
                       Xem bác sĩ theo chuyên khoa
                     </Text>
                   </div>
-
-                  <RightOutlined className="text-gray-400" />
                 </div>
               </Card>
             </Col>

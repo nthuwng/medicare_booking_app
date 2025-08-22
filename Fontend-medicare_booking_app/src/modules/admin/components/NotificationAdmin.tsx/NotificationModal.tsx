@@ -178,8 +178,14 @@ const NotificationModal = (props: IProps) => {
                 <div className="flex items-start gap-5">
                   <Avatar
                     size={80}
+                    src={dataDoctorNotification.avatarUrl}
                     icon={<UserOutlined />}
                     className="bg-blue-500 border-4 border-blue-100 shadow-lg"
+                    style={{
+                      background: dataDoctorNotification.avatarUrl
+                        ? undefined
+                        : "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                    }}
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-4">

@@ -62,13 +62,33 @@ export const getNotificationByUserId = (userId: string) => {
 export const createSpecialty = (
   specialty_name: string,
   description: string,
-  icon_path: string
+  iconPath: string,
+  iconPublicId: string
 ) => {
   const urlBackend = `/api/doctor/specialties`;
   return axios.post<IBackendRes<ISpecialty>>(urlBackend, {
     specialty_name,
     description,
-    icon_path,
+    icon_path: iconPath,
+    icon_public_id: iconPublicId,
+  });
+};
+
+export const uploadFileAPI = (img: any) => {
+  const bodyFormData = new FormData();
+  bodyFormData.append("image", img);
+  return axios<
+    IBackendRes<{
+      url: string;
+      public_id: string;
+    }>
+  >({
+    method: "post",
+    url: "/api/doctor/upload/image",
+    data: bodyFormData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
   });
 };
 

@@ -4,6 +4,7 @@ import {
   DeleteTwoTone,
   EditTwoTone,
   ExportOutlined,
+  EyeOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
@@ -11,10 +12,15 @@ import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { getAllSpecialties } from "../../services/admin.api";
 import SpecialitesCreate from "./SpecialitesCreate";
 import type { ISpecialtyTable } from "@/types";
+import SpecialitesDetail from "./SpecialitesDetail";
 
 const SpecialitesTable = () => {
   const actionRef = useRef<ActionType>(null);
   const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
+  const [dataViewDetail, setDataViewDetail] = useState<ISpecialtyTable | null>(
+    null
+  );
+  const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
   const [meta, setMeta] = useState({
     current: 1,
     pageSize: 5,
@@ -64,25 +70,74 @@ const SpecialitesTable = () => {
     {
       title: "Hình ảnh",
       dataIndex: "iconPath",
+      render(dom, entity, index, action, schema) {
+        return (
+          <img
+            src={entity.iconPath}
+            alt=""
+            className="w-10 h-10 object-cover"
+          />
+        );
+      },
       hideInSearch: true,
     },
     {
       title: "Mô tả",
       dataIndex: "description",
       hideInSearch: true,
+      render: (_, record) => (
+        <div
+          style={{
+            maxWidth: 300, // giới hạn chiều rộng
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={record.description} // hover sẽ hiện full text
+        >
+          {record.description}
+        </div>
+      ),
     },
     {
       title: "Action",
       hideInSearch: true,
-      render(dom, entity, index, action, schema) {
+      render: (_, entity) => {
         return (
-          <>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px", // khoảng cách đều giữa các icon
+            }}
+          >
+            {/* Xem chi tiết */}
+            <EyeOutlined
+              style={{
+                cursor: "pointer",
+                color: "#1890ff",
+                fontSize: 16,
+                transition: "all 0.3s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#40a9ff")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#1890ff")}
+              onClick={() => {
+                setDataViewDetail(entity);
+                setOpenViewDetail(true);
+              }}
+            />
+
+            {/* Chỉnh sửa */}
             <EditTwoTone
               twoToneColor="#f57800"
-              style={{ cursor: "pointer", margin: "0 5px" }}
+              style={{
+                cursor: "pointer",
+                fontSize: 16,
+              }}
               onClick={() => {}}
             />
 
+            {/* Xóa */}
             <Popconfirm
               placement="leftTop"
               title={"Xác nhận xóa chuyên khoa"}
@@ -91,11 +146,15 @@ const SpecialitesTable = () => {
               okText="Xác nhận"
               cancelText="Hủy"
             >
-              <span style={{ cursor: "pointer" }}>
-                <DeleteTwoTone twoToneColor="#ff4d4f" />
-              </span>
+              <DeleteTwoTone
+                twoToneColor="#ff4d4f"
+                style={{
+                  cursor: "pointer",
+                  fontSize: 16,
+                }}
+              />
             </Popconfirm>
-          </>
+          </div>
         );
       },
     },
@@ -166,6 +225,13 @@ const SpecialitesTable = () => {
         openModalCreate={openModalCreate}
         setOpenModalCreate={setOpenModalCreate}
         refreshTable={refreshTable}
+      />
+
+      <SpecialitesDetail
+        openViewDetail={openViewDetail}
+        setOpenViewDetail={setOpenViewDetail}
+        dataViewDetail={dataViewDetail}
+        setDataViewDetail={setDataViewDetail}
       />
     </>
   );

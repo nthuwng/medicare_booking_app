@@ -96,8 +96,12 @@ const DoctorBookingPage = () => {
     const qs = new URLSearchParams(location.search);
     const spId = qs.get("specialtyId") || undefined;
     const spName = qs.get("specialtyName") || undefined;
+    const clId = qs.get("clinicId") || undefined;
+    const clName = qs.get("clinicName") || undefined;
     if (spId) setSelectedSpecialty(spId);
     if (spName) setSearchText("");
+    if (clId) setSelectedClinic(clId);
+    if (clName) setSearchText("");
 
     const bootstrap = async () => {
       // Load filter sources (specialties, clinics)
@@ -107,7 +111,7 @@ const DoctorBookingPage = () => {
       ]);
       if (spRes.data) setSpecialties(spRes.data.result);
       if (clRes.data) setClinics(clRes.data.result);
-      await fetchDoctors("", spId, undefined);
+      await fetchDoctors("", spId, clId);
     };
     bootstrap();
   }, []);

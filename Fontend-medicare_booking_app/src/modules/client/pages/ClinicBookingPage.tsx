@@ -20,7 +20,10 @@ import { useNavigate } from "react-router-dom";
 
 import SpecialtiesCard from "../components/BookingSpecialties/specialties.card";
 import type { IClinic } from "@/types";
-import { getAllClinicsBooking, getAllSpecialtiesBooking } from "../services/client.api";
+import {
+  getAllClinicsBooking,
+  getAllSpecialtiesBooking,
+} from "../services/client.api";
 import BookingClinic from "../components/BookingClinic/BookingClinic";
 
 const { Title, Text } = Typography;
@@ -31,9 +34,7 @@ const ClinicBookingPage = () => {
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  const [dataClinics, setDataClinics] = useState<IClinic[]>(
-    []
-  );
+  const [dataClinics, setDataClinics] = useState<IClinic[]>([]);
 
   const fetchClinics = async (searchQuery = "") => {
     setLoading(true);
@@ -44,10 +45,10 @@ const ClinicBookingPage = () => {
       });
 
       if (searchQuery.trim()) {
-        queryParams.append("specialtyName", searchQuery.trim());
+        queryParams.append("clinicName", searchQuery.trim());
       }
 
-      const response = await getAllClinicsBooking   (queryParams.toString());
+      const response = await getAllClinicsBooking(queryParams.toString());
       if (response.data) {
         const clinics = response.data.result;
         setDataClinics(clinics);
@@ -88,7 +89,7 @@ const ClinicBookingPage = () => {
   const handleRefetch = async () => {
     setLoading(true);
     try {
-      await fetchClinics(searchText);   
+      await fetchClinics(searchText);
     } catch (error) {
       console.error("Error refetching clinics:", error);
       message.error("Có lỗi xảy ra khi làm mới dữ liệu");

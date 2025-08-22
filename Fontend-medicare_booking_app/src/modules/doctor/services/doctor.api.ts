@@ -32,6 +32,24 @@ export const getNotificationByUserId = (userId: string) => {
   return axios.get<IBackendRes<INotificationDataAdmin[]>>(urlBackend);
 };
 
+export const uploadFileAPI = (img: any) => {
+  const bodyFormData = new FormData();
+  bodyFormData.append("image", img);
+  return axios<
+    IBackendRes<{
+      url: string;
+      public_id: string;
+    }>
+  >({
+    method: "post",
+    url: "/api/doctor/upload/image",
+    data: bodyFormData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
 export const createDoctorProfile = (
   fullName: string,
   phone: string,
@@ -43,7 +61,8 @@ export const createDoctorProfile = (
   clinicId: string,
   bookingFee: number,
   consultationFee: number,
-  bio: string
+  bio: string,
+  avatar_public_id: string
 ) => {
   const urlBackend = `/api/doctor/doctors`;
   return axios.post<IBackendRes<IDoctorProfile>>(urlBackend, {
@@ -58,6 +77,7 @@ export const createDoctorProfile = (
     bookingFee,
     consultationFee,
     bio,
+    avatar_public_id,
   });
 };
 

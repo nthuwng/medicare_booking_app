@@ -22,12 +22,16 @@ import {
   DollarOutlined,
   FileTextOutlined,
   CalendarOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
+import type { UploadChangeParam } from "antd/es/upload";
+import type { UploadRequestOption as RcCustomRequestOptions } from "rc-upload/lib/interface";
 import {
   createDoctorProfile,
   getAllClinicsDoctorProFile,
   getAllSpecialtiesDoctorProFile,
+  uploadFileAPI,
 } from "../../services/doctor.api";
 import type { IClinic, ISpecialty } from "@/types";
 import type { FormProps } from "antd/lib";
@@ -52,6 +56,7 @@ type FieldType = {
   clinicId: string;
   bookingFee: number;
   consultationFee: number;
+  avatar_public_id: string;
   bio: string;
 };
 
@@ -61,6 +66,7 @@ const DoctorProFileCreate = (props: IProps) => {
   const [specialties, setSpecialties] = useState<ISpecialty[]>([]);
   const [clinics, setClinics] = useState<IClinic[]>([]);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [loadingUpload, setLoadingUpload] = useState(false);
   const [isSubmit, setIsSubmit] = useState(false);
   const { message, notification } = App.useApp();
 
@@ -101,7 +107,6 @@ const DoctorProFileCreate = (props: IProps) => {
       gender,
       title,
       experienceYears,
-      avatar_url,
       specialtyId,
       clinicId,
       bookingFee,
@@ -110,65 +115,113 @@ const DoctorProFileCreate = (props: IProps) => {
     } = values;
     setIsSubmit(true);
 
-    const res = await createDoctorProfile(
-      fullName,
-      phone,
-      gender,
-      title,
-      experienceYears,
-      avatar_url,
-      specialtyId,
-      clinicId,
-      bookingFee,
-      consultationFee,
-      bio
-    );
-    if (res && res.data) {
-      notification.success({
-        message: "Tạo mới hồ sơ bác sĩ thành công",
-        placement: "top",
-        duration: 5,
-        style: {
-          fontSize: "16px",
-        },
-        description: "Vui lòng chờ admin phê duyệt",
-      });
-      form.resetFields();
-      setOpenCreate(false);
-      fetchDoctorProfile?.();
-    } else {
+    try {
+      // Lấy thông tin file đã upload
+      let avatar_url = "";
+      let avatar_public_id = "";
+
+      if (fileList.length > 0 && fileList[0].url) {
+        avatar_url = fileList[0].url;
+        avatar_public_id = fileList[0].name || "";
+      }
+
+      const res = await createDoctorProfile(
+        fullName,
+        phone,
+        gender,
+        title,
+        experienceYears,
+        avatar_url,
+        specialtyId,
+        clinicId,
+        bookingFee,
+        consultationFee,
+        bio,
+        avatar_public_id
+      );
+
+      if (res && res.data) {
+        notification.success({
+          message: "Tạo mới hồ sơ bác sĩ thành công",
+          placement: "top",
+          duration: 5,
+          style: {
+            fontSize: "16px",
+          },
+          description: "Vui lòng chờ admin phê duyệt",
+        });
+        form.resetFields();
+        setFileList([]);
+        setOpenCreate(false);
+        fetchDoctorProfile?.();
+      } else {
+        notification.error({
+          message: "Đã có lỗi xảy ra",
+          description: res.message,
+        });
+      }
+    } catch (error: any) {
       notification.error({
-        message: "Đã có lỗi xảy ra",
-        description: res.message,
+        message: "Lỗi",
+        description: error.message || "Có lỗi xảy ra khi tạo hồ sơ bác sĩ",
       });
+    } finally {
+      setIsSubmit(false);
     }
-    setIsSubmit(false);
   };
 
   const handleCancel = () => {
     form.resetFields();
     setFileList([]);
+    setLoadingUpload(false);
     setOpenCreate(false);
   };
 
-  const uploadProps = {
-    beforeUpload: (file: File) => {
-      const isImage = file.type.startsWith("image/");
-      if (!isImage) {
-        message.error("Chỉ được upload file ảnh!");
-        return false;
+  const beforeUpload = (file: File) => {
+    const isImage = file.type.startsWith("image/");
+    if (!isImage) {
+      message.error("Chỉ được upload file ảnh!");
+      return false;
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      message.error("Ảnh phải nhỏ hơn 2MB!");
+      return false;
+    }
+    return true;
+  };
+
+  const handleUploadFile = async (options: RcCustomRequestOptions) => {
+    const { onSuccess, onError, file } = options;
+
+    try {
+      setLoadingUpload(true);
+      const res = await uploadFileAPI(file);
+
+      if (res && res.data) {
+        const uploadedFile: any = {
+          uid: (file as any).uid,
+          name: res.data.public_id,
+          status: "done",
+          url: res.data.url,
+        };
+
+        setFileList([{ ...uploadedFile }]);
+        onSuccess?.(res.data, file as any);
+      } else {
+        message.error(res.message || "Upload thất bại");
+        onError?.(new Error(res.message));
       }
-      const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        message.error("Ảnh phải nhỏ hơn 2MB!");
-        return false;
-      }
-      return false; // Prevent auto upload
-    },
-    onChange: (info: any) => {
-      setFileList(info.fileList.slice(-1)); // Only keep the last uploaded file
-    },
-    fileList,
+    } catch (error: any) {
+      message.error(error.message || "Upload thất bại");
+      onError?.(error);
+    } finally {
+      setLoadingUpload(false);
+    }
+  };
+
+  const handleRemove = () => {
+    setFileList([]);
   };
 
   return (
@@ -327,10 +380,17 @@ const DoctorProFileCreate = (props: IProps) => {
 
             <Col xs={24} md={12}>
               <Form.Item name="avatar_url" label="Ảnh đại diện">
-                <Upload {...uploadProps} listType="picture-card" maxCount={1}>
-                  {fileList.length < 1 && (
+                <Upload
+                  listType="picture-card"
+                  maxCount={1}
+                  customRequest={handleUploadFile}
+                  beforeUpload={beforeUpload}
+                  onRemove={handleRemove}
+                  fileList={fileList}
+                >
+                  {fileList.length >= 1 ? null : (
                     <div>
-                      <UploadOutlined />
+                      {loadingUpload ? <LoadingOutlined /> : <UploadOutlined />}
                       <div className="mt-2">Tải ảnh</div>
                     </div>
                   )}

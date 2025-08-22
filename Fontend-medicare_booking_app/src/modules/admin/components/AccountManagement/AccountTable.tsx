@@ -96,21 +96,30 @@ const AccountTable = () => {
           <>
             <EditTwoTone
               twoToneColor="#f57800"
-              style={{ cursor: "pointer", margin: "0 5px" }}
+              style={{
+                cursor: "pointer",
+                fontSize: 16,
+                marginRight: 10,
+              }}
               onClick={() => {}}
             />
 
+            {/* Xóa */}
             <Popconfirm
               placement="leftTop"
-              title={"Xác nhận xóa tài khoản"}
-              description={"Bạn có chắc chắn muốn xóa tài khoản này ?"}
+              title={"Xác nhận xóa chuyên khoa"}
+              description={"Bạn có chắc chắn muốn xóa chuyên khoa này ?"}
               onConfirm={() => {}}
               okText="Xác nhận"
               cancelText="Hủy"
             >
-              <span style={{ cursor: "pointer" }}>
-                <DeleteTwoTone twoToneColor="#ff4d4f" />
-              </span>
+              <DeleteTwoTone
+                twoToneColor="#ff4d4f"
+                style={{
+                  cursor: "pointer",
+                  fontSize: 16,
+                }}
+              />
             </Popconfirm>
           </>
         );
