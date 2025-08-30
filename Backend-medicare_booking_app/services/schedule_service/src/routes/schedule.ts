@@ -4,6 +4,7 @@ import {
   getAllScheduleController,
   getScheduleByDoctorIdController,
   getScheduleByIdController,
+  updateExpiredTimeSlotsController,
 } from "src/controller/scheduleController";
 import {
   authenticateToken,
@@ -25,7 +26,6 @@ const scheduleRoutes = (app: Express) => {
   router.get(
     "/:id",
     authenticateToken,
-    authorizeAdmin,
     getScheduleByIdController
   );
 
@@ -35,6 +35,14 @@ const scheduleRoutes = (app: Express) => {
     authorizeDoctor,
     getScheduleByDoctorIdController
   );
+
+  // API để cập nhật time slots hết hạn
+  router.patch(
+    "/update-expired",
+    authenticateToken,
+    updateExpiredTimeSlotsController
+  );
+
   app.use("/schedules", router);
 };
 

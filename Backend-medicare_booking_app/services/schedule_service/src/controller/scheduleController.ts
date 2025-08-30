@@ -6,6 +6,7 @@ import {
   scheduleService,
   getScheduleByDoctorId,
   getScheduleById,
+  updateExpiredTimeSlots,
 } from "src/services/scheduleServices";
 import { length } from "zod";
 
@@ -96,7 +97,6 @@ const getAllScheduleController = async (req: Request, res: Response) => {
 
 const getScheduleByDoctorIdController = async (req: Request, res: Response) => {
   try {
-
     const { userId } = req.params;
     const doctor = await getDoctorIdByUserIdViaRabbitMQ(userId as string);
     const schedule = await getScheduleByDoctorId(doctor.id);
@@ -134,6 +134,7 @@ const getScheduleByIdController = async (req: Request, res: Response) => {
     }
     res.status(200).json({
       success: true,
+      length: schedule.data.schedule.length,
       message: "Lấy lịch khám thành công.",
       data: schedule,
     });
@@ -142,9 +143,31 @@ const getScheduleByIdController = async (req: Request, res: Response) => {
   }
 };
 
+const updateExpiredTimeSlotsController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const result = await updateExpiredTimeSlots();
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("Error updating expired time slots:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật time slots hết hạn",
+      error: error.message,
+    });
+  }
+};
+
 export {
   createScheduleController,
   getAllScheduleController,
   getScheduleByDoctorIdController,
   getScheduleByIdController,
+  updateExpiredTimeSlotsController,
 };

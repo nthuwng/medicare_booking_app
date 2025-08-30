@@ -5,6 +5,7 @@ import scheduleRoutes from "./routes/schedule";
 import timeSlotRoutes from "./routes/timeSlotRoutes";
 import { connectRabbitMQ } from "./queue/connection";
 import { initializeAllRabbitMQConsumers } from "./queue/consumers";
+import { updateExpiredSlotsJob } from "./jobs/updateExpiredSlots.job";
 
 const app = express();
 const port = process.env.PORT || 8088;
@@ -25,6 +26,10 @@ const startApplication = async () => {
 
     //Khởi tạo tất cả Consumers
     await initializeAllRabbitMQConsumers();
+
+    //Khởi tạo job cập nhật time slots hết hạn
+    updateExpiredSlotsJob();
+
     //Khởi động HTTP Server (hoặc gRPC server)
     app.listen(port, () => {
       console.log(`✅ Schedule_service listening on port ${port}`);

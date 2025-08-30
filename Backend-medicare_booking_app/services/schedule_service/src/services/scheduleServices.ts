@@ -10,6 +10,7 @@ import {
   checkClinicViaRabbitMQ,
   checkDoctorProfileViaRabbitMQ,
 } from "src/queue/publishers/schedule.publisher";
+import { todayStr, nowTimeStr } from "src/utils/time";
 
 // Config timezone cho dayjs
 dayjs.extend(utc);
@@ -214,7 +215,6 @@ const handleGetAllSchedule = async (page: number, pageSize: number) => {
     totalSchedules: schedulesWithDoctorInfo.length,
   };
 };
-
 const countTotalSchedulePage = async (pageSize: number) => {
   const totalItems = await prisma.schedule.count();
 
@@ -225,27 +225,7 @@ const countTotalSchedulePage = async (pageSize: number) => {
 
 const getScheduleByDoctorId = async (doctorId: string) => {
   const schedule = await prisma.schedule.findMany({
-    where: { doctorId },
-    include: {
-      timeSlots: {
-        include: {
-          timeSlot: {
-            select: {
-              id: true,
-              startTime: true,
-              endTime: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  return schedule;
-};
-
-const getScheduleById = async (id: string) => {
-  const schedule = await prisma.schedule.findFirst({
-    where: { id: id },
+    where: { doctorId, date: { gte: new Date(`${todayStr()}T00:00:00.000Z`) } },
     include: {
       timeSlots: {
         include: {
@@ -254,9 +234,120 @@ const getScheduleById = async (id: string) => {
       },
     },
   });
-  const doctor = await checkDoctorProfileViaRabbitMQ(schedule?.doctorId || "");
+
+  const filtered = schedule.map((s) => ({
+    ...s,
+    timeSlots: s.timeSlots.map((ts) => ({
+      ...ts,
+      timeSlot: {
+        ...ts.timeSlot,
+        startTime: dayjs(ts.timeSlot.startTime).format("HH:mm"),
+        endTime: dayjs(ts.timeSlot.endTime).format("HH:mm"),
+      },
+    })),
+  }));
+
+  return filtered;
+};
+
+const getScheduleById = async (id: string) => {
+  const schedule = await prisma.schedule.findMany({
+    where: { doctorId: id },
+    include: {
+      timeSlots: {
+        include: {
+          timeSlot: true,
+        },
+      },
+    },
+  });
+  const doctor = await checkDoctorProfileViaRabbitMQ(schedule[0]?.doctorId || "");
 
   return { data: { schedule, doctor } };
+};
+
+const updateExpiredTimeSlots = async () => {
+  const today = todayStr();
+  const currentTime = nowTimeStr();
+
+  // 1. Tìm tất cả time slots có ngày < hôm nay
+  const pastDateSlots = await prisma.scheduleTimeSlot.findMany({
+    where: {
+      status: "OPEN",
+      schedule: {
+        date: {
+          lt: new Date(`${today}T00:00:00.000Z`),
+        },
+      },
+    },
+    include: {
+      schedule: true,
+      timeSlot: true,
+    },
+  });
+
+  // 2. Tìm tất cả time slots hôm nay đã qua giờ
+  const todayExpiredSlots = await prisma.scheduleTimeSlot.findMany({
+    where: {
+      status: "OPEN",
+      schedule: {
+        date: {
+          gte: new Date(`${today}T00:00:00.000Z`),
+          lt: new Date(`${today}T23:59:59.999Z`),
+        },
+      },
+    },
+    include: {
+      schedule: true,
+      timeSlot: true,
+    },
+  });
+
+  // Lọc các slot hôm nay đã qua giờ
+  const expiredTodaySlots = todayExpiredSlots.filter((slot) => {
+    const endTime = dayjs(slot.timeSlot.endTime).format("HH:mm:ss");
+    return endTime <= currentTime;
+  });
+
+  // 3. Gộp tất cả slots cần update
+  const allExpiredSlots = [...pastDateSlots, ...expiredTodaySlots];
+
+  if (allExpiredSlots.length === 0) {
+    return {
+      message: "Không có time slot nào cần cập nhật",
+      updated: 0,
+    };
+  }
+
+  // 4. Update status thành EXPIRED
+  const updatePromises = allExpiredSlots.map((slot) =>
+    prisma.scheduleTimeSlot.update({
+      where: {
+        scheduleId_timeSlotId: {
+          scheduleId: slot.scheduleId,
+          timeSlotId: slot.timeSlotId,
+        },
+      },
+      data: {
+        status: "EXPIRED",
+      },
+    })
+  );
+
+  await Promise.all(updatePromises);
+
+  return {
+    message: `Đã cập nhật ${allExpiredSlots.length} time slot thành hết hạn`,
+    updated: allExpiredSlots.length,
+    details: allExpiredSlots.map((slot) => ({
+      scheduleId: slot.scheduleId,
+      timeSlotId: slot.timeSlotId,
+      date: slot.schedule.date,
+      timeRange: `${dayjs(slot.timeSlot.startTime).format("HH:mm")} - ${dayjs(
+        slot.timeSlot.endTime
+      ).format("HH:mm")}`,
+    })),
+  };
 };
 
 export {
@@ -265,4 +356,5 @@ export {
   getScheduleByDoctorId,
   handleGetAllSchedule,
   getScheduleById,
+  updateExpiredTimeSlots,
 };
