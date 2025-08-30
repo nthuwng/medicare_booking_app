@@ -12,6 +12,7 @@ export interface ITimeSlot {
   timeSlotId: number;
   maxBooking: number;
   currentBooking: number;
+  status: "OPEN" | "EXPIRED";
   timeSlot: ITimeSlotDetail;
 }
 

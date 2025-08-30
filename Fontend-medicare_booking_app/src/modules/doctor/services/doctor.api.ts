@@ -91,3 +91,7 @@ export const getAllTimeSlots = () => {
   return axios.get<IBackendRes<ITimeSlotDetail[]>>(urlBackend);
 };
 
+export const updateExpiredTimeSlots = () => {
+  const urlBackend = `/api/schedule/schedules/update-expired`;
+  return axios.patch<IBackendRes<any>>(urlBackend);
+};
