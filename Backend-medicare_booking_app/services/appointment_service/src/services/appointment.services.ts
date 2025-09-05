@@ -45,11 +45,19 @@ const createAppointmentService = async (
 
   // Get schedule information (includes doctor info and timeSlots)
   const scheduleResponse = await checkScheduleViaRabbitMQ(scheduleId);
+  console.log("scheduleResponse =>>>>>>> hihi", scheduleResponse);
   if (!scheduleResponse || !scheduleResponse.data) {
     throw new Error("Lịch khám không tồn tại");
   }
 
-  const { schedule, doctor } = scheduleResponse.data;
+  const { schedule: scheduleArray, doctor } = scheduleResponse.data;
+
+  // Schedule is an array, get the first element
+  if (!scheduleArray || scheduleArray.length === 0) {
+    throw new Error("Lịch khám không tồn tại");
+  }
+
+  const schedule = scheduleArray[0];
 
   if (!schedule.isAvailable) {
     throw new Error("Lịch khám không khả dụng");

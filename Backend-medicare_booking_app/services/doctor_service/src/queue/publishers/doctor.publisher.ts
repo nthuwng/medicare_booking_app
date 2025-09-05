@@ -57,6 +57,10 @@ const sendMessageUpdateDoctorStatusViaRabbitMQ = async (
   });
 };
 
+const getScheduleByDoctorIdViaRabbitMQ = async (doctorId: string) => {
+  return rpcRequest("schedule.get_schedule_by_doctor_id", { doctorId });
+};
+
 export {
   verifyTokenViaRabbitMQ,
   checkAdminViaRabbitMQ,
@@ -65,4 +69,5 @@ export {
   checkDoctorViaRabbitMQ,
   sendMessageRegisterDoctorViaRabbitMQ,
   sendMessageUpdateDoctorStatusViaRabbitMQ,
+  getScheduleByDoctorIdViaRabbitMQ,
 };

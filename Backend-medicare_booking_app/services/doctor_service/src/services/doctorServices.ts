@@ -7,6 +7,7 @@ import {
 import { prisma } from "src/config/client";
 import {
   getAllDoctorsViaRabbitMQ,
+  getScheduleByDoctorIdViaRabbitMQ,
   getUserByIdViaRabbitMQ,
   sendMessageRegisterDoctorViaRabbitMQ,
   sendMessageUpdateDoctorStatusViaRabbitMQ,
@@ -33,7 +34,6 @@ const createDoctorProfile = async (
     gender,
     title,
     bookingFee,
-
   } = body;
 
   // Kiểm tra user có tồn tại trong auth_service
@@ -63,7 +63,7 @@ const createDoctorProfile = async (
     userId,
     fullName,
     phone,
-      avatar_url || "",
+    avatar_url || "",
     clinicId,
     specialtyId,
     bio || "",
@@ -71,7 +71,7 @@ const createDoctorProfile = async (
     gender || "",
     title || "",
     bookingFee || 0,
-    avatar_public_id || "",
+    avatar_public_id || ""
   );
 
   try {
@@ -161,8 +161,11 @@ const getDoctorByIdService = async (id: string) => {
   // Gọi sang auth_service để lấy thông tin user
   const userInfo = await getUserByIdViaRabbitMQ(doctor.userId);
 
+  const scheduleByDoctorId = await getScheduleByDoctorIdViaRabbitMQ(doctor.id);
+
   return {
     ...doctor,
+    scheduleByDoctorId,
     userInfo,
   };
 };

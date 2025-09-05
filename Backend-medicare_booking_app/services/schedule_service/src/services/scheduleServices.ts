@@ -261,7 +261,9 @@ const getScheduleById = async (id: string) => {
       },
     },
   });
-  const doctor = await checkDoctorProfileViaRabbitMQ(schedule[0]?.doctorId || "");
+  const doctor = await checkDoctorProfileViaRabbitMQ(
+    schedule[0]?.doctorId || ""
+  );
 
   return { data: { schedule, doctor } };
 };

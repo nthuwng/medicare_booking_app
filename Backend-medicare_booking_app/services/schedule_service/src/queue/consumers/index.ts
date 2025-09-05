@@ -1,8 +1,10 @@
 import { initCheckScheduleConsumer } from "./checkSchedule.consumer";
+import { initGetScheduleByDoctorIdConsumer } from "./getScheduleByDoctorId.consumer";
 
 export const initializeAllRabbitMQConsumers = async () => {
   try {
     await initCheckScheduleConsumer();
+    await initGetScheduleByDoctorIdConsumer();
 
     console.log(
       "✅ All RabbitMQ consumers doctor_service initialized successfully."
