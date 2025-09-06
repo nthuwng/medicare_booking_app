@@ -11,6 +11,8 @@ import RegisterPage from "@/pages/register";
 import { Route, Routes } from "react-router-dom";
 import DoctorDetailPage from "@/modules/client/pages/doctor/DoctorDetailPage";
 import MakeAppointmentPage from "@/modules/client/pages/booking/MakeAppointmentPage";
+import PaymentSelectionPage from "@/modules/client/pages/booking/PaymentSelectionPage";
+import PaymentReturnPage from "@/modules/client/pages/booking/PaymentReturnPage";
 
 const ClientRoutes = () => {
   return (
@@ -44,6 +46,12 @@ const ClientRoutes = () => {
           path="/booking-options/doctor/:doctorId/appointment"
           element={<MakeAppointmentPage />}
         />
+
+        {/* Trang chọn phương thức thanh toán */}
+        <Route path="/payment-selection" element={<PaymentSelectionPage />} />
+
+        {/* Trang kết quả thanh toán VNPay */}
+        <Route path="/payment-return" element={<PaymentReturnPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

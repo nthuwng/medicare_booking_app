@@ -12,13 +12,8 @@ import {
   Col,
   Button,
   Form,
-  Input,
   Select,
-  Radio,
-  Avatar,
   Space,
-  Tag,
-  Divider,
   message,
   Steps,
   Breadcrumb,
@@ -26,22 +21,18 @@ import {
   Result,
 } from "antd";
 import {
-  UserOutlined,
-  PhoneOutlined,
-  MailOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
-  EnvironmentOutlined,
   CheckCircleOutlined,
   HomeOutlined,
   RightOutlined,
-  StarFilled,
-  SafetyCertificateOutlined,
 } from "@ant-design/icons";
+import DoctorInfoCard from "../../components/appointment/DoctorInfoCard";
+import PatientInfoForm from "../../components/appointment/PatientInfoForm";
+import BookerInfoForm from "../../components/appointment/BookerInfoForm";
+import ConfirmCard from "../../components/appointment/ConfirmCard";
 
 const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
-const { TextArea } = Input;
 
 type TimeSlot = {
   id: number;
@@ -87,6 +78,7 @@ const MakeAppointmentPage = () => {
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<number | null>(
     null
   );
+  const [formData, setFormData] = useState<BookingFormData | null>(null);
 
   const fetchDoctorDetail = async () => {
     if (!doctorId) return;
@@ -139,48 +131,36 @@ const MakeAppointmentPage = () => {
   };
 
   useEffect(() => {
-    // console.log("availableTimeSlots =>>>>>>>>>>", availableTimeSlots);
     fetchDoctorDetail();
   }, [doctorId, form]);
 
-  const provinces = [
-    { label: "Hà Nội", value: "hanoi" },
-    { label: "Hồ Chí Minh", value: "hcm" },
-    { label: "Đà Nẵng", value: "danang" },
-    { label: "Hải Phòng", value: "haiphong" },
-    { label: "Cần Thơ", value: "cantho" },
-  ];
-
-  const districts = [
-    { label: "Ba Đình", value: "ba-dinh" },
-    { label: "Hoàn Kiếm", value: "hoan-kiem" },
-    { label: "Đống Đa", value: "dong-da" },
-    { label: "Cầu Giấy", value: "cau-giay" },
-    { label: "Thanh Xuân", value: "thanh-xuan" },
-  ];
-
-  const relationships = [
-    { label: "Con", value: "child" },
-    { label: "Cha/Mẹ", value: "parent" },
-    { label: "Anh/Chị/Em", value: "sibling" },
-    { label: "Vợ/Chồng", value: "spouse" },
-    { label: "Ông/Bà", value: "grandparent" },
-    { label: "Cháu", value: "grandchild" },
-    { label: "Khác", value: "other" },
-  ];
-
-  const formatTimeSlot = (startTime: string, endTime: string) => {
-    const formatTime = (time: string) => time.substring(0, 5); // Remove seconds
-    return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+  const handleFormSubmit = (values: BookingFormData) => {
+    // Lưu form data vào state với appointmentDate
+    setFormData({
+      ...values,
+      appointmentDate: currentSelectedDate,
+    });
+    // Chuyển sang step xác nhận
+    setCurrentStep(1);
   };
 
-  const onFinish = async (values: BookingFormData) => {
+  const handleConfirmBooking = async () => {
     setSubmitting(true);
     try {
+      // Sử dụng saved form data thay vì getFieldsValue
+      const values = formData;
+
+      if (!values) {
+        message.error("Dữ liệu form bị mất, vui lòng thử lại!");
+        setCurrentStep(0);
+        setSubmitting(false);
+        return;
+      }
+
       // Find the selected schedule
       const selectedTimeSlot = availableTimeSlots.find(
         (slot) => slot.id === values.timeSlotId
-      );
+      ); 
 
       if (!selectedTimeSlot) {
         message.error("Vui lòng chọn khung giờ khám!");
@@ -209,19 +189,23 @@ const MakeAppointmentPage = () => {
         }),
       };
 
-      console.log("Booking data:", bookingData);
 
       // Call API to create booking
       const response = await createBooking(bookingData);
 
       if (response.data) {
         message.success("Đặt lịch thành công!");
-        setCurrentStep(2);
+
+        // Chuyển đến trang chọn phương thức thanh toán
+        navigate("/payment-selection", {
+          state: {
+            appointmentData: response.data,
+          },
+        });
       } else {
         message.error("Có lỗi xảy ra khi đặt lịch!");
       }
     } catch (error: any) {
-      console.error("Error creating booking:", error);
       const errorMessage =
         error.response?.data?.message || "Có lỗi xảy ra khi đặt lịch!";
       message.error(errorMessage);
@@ -269,9 +253,7 @@ const MakeAppointmentPage = () => {
   }
 
   const handleDateSelect = (selectedDateValue: string) => {
-    // Clear selected time slot when date changes
     setSelectedTimeSlotId(null);
-    // Update current selected date
     setCurrentSelectedDate(selectedDateValue);
 
     form.setFieldsValue({
@@ -280,7 +262,6 @@ const MakeAppointmentPage = () => {
     });
 
     if (selectedDateValue && doctor) {
-      // Tìm schedule tương ứng với ngày được chọn
       const selectedSchedule = doctor.scheduleByDoctorId.find(
         (schedule: any) => schedule.date === selectedDateValue
       );
@@ -294,7 +275,6 @@ const MakeAppointmentPage = () => {
           status: timeSlot.status,
           scheduleId: selectedSchedule.id,
         }));
-        console.log("timeSlots test =>>>>>>>>>>", timeSlots);
         setAvailableTimeSlots(timeSlots);
       } else {
         setAvailableTimeSlots([]);
@@ -353,220 +333,9 @@ const MakeAppointmentPage = () => {
 
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px" }}>
         <Row gutter={[24, 24]}>
-          {/* Left Column - Doctor Info */}
           <Col xs={24} lg={8}>
-            <Card
-              style={{
-                borderRadius: "12px",
-                border: "1px solid #e8f4f8",
-                position: "sticky",
-                top: "24px",
-              }}
-              bodyStyle={{ padding: "24px" }}
-            >
-              {/* Header */}
-              <div style={{ marginBottom: "20px" }}>
-                <Tag color="orange" style={{ marginBottom: "12px" }}>
-                  ĐẶT LỊCH KHÁM
-                </Tag>
-                <Title level={4} style={{ margin: 0, color: "#1890ff" }}>
-                  {doctor.fullName}
-                </Title>
-              </div>
-
-              {/* Doctor Avatar & Basic Info */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: "20px",
-                }}
-              >
-                <Avatar
-                  size={64}
-                  src={doctor.avatarUrl}
-                  style={{ marginRight: "12px" }}
-                  icon={<UserOutlined />}
-                />
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    <StarFilled
-                      style={{ color: "#faad14", marginRight: "4px" }}
-                    />
-                    <Text strong>4.8</Text>
-                    <Text type="secondary" style={{ marginLeft: "8px" }}>
-                      {doctor.experienceYears}+ năm kinh nghiệm
-                    </Text>
-                  </div>
-                  <Text type="secondary">
-                    {doctor.specialty?.specialtyName || "Chuyên khoa"}
-                  </Text>
-                </div>
-              </div>
-
-              {/* Schedule Info */}
-              <div
-                style={{
-                  backgroundColor: "#fff7e6",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  border: "1px solid #ffd591",
-                  marginBottom: "20px",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <CalendarOutlined
-                    style={{ color: "#fa8c16", marginRight: "8px" }}
-                  />
-                  <Text strong>Thứ 2 - Chủ nhật</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <ClockCircleOutlined
-                    style={{ color: "#fa8c16", marginRight: "8px" }}
-                  />
-                  <Text strong>8:00 - 17:00</Text>
-                </div>
-              </div>
-
-              {/* Location */}
-              <div style={{ marginBottom: "20px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <EnvironmentOutlined
-                    style={{
-                      color: "#52c41a",
-                      marginRight: "8px",
-                      marginTop: "2px",
-                    }}
-                  />
-                  <Text strong style={{ color: "#52c41a" }}>
-                    {doctor.clinic?.clinicName || "Phòng khám"}
-                  </Text>
-                </div>
-                <Text
-                  type="secondary"
-                  style={{ fontSize: "14px", lineHeight: "1.5" }}
-                >
-                  {doctor.clinic
-                    ? `${doctor.clinic.street}, ${
-                        doctor.clinic.district
-                      }, ${doctor.clinic.city
-                        .replace("HoChiMinh", "Hồ Chí Minh")
-                        .replace("HaNoi", "Hà Nội")}`
-                    : "Địa chỉ phòng khám"}
-                </Text>
-              </div>
-
-              {/* Price */}
-              <div
-                style={{
-                  backgroundColor: "#f6ffed",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  border: "1px solid #b7eb8f",
-                  marginBottom: "16px",
-                }}
-              >
-                <div style={{ textAlign: "center", marginBottom: "12px" }}>
-                  <Text strong style={{ fontSize: "16px", color: "#52c41a" }}>
-                    💰 Chi phí khám bệnh
-                  </Text>
-                </div>
-
-                <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text>Phí khám:</Text>
-                    <Text strong style={{ color: "#52c41a" }}>
-                      {Number(doctor.consultationFee) > 0
-                        ? `${Number(doctor.consultationFee)?.toLocaleString()}đ`
-                        : "Miễn phí"}
-                    </Text>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text>Phí đặt lịch:</Text>
-                    <Text strong style={{ color: "#52c41a" }}>
-                      {Number(doctor.bookingFee)?.toLocaleString()}đ
-                    </Text>
-                  </div>
-
-                  <Divider style={{ margin: "8px 0" }} />
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text strong style={{ fontSize: "16px" }}>
-                      Tổng cộng:
-                    </Text>
-                    <Text strong style={{ fontSize: "18px", color: "#52c41a" }}>
-                      {(
-                        Number(doctor.consultationFee) +
-                        Number(doctor.bookingFee)
-                      )?.toLocaleString()}
-                      đ
-                    </Text>
-                  </div>
-                </Space>
-              </div>
-
-              <Divider />
-
-              {/* Payment Info */}
-              <div style={{ textAlign: "center" }}>
-                <Text
-                  strong
-                  style={{
-                    color: "#1890ff",
-                    marginBottom: "8px",
-                    display: "block",
-                  }}
-                >
-                  Hình thức thanh toán
-                </Text>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <SafetyCertificateOutlined
-                    style={{
-                      color: "#52c41a",
-                      marginRight: "4px",
-                    }}
-                  />
-                  <Text>Thanh toán sau tại cơ sở y tế</Text>
-                </div>
-              </div>
-            </Card>
+            {/* Left Column - Doctor Info */}
+            <DoctorInfoCard doctor={doctor} />
           </Col>
 
           {/* Right Column - Booking Form */}
@@ -589,7 +358,7 @@ const MakeAppointmentPage = () => {
                 <Form
                   form={form}
                   layout="vertical"
-                  onFinish={onFinish}
+                  onFinish={handleFormSubmit}
                   requiredMark={false}
                 >
                   {/* Hidden field for timeSlotId validation */}
@@ -836,438 +605,14 @@ const MakeAppointmentPage = () => {
                     </Card>
                   </div>
 
-                  {/* Booking For Section */}
-                  <Card
-                    style={{
-                      borderRadius: "16px",
-                      border: "2px solid #fff2e8",
-                      backgroundColor: "#fffbf5",
-                      boxShadow: "0 4px 12px rgba(250, 140, 22, 0.1)",
-                      marginBottom: "24px",
-                    }}
-                    bodyStyle={{ padding: "24px" }}
-                  >
-                    <div style={{ marginBottom: "16px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        <UserOutlined
-                          style={{
-                            fontSize: "20px",
-                            color: "#fa8c16",
-                            marginRight: "8px",
-                          }}
-                        />
-                        <Title
-                          level={5}
-                          style={{ margin: 0, color: "#fa8c16" }}
-                        >
-                          Đặt lịch cho ai?
-                        </Title>
-                      </div>
-                      <Text type="secondary" style={{ fontSize: "14px" }}>
-                        Chọn bạn đang đặt lịch cho ai
-                      </Text>
-                    </div>
-
-                    <Form.Item
-                      name="bookingFor"
-                      initialValue="self"
-                      rules={[{ required: true }]}
-                      style={{ marginBottom: 0 }}
-                    >
-                      <Radio.Group
-                        onChange={(e) => setBookingFor(e.target.value)}
-                        style={{ width: "100%" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "16px",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <Radio
-                            value="self"
-                            style={{
-                              padding: "12px 16px",
-                              borderRadius: "8px",
-                              border: "1px solid #d9d9d9",
-                              backgroundColor: "#ffffff",
-                              fontWeight: "500",
-                            }}
-                          >
-                            👤 Đặt cho mình
-                          </Radio>
-                          <Radio
-                            value="other"
-                            style={{
-                              padding: "12px 16px",
-                              borderRadius: "8px",
-                              border: "1px solid #d9d9d9",
-                              backgroundColor: "#ffffff",
-                              fontWeight: "500",
-                            }}
-                          >
-                            👨‍👩‍👧‍👦 Đặt cho người thân
-                          </Radio>
-                        </div>
-                      </Radio.Group>
-                    </Form.Item>
-                  </Card>
-
-                  {/* Thông tin người đặt lịch - chỉ hiển thị khi đặt cho người thân */}
-                  {bookingFor === "other" && (
-                    <div
-                      style={{
-                        backgroundColor: "#f0f9ff",
-                        padding: "20px",
-                        borderRadius: "8px",
-                        border: "1px solid #bae6fd",
-                        marginBottom: "24px",
-                      }}
-                    >
-                      <Title
-                        level={5}
-                        style={{ color: "#0369a1", marginBottom: "16px" }}
-                      >
-                        👤 Thông tin người đặt lịch
-                      </Title>
-
-                      <Row gutter={[16, 0]}>
-                        <Col xs={24} md={12}>
-                          <Form.Item
-                            label={<Text strong>Họ tên người đặt</Text>}
-                            name="bookerName"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Vui lòng nhập tên người đặt!",
-                              },
-                            ]}
-                          >
-                            <Input
-                              size="large"
-                              placeholder="Nhập họ tên của bạn"
-                              prefix={
-                                <UserOutlined style={{ color: "#bfbfbf" }} />
-                              }
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12}>
-                          <Form.Item
-                            label={
-                              <Text strong>Mối quan hệ với bệnh nhân</Text>
-                            }
-                            name="relationshipToPatient"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Vui lòng chọn mối quan hệ!",
-                              },
-                            ]}
-                          >
-                            <Select size="large" placeholder="Chọn mối quan hệ">
-                              {relationships.map((rel) => (
-                                <Option key={rel.value} value={rel.value}>
-                                  {rel.label}
-                                </Option>
-                              ))}
-                            </Select>
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      <Row gutter={[16, 0]}>
-                        <Col xs={24} md={12}>
-                          <Form.Item
-                            label={<Text strong>Số điện thoại người đặt</Text>}
-                            name="bookerPhone"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Vui lòng nhập số điện thoại!",
-                              },
-                              {
-                                pattern: /^[0-9]{10,11}$/,
-                                message: "Số điện thoại không hợp lệ!",
-                              },
-                            ]}
-                          >
-                            <Input
-                              size="large"
-                              placeholder="Nhập số điện thoại của bạn"
-                              prefix={
-                                <PhoneOutlined style={{ color: "#bfbfbf" }} />
-                              }
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12}>
-                          <Form.Item
-                            label={<Text strong>Email người đặt</Text>}
-                            name="bookerEmail"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Vui lòng nhập email!",
-                              },
-                              { type: "email", message: "Email không hợp lệ!" },
-                            ]}
-                          >
-                            <Input
-                              size="large"
-                              placeholder="Nhập email của bạn"
-                              prefix={
-                                <MailOutlined style={{ color: "#bfbfbf" }} />
-                              }
-                            />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-                    </div>
-                  )}
+                  {/* Booker Information Section */}
+                  <BookerInfoForm
+                    bookingFor={bookingFor}
+                    setBookingFor={setBookingFor}
+                  />
 
                   {/* Patient Information Section */}
-                  <Card
-                    style={{
-                      borderRadius: "16px",
-                      border: "2px solid #e6f7ff",
-                      backgroundColor: "#fafcff",
-                      boxShadow: "0 4px 12px rgba(24, 144, 255, 0.1)",
-                      marginBottom: "24px",
-                    }}
-                    bodyStyle={{ padding: "24px" }}
-                  >
-                    <div style={{ marginBottom: "24px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        {bookingFor === "self" ? (
-                          <UserOutlined
-                            style={{
-                              fontSize: "20px",
-                              color: "#1890ff",
-                              marginRight: "8px",
-                            }}
-                          />
-                        ) : (
-                          <UserOutlined
-                            style={{
-                              fontSize: "20px",
-                              color: "#1890ff",
-                              marginRight: "8px",
-                            }}
-                          />
-                        )}
-                        <Title
-                          level={5}
-                          style={{ margin: 0, color: "#1890ff" }}
-                        >
-                          {bookingFor === "self"
-                            ? "Thông tin của bạn"
-                            : "Thông tin bệnh nhân"}
-                        </Title>
-                      </div>
-                      <Text type="secondary" style={{ fontSize: "14px" }}>
-                        Vui lòng nhập đầy đủ thông tin để chúng tôi có thể liên
-                        hệ và xác nhận lịch khám
-                      </Text>
-                    </div>
-
-                    <Row gutter={[16, 0]}>
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          label={<Text strong>Họ tên bệnh nhân</Text>}
-                          name="patientName"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng nhập họ tên!",
-                            },
-                          ]}
-                        >
-                          <Input
-                            size="large"
-                            placeholder="Nhập họ tên bệnh nhân"
-                            prefix={
-                              <UserOutlined style={{ color: "#bfbfbf" }} />
-                            }
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          label={<Text strong>Giới tính</Text>}
-                          name="gender"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng chọn giới tính!",
-                            },
-                          ]}
-                        >
-                          <Radio.Group>
-                            <Radio value="male">Nam</Radio>
-                            <Radio value="female">Nữ</Radio>
-                          </Radio.Group>
-                        </Form.Item>
-                      </Col>
-                    </Row>
-
-                    <Row gutter={[16, 0]}>
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          label={<Text strong>Số điện thoại liên hệ</Text>}
-                          name="phone"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng nhập số điện thoại!",
-                            },
-                            {
-                              pattern: /^[0-9]{10,11}$/,
-                              message: "Số điện thoại không hợp lệ!",
-                            },
-                          ]}
-                        >
-                          <Input
-                            size="large"
-                            placeholder="Nhập số điện thoại"
-                            prefix={
-                              <PhoneOutlined style={{ color: "#bfbfbf" }} />
-                            }
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          label={<Text strong>Địa chỉ email</Text>}
-                          name="email"
-                          rules={[
-                            { required: true, message: "Vui lòng nhập email!" },
-                            { type: "email", message: "Email không hợp lệ!" },
-                          ]}
-                        >
-                          <Input
-                            size="large"
-                            placeholder="Nhập địa chỉ email"
-                            prefix={
-                              <MailOutlined style={{ color: "#bfbfbf" }} />
-                            }
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-
-                    <Form.Item
-                      label={<Text strong>Năm sinh</Text>}
-                      name="dateOfBirth"
-                      rules={[
-                        { required: true, message: "Vui lòng nhập năm sinh!" },
-                      ]}
-                    >
-                      <Input
-                        size="large"
-                        placeholder="Nhập năm sinh (ví dụ: 1990)"
-                        prefix={
-                          <CalendarOutlined style={{ color: "#bfbfbf" }} />
-                        }
-                      />
-                    </Form.Item>
-
-                    <Row gutter={[16, 0]}>
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          label={<Text strong>Tỉnh/Thành phố</Text>}
-                          name="province"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng chọn tỉnh/thành!",
-                            },
-                          ]}
-                        >
-                          <Select
-                            size="large"
-                            placeholder="-- Chọn Tỉnh/Thành --"
-                          >
-                            {provinces.map((province) => (
-                              <Option
-                                key={province.value}
-                                value={province.value}
-                              >
-                                {province.label}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          label={<Text strong>Quận/Huyện</Text>}
-                          name="district"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng chọn quận/huyện!",
-                            },
-                          ]}
-                        >
-                          <Select
-                            size="large"
-                            placeholder="-- Chọn Quận/Huyện --"
-                          >
-                            {districts.map((district) => (
-                              <Option
-                                key={district.value}
-                                value={district.value}
-                              >
-                                {district.label}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                    </Row>
-
-                    <Form.Item
-                      label={<Text strong>Địa chỉ</Text>}
-                      name="address"
-                      rules={[
-                        { required: true, message: "Vui lòng nhập địa chỉ!" },
-                      ]}
-                    >
-                      <Input
-                        size="large"
-                        placeholder="Nhập số nhà, tên đường..."
-                        prefix={
-                          <EnvironmentOutlined style={{ color: "#bfbfbf" }} />
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={<Text strong>Lý do khám</Text>}
-                      name="reason"
-                    >
-                      <TextArea
-                        rows={4}
-                        placeholder="Mô tả triệu chứng, lý do khám bệnh..."
-                        maxLength={400}
-                        showCount
-                      />
-                    </Form.Item>
-                  </Card>
+                  <PatientInfoForm bookingFor={bookingFor} />
 
                   <div style={{ textAlign: "center", marginTop: "32px" }}>
                     <Button
@@ -1307,142 +652,10 @@ const MakeAppointmentPage = () => {
                   </Title>
 
                   {/* Hiển thị thông tin đã nhập */}
-                  <div style={{ marginBottom: "32px" }}>
-                    {(() => {
-                      const formData = form.getFieldsValue();
-                      return (
-                        <div>
-                          {/* Thông tin người đặt lịch (nếu đặt cho người thân) */}
-                          {formData.bookingFor === "other" && (
-                            <Card
-                              title="👤 Thông tin người đặt lịch"
-                              style={{ marginBottom: "16px" }}
-                              size="small"
-                            >
-                              <Row gutter={[16, 8]}>
-                                <Col xs={24} md={12}>
-                                  <Text strong>Họ tên: </Text>
-                                  <Text>{formData.bookerName}</Text>
-                                </Col>
-                                <Col xs={24} md={12}>
-                                  <Text strong>Mối quan hệ: </Text>
-                                  <Text>
-                                    {
-                                      relationships.find(
-                                        (rel) =>
-                                          rel.value ===
-                                          formData.relationshipToPatient
-                                      )?.label
-                                    }
-                                  </Text>
-                                </Col>
-                                <Col xs={24} md={12}>
-                                  <Text strong>Số điện thoại: </Text>
-                                  <Text>{formData.bookerPhone}</Text>
-                                </Col>
-                                <Col xs={24} md={12}>
-                                  <Text strong>Email: </Text>
-                                  <Text>{formData.bookerEmail}</Text>
-                                </Col>
-                              </Row>
-                            </Card>
-                          )}
-
-                          {/* Thông tin bệnh nhân */}
-                          <Card
-                            title={
-                              formData.bookingFor === "self"
-                                ? "👤 Thông tin của bạn"
-                                : "🏥 Thông tin bệnh nhân"
-                            }
-                            size="small"
-                          >
-                            <Row gutter={[16, 8]}>
-                              <Col xs={24} md={12}>
-                                <Text strong>Họ tên: </Text>
-                                <Text>{formData.patientName}</Text>
-                              </Col>
-                              <Col xs={24} md={12}>
-                                <Text strong>Giới tính: </Text>
-                                <Text>
-                                  {formData.gender === "male" ? "Nam" : "Nữ"}
-                                </Text>
-                              </Col>
-                              <Col xs={24} md={12}>
-                                <Text strong>Số điện thoại: </Text>
-                                <Text>{formData.phone}</Text>
-                              </Col>
-                              <Col xs={24} md={12}>
-                                <Text strong>Email: </Text>
-                                <Text>{formData.email}</Text>
-                              </Col>
-                              <Col xs={24} md={12}>
-                                <Text strong>Năm sinh: </Text>
-                                <Text>{formData.dateOfBirth}</Text>
-                              </Col>
-                              <Col xs={24} md={12}>
-                                <Text strong>Địa chỉ: </Text>
-                                <Text>
-                                  {formData.address},{" "}
-                                  {
-                                    districts.find(
-                                      (d) => d.value === formData.district
-                                    )?.label
-                                  }
-                                  ,{" "}
-                                  {
-                                    provinces.find(
-                                      (p) => p.value === formData.province
-                                    )?.label
-                                  }
-                                </Text>
-                              </Col>
-                              <Col xs={24} md={12}>
-                                <Text strong>Ngày khám: </Text>
-                                <Text
-                                  style={{
-                                    color: "#1890ff",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  {formData.appointmentDate}
-                                </Text>
-                              </Col>
-                              <Col xs={24} md={12}>
-                                <Text strong>Giờ khám: </Text>
-                                <Text
-                                  style={{
-                                    color: "#1890ff",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  {(() => {
-                                    const selectedSlot =
-                                      availableTimeSlots.find(
-                                        (slot) =>
-                                          slot.id === formData.timeSlotId
-                                      );
-                                    return selectedSlot
-                                      ? formatTimeSlot(
-                                          selectedSlot.startTime,
-                                          selectedSlot.endTime
-                                        )
-                                      : "Chưa chọn";
-                                  })()}
-                                </Text>
-                              </Col>
-                              {formData.reason && (
-                                <Col span={24}>
-                                  <Text strong>Lý do khám: </Text>
-                                  <Text>{formData.reason}</Text>
-                                </Col>
-                              )}
-                            </Row>
-                          </Card>
-                        </div>
-                      );
-                    })()}
-                  </div>
+                  <ConfirmCard
+                    formData={formData as BookingFormData}
+                    availableTimeSlots={availableTimeSlots as TimeSlot[]}
+                  />
 
                   <div style={{ textAlign: "center" }}>
                     <Paragraph
@@ -1463,8 +676,7 @@ const MakeAppointmentPage = () => {
                         size="large"
                         loading={submitting}
                         onClick={() => {
-                          const formData = form.getFieldsValue();
-                          onFinish(formData);
+                          handleConfirmBooking();
                         }}
                         style={{
                           width: "180px",

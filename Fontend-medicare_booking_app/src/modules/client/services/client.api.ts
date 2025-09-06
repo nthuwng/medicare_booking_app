@@ -1,5 +1,12 @@
 import axios from "services/axios.customize";
-import type { IDoctorProfile, ISpecialty, IClinic, ICreateAppointmentInput, IBooking } from "@/types";
+import type {
+  IDoctorProfile,
+  ISpecialty,
+  IClinic,
+  ICreateAppointmentInput,
+  IBooking,
+  ICreateVNPayPaymentInput,
+} from "@/types";
 
 export const getAllApprovedDoctorsBooking = (query: string) => {
   const urlBackend = `/api/doctor/doctors/approved?${query}`;
@@ -24,4 +31,17 @@ export const getDoctorDetailBookingById = (doctorId: string) => {
 export const createBooking = (data: ICreateAppointmentInput) => {
   const urlBackend = `/api/appointment/create-appointment`;
   return axios.post<IBackendRes<IBooking>>(urlBackend, data);
+};
+
+export const createVNPayPayment = (data: ICreateVNPayPaymentInput) => {
+  const urlBackend = `/api/payment/vnpay/create`;
+  return axios.post<IBackendRes<{ paymentId: string; paymentUrl: string }>>(
+    urlBackend,
+    data
+  );
+};
+
+export const verifyVNPayReturn = (queryParams: string) => {
+  const urlBackend = `/api/payment/vnpay/return?${queryParams}`;
+  return axios.get<IBackendRes<any>>(urlBackend);
 };

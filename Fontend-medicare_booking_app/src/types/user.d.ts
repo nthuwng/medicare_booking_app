@@ -143,3 +143,9 @@ export interface IBooking {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ICreateVNPayPaymentInput {
+  appointmentId: string;
+  amount: number;
+  returnUrl: string;
+}
