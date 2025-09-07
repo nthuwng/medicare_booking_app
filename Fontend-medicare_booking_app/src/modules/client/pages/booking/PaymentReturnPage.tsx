@@ -219,6 +219,7 @@ const PaymentReturnPage = () => {
               <LoadingOutlined style={{ fontSize: 48, color: "#1890ff" }} />
             }
             size="large"
+            delay={5000}
           />
           <div style={{ marginTop: 24 }}>
             <Title level={4} style={{ color: "#1890ff", marginBottom: 8 }}>
