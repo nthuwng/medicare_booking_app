@@ -14,7 +14,7 @@ export const getAllApprovedDoctorsBooking = (query: string) => {
 };
 
 export const getAllSpecialtiesBooking = (query: string) => {
-  const urlBackend = `/api/doctor/specialties?${query}`;
+  const urlBackend = `/api/doctor/specialties?${query}`; 
   return axios.get<IBackendRes<IModelPaginate<ISpecialty>>>(urlBackend);
 };
 
