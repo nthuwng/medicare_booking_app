@@ -70,7 +70,7 @@ const NotificationDoctor = (props: IProps) => {
     const socket = connectAdminSocket();
 
     // 2) join phòng riêng theo userId
-    socket.emit("join-user-room", { userId: user.id });
+    socket.emit("join-doctor-room", { userId: user.id });
 
     // 3) nhận realtime và cập nhật badge + list ngay (không cần bấm chuông)
     const isValidNotification = (n: any) =>
@@ -88,8 +88,18 @@ const NotificationDoctor = (props: IProps) => {
       setNotifications((prev) => [notif, ...prev.filter(Boolean)]);
     };
 
-    socket.on("doctor.approved", onApproved);
+    const onAppointmentCreated = (payload: any) => {
+      const notif = payload?.notification;
+      if (!isValidNotification(notif)) {
+        fetchNotifications();
+        return;
+      }
 
+      setNotifications((prev) => [notif, ...prev.filter(Boolean)]);
+    };
+
+    socket.on("doctor.approved", onApproved);
+    socket.on("appointment.created", onAppointmentCreated);
     socket.on("connect_error", (err) => console.error("socket error", err));
 
     return () => {
@@ -176,7 +186,7 @@ const NotificationDoctor = (props: IProps) => {
   const getIcon = (type: string) => {
     if (type === "DOCTOR_REGISTRATION")
       return <UserOutlined style={{ color: "#1890ff" }} />;
-    if (type === "APPOINTMENT")
+    if (type === "APPOINTMENT_CREATED")
       return <BellOutlined style={{ color: "#52c41a" }} />;
     return <BellOutlined />;
   };
