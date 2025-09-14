@@ -101,3 +101,15 @@ export const getAllAppointmentsByDoctorId = (query: string) => {
   const urlBackend = `/api/appointment/appointments/doctor-appointments/${query}`;
   return axios.get<IBackendRes<IModelPaginate<IAppointment>>>(urlBackend);
 };
+
+export type CreateSchedulePayload = {
+  doctorId: string;
+  clinicId: number;
+  timeSlotId: number[]; // SỐ ÍT: timeSlotId
+  date: string;         // "YYYY/M/D"
+};
+
+export const createDoctorSchedule = (data: CreateSchedulePayload) =>
+  axios.post("/api/schedule/schedules", data, {
+    headers: { "Content-Type": "application/json" },
+  });

@@ -55,7 +55,9 @@ const DoctorProFile = () => {
   }, [user?.id, fetchDoctorProfile]);
 
   useEffect(() => {
-    const handler = () => { fetchDoctorProfile(); };
+    const handler = () => {
+      fetchDoctorProfile();
+    };
     window.addEventListener("doctor:profile-refresh", handler);
     return () => window.removeEventListener("doctor:profile-refresh", handler);
   }, [fetchDoctorProfile]);
