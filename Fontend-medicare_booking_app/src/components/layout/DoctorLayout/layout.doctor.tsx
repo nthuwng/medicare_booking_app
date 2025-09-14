@@ -14,6 +14,7 @@ import { RiAdminFill } from "react-icons/ri";
 import { MdAccountCircle } from "react-icons/md";
 import NotificationDoctor from "@/modules/doctor/components/NotificationDoctor/NotificationDoctor";
 import { IoCalendarOutline } from "react-icons/io5";
+import { useCurrentApp } from "@/components/contexts/app.context";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -24,10 +25,17 @@ const LayoutDoctor = () => {
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [modalNotificationLayout, setModalNotificationLayout] = useState(false);
 
-  const handleLogout = async () => {
-    //todo
-  };
+  const { setIsAuthenticated, setUser } = useCurrentApp();
 
+  const handleLogout = () => {
+    // Xóa token từ localStorage
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
+    // Reset trạng thái
+    setIsAuthenticated(false);
+    setUser(null);
+  };
   const items: MenuItem[] = [
     {
       label: <Link to="/doctor">Dashboard</Link>,
@@ -66,9 +74,9 @@ const LayoutDoctor = () => {
     },
     {
       label: (
-        <label style={{ cursor: "pointer" }} onClick={() => handleLogout()}>
+        <Link to={"/"} onClick={() => handleLogout()}>
           Đăng xuất
-        </label>
+        </Link>
       ),
       key: "logout",
     },
@@ -113,7 +121,11 @@ const LayoutDoctor = () => {
               </div>
               {/* User Dropdown */}
               <div className="notification-icon">
-                <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
+                <Dropdown
+                  menu={{ items: itemsDropdown }}
+                  trigger={["click"]}
+                  overlayClassName="doctor-user-dropdown"
+                >
                   <Space style={{ cursor: "pointer" }}>
                     <RiAdminFill fontSize={20} />
                   </Space>

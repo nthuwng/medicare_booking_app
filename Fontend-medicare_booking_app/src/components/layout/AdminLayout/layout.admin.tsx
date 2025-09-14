@@ -20,6 +20,7 @@ import { LiaClinicMedicalSolid } from "react-icons/lia";
 import { MdAccountCircle } from "react-icons/md";
 import NotificationAdmin from "@/modules/admin/components/NotificationAdmin.tsx/NotificationAdmin";
 import { FaUserInjured } from "react-icons/fa";
+import { useCurrentApp } from "@/components/contexts/app.context";
 type MenuItem = Required<MenuProps>["items"][number];
 
 const { Content, Footer, Sider } = Layout;
@@ -29,8 +30,16 @@ const LayoutAdmin = () => {
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [modalNotificationLayout, setModalNotificationLayout] = useState(false);
 
-  const handleLogout = async () => {
-    //todo
+  const { setIsAuthenticated, setUser } = useCurrentApp();
+
+  const handleLogout = () => {
+    // Xóa token từ localStorage
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
+    // Reset trạng thái
+    setIsAuthenticated(false);
+    setUser(null);
   };
 
   const items: MenuItem[] = [
@@ -92,10 +101,14 @@ const LayoutAdmin = () => {
       key: "account",
     },
     {
+      // background: #e0f2fe !important;
+      // color: #1677ff !important;
+      // box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+      // transform: scale(1.04);
       label: (
-        <label style={{ cursor: "pointer" }} onClick={() => handleLogout()}>
+        <Link to={"/"} onClick={() => handleLogout()}>
           Đăng xuất
-        </label>
+        </Link>
       ),
       key: "logout",
     },
@@ -140,7 +153,11 @@ const LayoutAdmin = () => {
               </div>
               {/* User Dropdown */}
               <div className="notification-icon">
-                <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
+                <Dropdown
+                  menu={{ items: itemsDropdown }}
+                  trigger={["click"]}
+                  overlayClassName="admin-user-dropdown"
+                >
                   <Space style={{ cursor: "pointer" }}>
                     <RiAdminFill fontSize={20} />
                   </Space>

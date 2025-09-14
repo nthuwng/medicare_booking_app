@@ -4,6 +4,7 @@ import { Dropdown } from "antd";
 import { RiAdminFill } from "react-icons/ri";
 import { Space } from "lucide-react";
 import { useEffect } from "react";
+import "./layout.client.css";
 
 const ClientHeader = () => {
   const {
@@ -68,7 +69,10 @@ const ClientHeader = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 w-full h-16 bg-white shadow-lg  border-b border-gray-100" style={{backgroundColor: "#f9fafb"}}>
+      <header
+        className="fixed top-0 left-0 right-0 z-50 w-full h-16 bg-white shadow-lg  border-b border-gray-100"
+        style={{ backgroundColor: "#f9fafb" }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center">
@@ -185,7 +189,11 @@ const ClientHeader = () => {
                       )}
                     </div>
                   </div>
-                  <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
+                  <Dropdown
+                    menu={{ items: itemsDropdown }}
+                    trigger={["click"]}
+                    overlayClassName="client-user-dropdown"
+                  >
                     <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                         <RiAdminFill className="text-blue-600 text-lg" />
