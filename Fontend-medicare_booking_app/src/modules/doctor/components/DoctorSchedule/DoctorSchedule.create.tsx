@@ -4,33 +4,19 @@ import type { FormProps } from "antd";
 import type { Dayjs } from "dayjs";
 import { createDoctorSchedule } from "../../services/doctor.api";
 
-// ---- types nhẹ (tuỳ dự án bạn có thể import type riêng) ----
-export interface IClinic {
-  id: number | string;
-  tenPhongKham?: string;
-  name?: string;
-  clinicName?: string;
-  clinic_name?: string;
-  title?: string;
-  clinic?: {
-    tenPhongKham?: string;
-    name?: string;
-    clinicName?: string;
-  };
-}
-export interface ITimeSlotDetail {
-  id: number | string;
-  name?: string;
-  startTime?: string;
-  endTime?: string;
-}
+export interface IClinic { id: number | string; tenPhongKham?: string; name?: string; }
+export interface ITimeSlotDetail { id: number | string; name?: string; startTime?: string; endTime?: string; }
 
 interface IProps {
   openModalCreate: boolean;
   setOpenModalCreate: (v: boolean) => void;
   timeSlots: ITimeSlotDetail[];
-  clinics: IClinic[];     // truyền từ cha: res.data.result
+  clinics: IClinic[];
   doctorId: string;
+
+  // 👇 mới thêm
+  fixedClinicId?: number | string | null;
+  fixedClinicName?: string;
 }
 
 type FieldType = {
@@ -38,23 +24,7 @@ type FieldType = {
   clinicId: number | string;
   timeSlotIds: Array<number | string>;
   note?: string;
-  doctorId?: string; // field ẩn
-};
-
-// helper: rút nhãn phòng khám từ mọi key có thể gặp
-const getClinicLabel = (c: any) => {
-  const label =
-    c?.tenPhongKham ??
-    c?.name ??
-    c?.clinicName ??
-    c?.clinic_name ??
-    c?.title ??
-    c?.clinic?.tenPhongKham ??
-    c?.clinic?.name ??
-    c?.clinic?.clinicName;
-
-  const trimmed = (label ?? "").toString().trim();
-  return trimmed || `Phòng khám #${c?.id}`;
+  doctorId?: string;
 };
 
 const DoctorScheduleCreate: React.FC<IProps> = ({
@@ -63,33 +33,32 @@ const DoctorScheduleCreate: React.FC<IProps> = ({
   timeSlots,
   clinics,
   doctorId,
+  fixedClinicId,
+  fixedClinicName,
 }) => {
   const [form] = Form.useForm<FieldType>();
 
-  // log để kiểm tra dữ liệu khi mở modal
+  // Bơm sẵn doctorId & clinicId khi mở modal
   useEffect(() => {
     if (openModalCreate) {
-      console.log("[Clinics in modal] ->", clinics);
-      if (clinics?.length) {
-        console.log("First clinic keys:", Object.keys(clinics[0]), clinics[0]);
-      }
-      form.setFieldsValue({ doctorId });
+      const patch: Partial<FieldType> = { doctorId };
+      if (fixedClinicId != null) patch.clinicId = Number(fixedClinicId);
+      form.setFieldsValue(patch as FieldType);
     } else {
       form.resetFields();
     }
-  }, [openModalCreate, doctorId, form, clinics]);
+  }, [openModalCreate, doctorId, fixedClinicId, form]);
 
-  // ---- options: phòng khám (hiển thị tên, submit id) ----
+  // Options (phòng khám) — vẫn giữ để dùng nếu không truyền fixedClinicId
   const clinicOptions = useMemo(
     () =>
-      (clinics ?? []).map((c: any) => ({
-        value: Number(c.id),       // submit lên BE
-        label: getClinicLabel(c),  // tên hiển thị
+      (clinics ?? []).map((c) => ({
+        value: Number(c.id),
+        label: c.tenPhongKham || c.name || `Phòng khám #${c.id}`,
       })),
     [clinics]
   );
 
-  // ---- options: khung giờ ----
   const timeSlotOptions = useMemo(
     () =>
       (timeSlots ?? []).map((t) => ({
@@ -103,10 +72,9 @@ const DoctorScheduleCreate: React.FC<IProps> = ({
     const d = v.date;
     const payload = {
       doctorId: (v.doctorId || doctorId || "").trim(),
-      clinicId: Number(v.clinicId),
-      timeSlotId: (v.timeSlotIds ?? []).map((x) => Number(x)), // BE yêu cầu: number[]
-      date: `${d.year()}/${d.month() + 1}/${d.date()}`,        // "YYYY/M/D"
-      // note: v.note,
+      clinicId: Number(v.clinicId ?? fixedClinicId),          // 🔒 đảm bảo gửi đúng clinic cố định
+      timeSlotId: (v.timeSlotIds ?? []).map((x) => Number(x)),
+      date: `${d.year()}/${d.month() + 1}/${d.date()}`,
     };
 
     try {
@@ -128,10 +96,7 @@ const DoctorScheduleCreate: React.FC<IProps> = ({
       title="Thêm mới lịch làm việc"
       open={openModalCreate}
       onOk={() => form.submit()}
-      onCancel={() => {
-        form.resetFields();
-        setOpenModalCreate(false);
-      }}
+      onCancel={() => { form.resetFields(); setOpenModalCreate(false); }}
       destroyOnClose
       okText="Tạo mới"
       cancelText="Hủy"
@@ -139,42 +104,39 @@ const DoctorScheduleCreate: React.FC<IProps> = ({
       maskClosable={false}
     >
       <Divider />
-      <Form
-        form={form}
-        name="form-create-schedule"
-        layout="vertical"
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-      >
-        {/* giữ doctorId trong values */}
+      <Form form={form} name="form-create-schedule" layout="vertical" onFinish={onFinish} onFinishFailed={onFinishFailed}>
+        {/* Ẩn doctorId */}
         <Form.Item<FieldType> name="doctorId" hidden rules={[{ required: true, message: "Thiếu doctorId" }]}>
           <Input />
         </Form.Item>
 
+        {/* Nếu có fixedClinicId -> ẩn field submit clinicId + hiển thị tên readonly */}
+        {fixedClinicId != null ? (
+          <>
+            {/* Ẩn để submit đúng clinicId */}
+            <Form.Item<FieldType> name="clinicId" hidden initialValue={Number(fixedClinicId)}>
+              <Input />
+            </Form.Item>
+            {/* Chỉ hiển thị tên phòng khám, không cho đổi */}
+            <Form.Item label="Phòng khám">
+              <Input value={fixedClinicName || `Phòng khám #${fixedClinicId}`} disabled />
+            </Form.Item>
+          </>
+        ) : (
+          // Ngược lại: cho chọn bình thường (trường hợp account chưa gán phòng)
+          <Form.Item<FieldType>
+            label="Phòng khám"
+            name="clinicId"
+            rules={[{ required: true, message: "Vui lòng chọn phòng khám!" }]}
+          >
+            <Select placeholder="Chọn phòng khám" options={clinicOptions} showSearch optionFilterProp="label" />
+          </Form.Item>
+        )}
+
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item<FieldType>
-              label="Ngày làm việc"
-              name="date"
-              rules={[{ required: true, message: "Vui lòng chọn ngày!" }]}
-            >
+            <Form.Item<FieldType> label="Ngày làm việc" name="date" rules={[{ required: true, message: "Vui lòng chọn ngày!" }]}>
               <DatePicker className="w-full" format="YYYY/MM/DD" />
-            </Form.Item>
-          </Col>
-
-          <Col span={12}>
-            <Form.Item<FieldType>
-              label="Phòng khám"
-              name="clinicId"
-              rules={[{ required: true, message: "Vui lòng chọn phòng khám!" }]}
-            >
-              <Select
-                placeholder="Chọn phòng khám"
-                options={clinicOptions}
-                showSearch
-                optionFilterProp="label"
-                notFoundContent="Trống"
-              />
             </Form.Item>
           </Col>
 
@@ -187,14 +149,7 @@ const DoctorScheduleCreate: React.FC<IProps> = ({
                 { type: "array", min: 1, message: "Chọn ít nhất 1 khung giờ!" },
               ]}
             >
-              <Select
-                mode="multiple"
-                placeholder="Chọn khung giờ"
-                options={timeSlotOptions}
-                showSearch
-                optionFilterProp="label"
-                notFoundContent="Trống"
-              />
+              <Select mode="multiple" placeholder="Chọn khung giờ" options={timeSlotOptions} showSearch optionFilterProp="label" />
             </Form.Item>
           </Col>
 

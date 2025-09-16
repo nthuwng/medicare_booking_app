@@ -7,11 +7,11 @@ import {
   getDoctorProfileByUserId,
   getScheduleByDoctorId,
   updateExpiredTimeSlots,
-  getAllClinics, // <-- dùng để lấy danh sách phòng khám
+  getAllClinics,
 } from "../../services/doctor.api";
 import type { ISchedule, ITimeSlotDetail } from "@/types/schedule";
 import type { IDoctorProfile } from "@/types";
-import type { IClinic } from "@/types/clinic"; // IClinic có tenPhongKham?: string
+import type { IClinic } from "@/types/clinic";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import DoctorScheduleCreate from "./DoctorSchedule.create";
@@ -56,7 +56,7 @@ const DoctorSchedule = () => {
   const fetchClinics = useCallback(async () => {
     try {
       const res = await getAllClinics();
-      // ⚠️ API phân trang => lấy result
+      // API phân trang -> lấy result
       setClinics(res?.data?.result || []);
     } catch (err) {
       console.error("Lỗi load clinics", err);
@@ -64,25 +64,20 @@ const DoctorSchedule = () => {
   }, []);
 
   useEffect(() => {
-    const initializeData = async () => {
-      if (!user?.id) return;
-
+    if (!user?.id) return;
+    (async () => {
       try {
         await updateExpiredTimeSlots();
       } catch (error) {
         console.log("⚠️ Lỗi update expired slots:", error);
       }
-
       fetchDoctorSchedule();
       fetchAllTimeSlots();
       fetchDetailDoctor();
       fetchClinics();
-    };
-
-    initializeData();
+    })();
   }, [user?.id, fetchDoctorSchedule, fetchAllTimeSlots, fetchDetailDoctor, fetchClinics]);
 
-  // ------- SORTED SCHEDULES -------
   const sortedSchedules = useMemo(
     () =>
       [...schedules].sort(
@@ -91,7 +86,7 @@ const DoctorSchedule = () => {
     [schedules]
   );
 
-  // ------- MAP ID -> TÊN PHÒNG KHÁM -------
+  // Map id -> tên phòng khám
   const clinicNameById = useMemo(() => {
     const m = new Map<number, string>();
     for (const c of clinics) {
@@ -106,6 +101,16 @@ const DoctorSchedule = () => {
     return m;
   }, [clinics]);
 
+  // Lấy clinicId cố định của bác sĩ từ profile (điều chỉnh theo schema thực tế)
+  const doctorClinicId =
+    (dataDoctor as any)?.clinicId ||
+    (dataDoctor as any)?.clinic?.id ||
+    null;
+
+  const doctorClinicName =
+    clinicNameById.get(Number(doctorClinicId ?? -1)) ||
+    (doctorClinicId != null ? `Phòng khám #${doctorClinicId}` : "");
+
   // Ưu tiên tên nhúng trong schedule.clinic nếu có
   const getClinicName = (s: ISchedule) => {
     const embedded =
@@ -115,9 +120,7 @@ const DoctorSchedule = () => {
       (s as any)?.clinic?.clinic_name ||
       "";
     if (String(embedded).trim()) return String(embedded).trim();
-
-    const fromList = clinicNameById.get(Number((s as any).clinicId));
-    return fromList || `Phòng khám #${(s as any).clinicId}`;
+    return clinicNameById.get(Number((s as any).clinicId)) || `Phòng khám #${(s as any).clinicId}`;
   };
 
   if (loading) {
@@ -211,17 +214,8 @@ const DoctorSchedule = () => {
                           : { color: "green", text: "Còn chỗ" };
 
                         return (
-                          <Col
-                            xs={24}
-                            sm={12}
-                            md={8}
-                            lg={6}
-                            key={`${schedule.id}-${slot.timeSlotId}`}
-                          >
-                            <Card
-                              className={`border rounded-lg ${isExpired ? "opacity-60" : ""}`}
-                              bodyStyle={{ padding: 16 }}
-                            >
+                          <Col xs={24} sm={12} md={8} lg={6} key={`${schedule.id}-${slot.timeSlotId}`}>
+                            <Card className={`border rounded-lg ${isExpired ? "opacity-60" : ""}`} bodyStyle={{ padding: 16 }}>
                               <div className="flex items-center justify-between mb-2">
                                 <Text strong className={isExpired ? "text-gray-400" : ""}>
                                   {start} - {end}
@@ -230,9 +224,7 @@ const DoctorSchedule = () => {
                               </div>
                               <div className="text-sm text-gray-600">
                                 <div>Đã đặt: {slot.currentBooking}/{slot.maxBooking}</div>
-                                <div className="text-xs mt-1">
-                                  Trạng thái: {slot.status === "OPEN" ? "Mở" : "Hết hạn"}
-                                </div>
+                                <div className="text-xs mt-1">Trạng thái: {slot.status === "OPEN" ? "Mở" : "Hết hạn"}</div>
                               </div>
                             </Card>
                           </Col>
@@ -246,13 +238,17 @@ const DoctorSchedule = () => {
         )}
       </div>
 
-      {/* Modal tạo lịch */}
+      {/* Modal tạo lịch – đã khóa chọn phòng */}
       <DoctorScheduleCreate
         openModalCreate={openModalCreate}
         setOpenModalCreate={setOpenModalCreate}
         timeSlots={timeSlots}
-        clinics={clinics}                 // để Select hiển thị đúng tên
-        doctorId={dataDoctor?.id || ""}   // truyền doctorId của bác sĩ
+        clinics={clinics}
+        doctorId={dataDoctor?.id || ""}
+
+        // 🔒 chỉ-được-1-phòng: truyền clinic cố định
+        fixedClinicId={doctorClinicId}
+        fixedClinicName={doctorClinicName}
       />
     </>
   );
