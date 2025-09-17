@@ -4,9 +4,11 @@ import type {
   IClinic,
   IDoctorProfile,
   INotificationDataAdmin,
+  IPatientProfile,
   ISpecialty,
 } from "@/types";
 import type { ISchedule, ITimeSlotDetail } from "@/types/schedule";
+import type { IConversationResponseDoctor, IMessage } from "@/types/message";
 
 export const getDoctorProfileByUserId = (userId: string) => {
   const urlBackend = `/api/doctor/doctors/profile/${userId}`;
@@ -100,4 +102,19 @@ export const updateExpiredTimeSlots = () => {
 export const getAllAppointmentsByDoctorId = (query: string) => {
   const urlBackend = `/api/appointment/appointments/doctor-appointments/${query}`;
   return axios.get<IBackendRes<IModelPaginate<IAppointment>>>(urlBackend);
+};
+
+export const getAllConversationsDoctorAPI = (doctorId: string) => {
+  const urlBackend = `/api/message/conversations/doctor/${doctorId}`;
+  return axios.get<IBackendRes<IConversationResponseDoctor>>(urlBackend);
+};
+
+export const getPatientDetailBookingById = (patientId: string) => {
+  const urlBackend = `/api/users/patients/${patientId}`;
+  return axios.get<IBackendRes<IPatientProfile>>(urlBackend);
+};
+
+export const getMessagesByConversationIdAPI = (conversationId: string) => {
+  const urlBackend = `/api/message/by-conversation-id/${conversationId}`;
+  return axios.get<IBackendRes<IMessage[]>>(urlBackend);
 };

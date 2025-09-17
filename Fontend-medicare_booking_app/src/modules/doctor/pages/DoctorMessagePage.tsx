@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MessageCircle,
   Search,
@@ -11,176 +11,416 @@ import {
   ArrowLeft,
   Clock,
   User,
-  CheckCircle,
-  Circle,
 } from "lucide-react";
-
-interface Patient {
-  id: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  isOnline: boolean;
-  appointmentStatus: "scheduled" | "completed" | "cancelled";
-  nextAppointment?: string;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  timestamp: string;
-  isOwn: boolean;
-  type: "text" | "image" | "file";
-  status: "sent" | "delivered" | "read";
-}
+import {
+  getAllConversationsDoctorAPI,
+  getDoctorProfileByUserId,
+  getMessagesByConversationIdAPI,
+  getPatientDetailBookingById,
+} from "../services/doctor.api";
+import { useCurrentApp } from "@/components/contexts/app.context";
+import { useParams } from "react-router-dom";
+import type { IDoctorProfile, IPatientProfile } from "@/types";
+import type { IConversation, IConversationDisplay } from "@/types/message";
+import { connectMessageSocket } from "@/sockets/message.socket";
 
 const DoctorMessagePage = () => {
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+  const { patientId } = useParams<{ patientId?: string }>();
+  const [selectedConversation, setSelectedConversation] = useState<
+    string | null
+  >(null);
   const [messageInput, setMessageInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [dataDoctor, setDataDoctor] = useState<IDoctorProfile | null>(null);
+  const [selectedPatientInfo, setSelectedPatientInfo] =
+    useState<IPatientProfile | null>(null);
+  const [displayConversations, setDisplayConversations] = useState<
+    IConversationDisplay[]
+  >([]);
+  const [dataPatient, setDataPatient] = useState<IPatientProfile | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useCurrentApp();
+  const socketRef = useRef<ReturnType<typeof connectMessageSocket> | null>(
+    null
+  );
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Dữ liệu mẫu cho danh sách bệnh nhân
-  const patients: Patient[] = [
-    {
-      id: "1",
-      name: "Nguyễn Văn A",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-      lastMessage: "Cảm ơn bác sĩ đã tư vấn chi tiết.",
-      timestamp: "5 phút trước",
-      unreadCount: 1,
-      isOnline: true,
-      appointmentStatus: "scheduled",
-      nextAppointment: "Thứ 2, 15/01 - 10:00",
-    },
-    {
-      id: "2",
-      name: "Trần Thị B",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
-      lastMessage: "Thuốc có tác dụng phụ gì không ạ?",
-      timestamp: "1 giờ trước",
-      unreadCount: 2,
-      isOnline: false,
-      appointmentStatus: "completed",
-      nextAppointment: "Chưa có lịch hẹn",
-    },
-    {
-      id: "3",
-      name: "Lê Minh C",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-      lastMessage: "Tôi cảm thấy tốt hơn nhiều rồi.",
-      timestamp: "2 giờ trước",
-      unreadCount: 0,
-      isOnline: true,
-      appointmentStatus: "scheduled",
-      nextAppointment: "Thứ 6, 19/01 - 14:30",
-    },
-  ];
+  // Function để scroll xuống cuối (chỉ trong container tin nhắn)
+  const scrollToBottom = () => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
 
-  // Dữ liệu mẫu cho tin nhắn
-  const messages: Message[] = [
-    {
-      id: "1",
-      content: "Chào bác sĩ, em muốn hỏi về kết quả xét nghiệm ạ.",
-      timestamp: "10:30",
-      isOwn: false,
-      type: "text",
-      status: "read",
-    },
-    {
-      id: "2",
-      content:
-        "Chào bạn! Kết quả xét nghiệm của bạn rất tốt. Các chỉ số đều trong mức bình thường.",
-      timestamp: "10:32",
-      isOwn: true,
-      type: "text",
-      status: "read",
-    },
-    {
-      id: "3",
-      content: "Vậy em có cần uống thuốc gì thêm không ạ?",
-      timestamp: "10:35",
-      isOwn: false,
-      type: "text",
-      status: "read",
-    },
-    {
-      id: "4",
-      content:
-        "Bạn tiếp tục uống thuốc như đơn cũ, nhưng giảm liều xuống còn 1 viên/ngày. Hẹn tái khám sau 2 tuần.",
-      timestamp: "10:36",
-      isOwn: true,
-      type: "text",
-      status: "delivered",
-    },
-  ];
+  // Function để check user có đang ở gần cuối không
+  const isNearBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
 
-  const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const threshold = 100; // 100px từ cuối
+    return (
+      container.scrollTop + container.clientHeight >=
+      container.scrollHeight - threshold
+    );
+  };
+
+  const fetchDoctorAndConversations = async () => {
+    setLoading(true);
+    try {
+      if (user?.id) {
+        const resDoctor = await getDoctorProfileByUserId(user.id);
+        setDataDoctor(resDoctor.data as IDoctorProfile);
+
+        // Sau khi có doctor info → load conversations
+        if (resDoctor.data?.id) {
+          try {
+            const res = await getAllConversationsDoctorAPI(resDoctor.data.id);
+
+            if (res.data) {
+              // Load thông tin patient cho mỗi conversation
+              if (res.data.conversations && res.data.conversations.length > 0) {
+                await loadPatientInfoForConversations(res.data.conversations);
+              } else {
+                // No conversations found
+                setDisplayConversations([]);
+              }
+            } else {
+              // No data returned
+              setDisplayConversations([]);
+            }
+          } catch (conversationError) {
+            console.error("❌ Error loading conversations:", conversationError);
+            setDisplayConversations([]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error in fetchDoctorAndConversations:", error);
+      setDisplayConversations([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const handler = () => {
+      fetchDoctorAndConversations();
+    };
+    window.addEventListener("doctor:message-refresh", handler);
+    return () => window.removeEventListener("doctor:message-refresh", handler);
+  }, [fetchDoctorAndConversations]);
+
+  // Effect để scroll xuống cuối khi messages thay đổi (chỉ khi user ở gần cuối)
+  useEffect(() => {
+    if (isNearBottom()) {
+      scrollToBottom();
+    }
+  }, [messages]);
+
+  // Effect để xử lý khi có patientId từ URL
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    if (patientId) {
+      const fetchPatientProfile = async () => {
+        const res = await getPatientDetailBookingById(patientId);
+        setDataPatient(res.data as IPatientProfile);
+        const resDoctor = await getDoctorProfileByUserId(user?.id as string);
+        setDataDoctor(resDoctor.data as IDoctorProfile);
+      };
+
+      const checkExistingConversation = async () => {
+        try {
+          setSelectedConversation(patientId);
+        } catch (error) {
+          setSelectedConversation(patientId);
+        }
+      };
+
+      fetchPatientProfile();
+      checkExistingConversation();
+    } else {
+      // Nếu không có patientId → Load doctor info rồi load conversations
+
+      fetchDoctorAndConversations();
+    }
+  }, [patientId, user?.id]);
+
+  // Function để load thông tin patient cho conversations
+  const loadPatientInfoForConversations = async (
+    conversations: IConversation[]
+  ) => {
+    try {
+      const conversationsWithPatientInfo: IConversationDisplay[] = [];
+
+      for (const conv of conversations) {
+        try {
+          // Chỉ hiển thị conversation nếu có ít nhất 1 tin nhắn
+          if (!conv.messages || conv.messages.length === 0) {
+            console.log(`⏭️ Bỏ qua conversation ${conv.id} - chưa có tin nhắn`);
+            continue;
+          }
+
+          const patientRes = await getPatientDetailBookingById(conv.patientId);
+
+          if (patientRes.data) {
+            // Format tin nhắn cuối cùng dựa trên người gửi
+            const lastMessageData = conv.messages[0];
+            const isOwnMessage = lastMessageData.senderId === user?.id;
+            const lastMessage = isOwnMessage
+              ? `Bạn: ${lastMessageData.content}`
+              : lastMessageData.content;
+
+            const timestamp = new Date(
+              lastMessageData.createdAt
+            ).toLocaleTimeString("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            const displayConv: IConversationDisplay = {
+              id: conv.id,
+              name: patientRes.data.full_name,
+              avatar:
+                patientRes.data.avatar_url ||
+                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+              lastMessage: lastMessage,
+              timestamp: timestamp,
+              isOnline: true, // Có thể thêm logic để check online status
+              unreadCount: 0, // Có thể thêm logic để đếm unread messages
+              type: "patient",
+              doctorId: dataDoctor?.id || "",
+              patientId: conv.patientId,
+            };
+
+            conversationsWithPatientInfo.push(displayConv);
+          }
+        } catch (error) {
+          console.error("❌ Lỗi khi xử lý conversation:", error);
+        }
+      }
+
+      setDisplayConversations(conversationsWithPatientInfo);
+    } catch (error) {
+      console.error("❌ Error loading patient info for conversations:", error);
+    }
+  };
+
+  const loadMessages = async (conversationId: string) => {
+    const res = await getMessagesByConversationIdAPI(conversationId);
+    if (res.data) {
+      const formattedMessages = res.data.map((msg: any) => ({
+        id: msg.id,
+        content: msg.content,
+        timestamp: new Date(msg.createdAt).toLocaleTimeString("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh",
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        isOwn: msg.senderId === user?.id, // So sánh senderId từ DB với user.id
+        conversationId: msg.conversationId,
+        senderId: msg.senderId,
+      }));
+
+      setMessages(formattedMessages);
+
+      // Join conversation room khi load messages
+      if (socketRef.current) {
+        socketRef.current.emit("join-conversation", {
+          conversationId: conversationId,
+        });
+      }
+
+      // Auto scroll xuống cuối khi load conversation mới
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    }
+  };
+
+  // Lọc conversations theo search query
+  const filteredConversations = displayConversations.filter((conv) =>
+    conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const selectedPatientInfo = patients.find(
-    (patient) => patient.id === selectedPatient
-  );
+  useEffect(() => {
+    // Cleanup previous socket if exists
+    if (socketRef.current) {
+      socketRef.current.off("message-sent");
+      socketRef.current.off("message-error");
+      socketRef.current.disconnect();
+    }
+
+    const socket = connectMessageSocket();
+    socketRef.current = socket;
+
+    // Join user room
+    if (user?.id && user?.userType === "DOCTOR") {
+      socket.emit("join-message-room", { userId: user?.id });
+    }
+
+    // 📨 Listen cho tin nhắn được gửi thành công
+    socket.on("message-sent", async (message) => {
+
+      // Xác định isOwn dựa trên senderId
+      const isOwn = message.senderId === user?.id;
+
+      // Prevent duplicate messages
+      setMessages((prev) => {
+        const exists = prev.find((msg) => msg.id === message.id);
+        if (exists) {
+          return prev;
+        }
+        return [...prev, { ...message, isOwn }];
+      });
+
+      // Nếu đang trong conversation này, auto join room
+      if (message.conversationId && selectedConversation) {
+        socket.emit("join-conversation", {
+          conversationId: message.conversationId,
+        });
+      }
+
+      // Cập nhật danh sách conversation khi có tin nhắn mới
+      if (message.conversationId) {
+        setDisplayConversations((prev) => {
+          const existingConv = prev.find(
+            (conv) => conv.id.toString() === message.conversationId.toString()
+          );
+          if (existingConv) {
+            // Cập nhật last message và timestamp cho conversation hiện có
+            // Format tin nhắn dựa trên người gửi
+            const formattedLastMessage = isOwn
+              ? `Bạn: ${message.content}`
+              : message.content;
+
+            return prev.map((conv) =>
+              conv.id.toString() === message.conversationId.toString()
+                ? {
+                    ...conv,
+                    lastMessage: formattedLastMessage,
+                    timestamp: message.timestamp,
+                  }
+                : conv
+            );
+          } else if (!isOwn) {
+            // Nếu chưa có conversation này và là tin nhắn từ patient, trigger reload
+            // Trigger reload bằng cách set flag
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent("reloadConversations"));
+            }, 1000);
+            return prev;
+          }
+          return prev;
+        });
+      }
+    });
+
+    // Listen for errors
+    socket.on("message-error", (error) => {
+      console.error("Message error:", error);
+    });
+
+    return () => {
+      socket.off("message-sent");
+      socket.off("message-error");
+      socket.disconnect();
+    };
+  }, [user?.id]);
+
+  // Effect để join conversation room khi chọn conversation
+  useEffect(() => {
+    if (selectedConversation && socketRef.current) {
+      socketRef.current.emit("join-conversation", {
+        conversationId: selectedConversation,
+      });
+    }
+  }, [selectedConversation]);
+
+  // Effect để handle reload conversations khi có tin nhắn mới từ patient
+  useEffect(() => {
+    const handleReloadConversations = async () => {
+      if (dataDoctor?.id) {
+        try {
+          const res = await getAllConversationsDoctorAPI(dataDoctor.id);
+          if (res.data?.conversations) {
+            await loadPatientInfoForConversations(res.data.conversations);
+          }
+        } catch (error) {
+          console.error("❌ Lỗi reload conversations:", error);
+        }
+      }
+    };
+
+    window.addEventListener("reloadConversations", handleReloadConversations);
+
+    return () => {
+      window.removeEventListener(
+        "reloadConversations",
+        handleReloadConversations
+      );
+    };
+  }, [dataDoctor?.id]);
 
   const handleSendMessage = () => {
-    if (messageInput.trim()) {
-      // Logic gửi tin nhắn sẽ được thêm vào đây
-      setMessageInput("");
+    if (messageInput.trim() && socketRef.current) {
+      // Lấy patientId từ URL hoặc từ conversation đã chọn
+      const currentPatientId = patientId || selectedPatientInfo?.id;
+
+      socketRef.current.emit("send-message", {
+        senderId: user?.id, // Sử dụng user?.id thay vì dataDoctor?.userId
+        patientId: currentPatientId,
+        doctorId: dataDoctor?.id,
+        senderType: "DOCTOR",
+        content: messageInput.trim(),
+        messageType: "TEXT",
+      });
+
+      setMessageInput(""); // Clear input
+
+      // Scroll xuống cuối khi gửi tin nhắn
+      setTimeout(() => {
+        scrollToBottom();
+      }, 50);
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "sent":
-        return <Circle className="w-3 h-3 text-gray-400" />;
-      case "delivered":
-        return <CheckCircle className="w-3 h-3 text-gray-400" />;
-      case "read":
-        return <CheckCircle className="w-3 h-3 text-blue-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getAppointmentStatusColor = (status: string) => {
-    switch (status) {
-      case "scheduled":
-        return "bg-blue-100 text-blue-800";
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getAppointmentStatusText = (status: string) => {
-    switch (status) {
-      case "scheduled":
-        return "Đã đặt lịch";
-      case "completed":
-        return "Đã khám";
-      case "cancelled":
-        return "Đã hủy";
-      default:
-        return "Chưa rõ";
-    }
-  };
+  // Early return nếu không có user
+  if (!user?.id) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg h-[600px] md:h-[700px] flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-xl font-medium text-gray-600 mb-2">
+                Đang tải thông tin người dùng...
+              </h2>
+              <p className="text-gray-500">Vui lòng đợi trong giây lát</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-full mx-auto h-screen">
-        <div className="bg-white rounded-lg shadow-lg h-full flex overflow-hidden">
+    <div className=" bg-gray-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg h-[700px] md:h-[800px] flex overflow-hidden">
           {/* Sidebar - Danh sách bệnh nhân */}
           <div
             className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col ${
-              selectedPatient ? "hidden md:flex" : "flex"
+              selectedConversation ? "hidden md:flex" : "flex"
             }`}
           >
             {/* Header sidebar */}
@@ -207,12 +447,12 @@ const DoctorMessagePage = () => {
 
             {/* Danh sách bệnh nhân */}
             <div className="flex-1 overflow-y-auto">
-              {filteredPatients.map((patient) => (
+              {/* Hiển thị patient conversation khi có patientId */}
+              {patientId && dataPatient && (
                 <div
-                  key={patient.id}
-                  onClick={() => setSelectedPatient(patient.id)}
+                  onClick={() => setSelectedConversation(patientId)}
                   className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedPatient === patient.id
+                    selectedConversation === patientId
                       ? "bg-blue-50 border-r-4 border-blue-500"
                       : ""
                   }`}
@@ -220,71 +460,155 @@ const DoctorMessagePage = () => {
                   <div className="flex items-start space-x-3">
                     <div className="relative">
                       <img
-                        src={patient.avatar}
-                        alt={patient.name}
+                        src={
+                          dataPatient.avatar_url ||
+                          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+                        }
+                        alt={dataPatient.full_name}
                         className="w-12 h-12 rounded-full object-cover"
                       />
-                      {patient.isOnline && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                      )}
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <h3 className="font-medium text-gray-900 truncate flex items-center">
                           <User className="w-4 h-4 mr-1 text-gray-500" />
-                          {patient.name}
+                          {dataPatient.full_name}
                         </h3>
-                        <span className="text-xs text-gray-500">
-                          {patient.timestamp}
-                        </span>
+                        <span className="text-xs text-gray-500">Vừa xong</span>
                       </div>
 
                       <div className="flex items-center justify-between mt-1">
                         <p className="text-sm text-gray-600 truncate">
-                          {patient.lastMessage}
+                          Bắt đầu cuộc trò chuyện với bệnh nhân
                         </p>
-                        {patient.unreadCount > 0 && (
-                          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                            {patient.unreadCount}
-                          </span>
-                        )}
                       </div>
 
                       <div className="mt-2 flex items-center justify-between">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getAppointmentStatusColor(
-                            patient.appointmentStatus
-                          )}`}
-                        >
-                          {getAppointmentStatusText(patient.appointmentStatus)}
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Bệnh nhân
                         </span>
                         <div className="flex items-center text-xs text-gray-500">
                           <Clock className="w-3 h-3 mr-1" />
-                          {patient.nextAppointment}
+                          Đang tư vấn
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Danh sách conversations khác nếu không có patientId */}
+              {!patientId &&
+                filteredConversations &&
+                filteredConversations.length > 0 &&
+                filteredConversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={async () => {
+                      setSelectedConversation(conv.id.toString());
+                      loadMessages(conv.id.toString());
+
+                      // Load thông tin patient để hiển thị trong header
+                      try {
+                        const patientRes = await getPatientDetailBookingById(
+                          conv.patientId || ""
+                        );
+                        if (patientRes.data) {
+                          setSelectedPatientInfo(patientRes.data);
+                        }
+                      } catch (error) {
+                        console.error("Error loading patient info:", error);
+                      }
+                    }}
+                    className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      selectedConversation === conv.id.toString()
+                        ? "bg-blue-50 border-r-4 border-blue-500"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="relative">
+                        <img
+                          src={conv.avatar}
+                          alt={conv.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        {conv.isOnline && (
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-medium text-gray-900 truncate flex items-center">
+                            <User className="w-4 h-4 mr-1 text-gray-500" />
+                            {conv.name}
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {conv.timestamp}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-sm text-gray-600 truncate">
+                            {conv.lastMessage}
+                          </p>
+                          {conv.unreadCount > 0 && (
+                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                              {conv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Bệnh nhân
+                          </span>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Tư vấn trực tuyến
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+              {/* Hiển thị loading */}
+              {loading && (
+                <div className="p-4 text-center text-gray-500">
+                  <p>Đang tải...</p>
+                </div>
+              )}
+
+              {/* Hiển thị message khi không có conversations */}
+              {!loading && !patientId && filteredConversations.length === 0 && (
+                <div className="p-4 text-center text-gray-500">
+                  <p>Chưa có cuộc trò chuyện nào</p>
+                  <p className="text-sm mt-1">
+                    Bệnh nhân sẽ xuất hiện ở đây khi họ liên hệ tư vấn
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Khu vực chat chính */}
           <div
             className={`flex-1 flex flex-col ${
-              !selectedPatient ? "hidden md:flex" : "flex"
+              !selectedConversation ? "hidden md:flex" : "flex"
             }`}
           >
-            {selectedPatient ? (
+            {selectedConversation ? (
               <>
                 {/* Header chat */}
                 <div className="p-4 border-b border-gray-200 bg-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <button
-                        onClick={() => setSelectedPatient(null)}
+                        onClick={() => setSelectedConversation(null)}
                         className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
                       >
                         <ArrowLeft className="w-5 h-5" />
@@ -292,28 +616,27 @@ const DoctorMessagePage = () => {
 
                       <div className="relative">
                         <img
-                          src={selectedPatientInfo?.avatar}
-                          alt={selectedPatientInfo?.name}
+                          src={
+                            (selectedPatientInfo || dataPatient)?.avatar_url ||
+                            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+                          }
+                          alt={(selectedPatientInfo || dataPatient)?.full_name}
                           className="w-10 h-10 rounded-full object-cover"
                         />
-                        {selectedPatientInfo?.isOnline && (
-                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                        )}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
 
                       <div>
                         <h2 className="font-medium text-gray-900">
-                          {selectedPatientInfo?.name}
+                          {(selectedPatientInfo || dataPatient)?.full_name}
                         </h2>
                         <div className="flex items-center space-x-2">
                           <p className="text-sm text-gray-500">
-                            {selectedPatientInfo?.isOnline
-                              ? "Đang hoạt động"
-                              : "Offline"}
+                            Đang hoạt động
                           </p>
                           <span className="text-gray-300">•</span>
                           <p className="text-sm text-blue-600">
-                            {selectedPatientInfo?.nextAppointment}
+                            Tư vấn trực tuyến
                           </p>
                         </div>
                       </div>
@@ -334,7 +657,24 @@ const DoctorMessagePage = () => {
                 </div>
 
                 {/* Khu vực tin nhắn */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                <div
+                  ref={messagesContainerRef}
+                  className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+                >
+                  {/* Tin nhắn chào mừng */}
+                  <div className="flex justify-center">
+                    <div className="bg-blue-100 px-4 py-2 rounded-lg text-center max-w-md">
+                      <p className="text-sm text-blue-800">
+                        Bạn đang tư vấn cho bệnh nhân{" "}
+                        {(selectedPatientInfo || dataPatient)?.full_name}
+                      </p>
+                      <p className="text-xs text-blue-600 mt-1">
+                        Hãy lắng nghe và đưa ra lời khuyên y khoa phù hợp
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Hiển thị tin nhắn real-time */}
                   {messages.map((message) => (
                     <div
                       key={message.id}
@@ -350,18 +690,13 @@ const DoctorMessagePage = () => {
                         }`}
                       >
                         <p className="text-sm">{message.content}</p>
-                        <div
-                          className={`flex items-center justify-between mt-1 ${
+                        <p
+                          className={`text-xs mt-1 ${
                             message.isOwn ? "text-blue-100" : "text-gray-500"
                           }`}
                         >
-                          <p className="text-xs">{message.timestamp}</p>
-                          {message.isOwn && (
-                            <div className="ml-2">
-                              {getStatusIcon(message.status)}
-                            </div>
-                          )}
-                        </div>
+                          {message.timestamp}
+                        </p>
                       </div>
                     </div>
                   ))}

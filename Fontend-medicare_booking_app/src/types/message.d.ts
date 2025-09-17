@@ -1,4 +1,4 @@
-import type { IPatientProfile } from "./user";
+import type { IDoctorProfileResponseMessage, IPatientProfile } from "./user";
 
 export interface IConversation {
   id: number;
@@ -23,6 +23,7 @@ export interface IConversationDisplay {
   unreadCount: number;
   type: string;
   doctorId: string;
+  patientId?: string;
 }
 
 export interface IMessage {
@@ -43,5 +44,10 @@ export interface IMessage {
 
 export interface IConversationResponse {
   patient: IPatientProfile;
+  conversations: IConversation[];
+}
+
+export interface IConversationResponseDoctor {
+  doctor: IDoctorProfileResponseMessage;
   conversations: IConversation[];
 }

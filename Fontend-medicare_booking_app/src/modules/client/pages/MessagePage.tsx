@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MessageCircle,
   Search,
@@ -15,17 +15,12 @@ import { useCurrentApp } from "@/components/contexts/app.context";
 import { useParams } from "react-router-dom";
 import type { IDoctorProfile, IPatientProfile } from "@/types";
 import {
-  getConversationByDoctorIdAPI,
   getDoctorDetailBookingById,
   getMessagesByConversationIdAPI,
   getPatientByUserIdAPI,
-  getAllConversationsAPI,
+  getAllConversationsPatientAPI,
 } from "../services/client.api";
-import type {
-  IConversation,
-  IConversationResponse,
-  IConversationDisplay,
-} from "@/types/message";
+import type { IConversation, IConversationDisplay } from "@/types/message";
 import { connectMessageSocket } from "@/sockets/message.socket";
 
 // Function để chuyển đổi ký hiệu thành tên đầy đủ
@@ -51,9 +46,6 @@ const MessagePage = () => {
   const [dataDoctor, setDataDoctor] = useState<IDoctorProfile | null>(null);
   const [selectedDoctorInfo, setSelectedDoctorInfo] =
     useState<IDoctorProfile | null>(null);
-  const [conversations, setConversations] = useState<IConversation>();
-  const [allConversations, setAllConversations] =
-    useState<IConversationResponse | null>(null);
   const [displayConversations, setDisplayConversations] = useState<
     IConversationDisplay[]
   >([]);
@@ -63,6 +55,37 @@ const MessagePage = () => {
   const socketRef = useRef<ReturnType<typeof connectMessageSocket> | null>(
     null
   );
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Function để scroll xuống cuối (chỉ trong container tin nhắn)
+  const scrollToBottom = () => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Function để check user có đang ở gần cuối không
+  const isNearBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+
+    const threshold = 100; // 100px từ cuối
+    return (
+      container.scrollTop + container.clientHeight >=
+      container.scrollHeight - threshold
+    );
+  };
+
+  // Effect để scroll xuống cuối khi messages thay đổi (chỉ khi user ở gần cuối)
+  useEffect(() => {
+    if (isNearBottom()) {
+      scrollToBottom();
+    }
+  }, [messages]);
 
   // Effect để xử lý khi có doctorId từ URL
   useEffect(() => {
@@ -77,13 +100,12 @@ const MessagePage = () => {
       const checkExistingConversation = async () => {
         try {
           // Chỉ kiểm tra xem có conversation có sẵn không, KHÔNG tạo mới
-          const res = await getConversationByDoctorIdAPI(doctorId);
+          const res = await getAllConversationsPatientAPI(doctorId);
 
           if (res.data) {
             // Conversation đã tồn tại → Load lịch sử
-            setConversations(res.data as IConversation);
             setSelectedConversation(doctorId);
-            loadMessages(res.data.id.toString());
+            loadMessages(res.data.conversations[0].id.toString());
           } else {
             // Chưa có conversation → Chỉ set selectedConversation để hiện UI
             setSelectedConversation(doctorId);
@@ -106,11 +128,11 @@ const MessagePage = () => {
 
             // Sau khi có patient info → load conversations
             if (resPatient.data?.id) {
-              const res = await getAllConversationsAPI(resPatient.data.id);
+              const res = await getAllConversationsPatientAPI(
+                resPatient.data.id
+              );
 
               if (res.data) {
-                setAllConversations(res.data);
-
                 // Load thông tin doctor cho mỗi conversation
                 if (
                   res.data.conversations &&
@@ -140,18 +162,30 @@ const MessagePage = () => {
 
       for (const conv of conversations) {
         try {
+          // Chỉ hiển thị conversation nếu có ít nhất 1 tin nhắn
+          if (!conv.messages || conv.messages.length === 0) {
+            console.log(`⏭️ Bỏ qua conversation ${conv.id} - chưa có tin nhắn`);
+            continue;
+          }
+
           const doctorRes = await getDoctorDetailBookingById(conv.doctorId);
 
           if (doctorRes.data) {
-            const lastMessage =
-              conv.messages && conv.messages.length > 0
-                ? conv.messages[0].content
-                : "Bắt đầu cuộc trò chuyện";
+            // Format tin nhắn cuối cùng dựa trên người gửi
+            const lastMessageData = conv.messages[0];
+            const isOwnMessage = lastMessageData.senderId === user?.id;
+            const lastMessage = isOwnMessage
+              ? `Bạn: ${lastMessageData.content}`
+              : lastMessageData.content;
 
-            const timestamp =
-              conv.messages && conv.messages.length > 0
-                ? new Date(conv.messages[0].createdAt).toLocaleTimeString()
-                : new Date(conv.createdAt).toLocaleTimeString();
+            const timestamp = new Date(
+              lastMessageData.createdAt
+            ).toLocaleTimeString("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+            });
 
             const displayConv = {
               id: conv.id,
@@ -184,35 +218,112 @@ const MessagePage = () => {
       const formattedMessages = res.data.map((msg: any) => ({
         id: msg.id,
         content: msg.content,
-        timestamp: new Date(msg.createdAt).toLocaleTimeString(),
+        timestamp: new Date(msg.createdAt).toLocaleTimeString("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh",
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         isOwn: msg.senderId === user?.id, // So sánh senderId từ DB với user.id
         conversationId: msg.conversationId,
         senderId: msg.senderId, // Debug thêm senderId
       }));
 
       setMessages(formattedMessages);
+
+      // Join conversation room khi load messages
+      if (socketRef.current) {
+        socketRef.current.emit("join-conversation", {
+          conversationId: conversationId,
+        });
+      }
+
+      // Auto scroll xuống cuối khi load conversation mới
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
   };
 
   useEffect(() => {
+    // Cleanup previous socket if exists
+    if (socketRef.current) {
+      socketRef.current.off("message-sent");
+      socketRef.current.off("message-error");
+      socketRef.current.disconnect();
+    }
+
     const socket = connectMessageSocket();
     socketRef.current = socket;
 
-    // Join room
+    // Join user room
     if (user?.id && user?.userType === "PATIENT") {
       socket.emit("join-message-room", { userId: user?.id });
     }
 
     // 📨 Listen cho tin nhắn được gửi thành công
     socket.on("message-sent", (message) => {
-      setMessages((prev) => [...prev, message]);
+
+      // Xác định isOwn dựa trên senderId
+      const isOwn = message.senderId === user?.id;
+
+      // Prevent duplicate messages
+      setMessages((prev) => {
+        const exists = prev.find((msg) => msg.id === message.id);
+        if (exists) {
+          return prev;
+        }
+        return [...prev, { ...message, isOwn }];
+      });
+
+      // Cập nhật danh sách conversation khi có tin nhắn mới
+      if (message.conversationId) {
+        setDisplayConversations((prev) => {
+          const existingConv = prev.find(
+            (conv) => conv.id.toString() === message.conversationId.toString()
+          );
+          if (existingConv) {
+            // Cập nhật last message và timestamp cho conversation hiện có
+            // Format tin nhắn dựa trên người gửi
+            const formattedLastMessage = isOwn
+              ? `Bạn: ${message.content}`
+              : message.content;
+
+            return prev.map((conv) =>
+              conv.id.toString() === message.conversationId.toString()
+                ? {
+                    ...conv,
+                    lastMessage: formattedLastMessage,
+                    timestamp: message.timestamp,
+                  }
+                : conv
+            );
+          }
+          return prev;
+        });
+      }
+    });
+
+    // Listen for errors
+    socket.on("message-error", (error) => {
+      console.error("Message error:", error);
     });
 
     return () => {
       socket.off("message-sent");
+      socket.off("message-error");
       socket.disconnect();
     };
   }, [user?.id]);
+
+  // Effect để join conversation room khi chọn conversation
+  useEffect(() => {
+    if (selectedConversation && socketRef.current) {
+      socketRef.current.emit("join-conversation", {
+        conversationId: selectedConversation,
+      });
+    }
+  }, [selectedConversation]);
 
   const handleSendMessage = () => {
     if (messageInput.trim() && socketRef.current) {
@@ -220,7 +331,7 @@ const MessagePage = () => {
       const currentDoctorId = doctorId || selectedDoctorInfo?.id;
 
       socketRef.current.emit("send-message", {
-        senderId: dataPatient?.user_id,
+        senderId: user?.id, // Sử dụng user?.id thay vì dataPatient?.user_id
         patientId: dataPatient?.id,
         doctorId: currentDoctorId,
         senderType: "PATIENT",
@@ -229,13 +340,26 @@ const MessagePage = () => {
       });
 
       setMessageInput(""); // Clear input
+
+      // Scroll xuống cuối khi gửi tin nhắn
+      setTimeout(() => {
+        scrollToBottom();
+      }, 50);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <div className="max-w-7xl mx-auto h-[calc(100vh-4rem)]">
-        <div className="bg-white rounded-lg shadow-lg h-full flex overflow-hidden">
+    <div className="min-h-screen bg-gray-50 pt-5">
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-800">Tin nhắn</h1>
+          <p className="text-gray-600">
+            Trao đổi với bác sĩ và nhận tư vấn y tế
+          </p>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-lg h-[600px] md:h-[700px] flex overflow-hidden">
           {/* Sidebar - Danh sách cuộc trò chuyện */}
           <div
             className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col ${
@@ -465,7 +589,10 @@ const MessagePage = () => {
                 </div>
 
                 {/* Khu vực tin nhắn */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                <div
+                  ref={messagesContainerRef}
+                  className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+                >
                   {/* Tin nhắn chào mừng */}
                   <div className="flex justify-center">
                     <div className="bg-blue-100 px-4 py-2 rounded-lg text-center max-w-md">
@@ -518,6 +645,9 @@ const MessagePage = () => {
                         type="text"
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && handleSendMessage()
+                        }
                         placeholder="Nhập tin nhắn..."
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       />

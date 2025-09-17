@@ -13,6 +13,7 @@ import {
   UserOutlined,
   CheckOutlined,
   DeleteOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
 import {
@@ -98,12 +99,25 @@ const NotificationDoctor = (props: IProps) => {
       setNotifications((prev) => [notif, ...prev.filter(Boolean)]);
     };
 
+    const onMessageCreated = (payload: any) => {
+      const notif = payload?.notification;
+      if (!isValidNotification(notif)) {
+        fetchNotifications();
+        return;
+      }
+
+      setNotifications((prev) => [notif, ...prev.filter(Boolean)]);
+    };
+
     socket.on("doctor.approved", onApproved);
     socket.on("appointment.created", onAppointmentCreated);
+    socket.on("message.created", onMessageCreated);
     socket.on("connect_error", (err) => console.error("socket error", err));
 
     return () => {
       socket.off("doctor.approved", onApproved);
+      socket.off("appointment.created", onAppointmentCreated);
+      socket.off("message.created", onMessageCreated);
       disconnectAdminSocket(socket);
     };
   }, [user?.id]);
@@ -136,6 +150,15 @@ const NotificationDoctor = (props: IProps) => {
       // bắn event để Profile refetch, không F5
       window.dispatchEvent(
         new CustomEvent("doctor:profile-refresh", {
+          detail: { userId: user?.id },
+        })
+      );
+      return; // không cần mở modal gì cả cho case này
+    }
+    if (notification.type === "MESSAGE_CREATED") {
+      // bắn event để Profile refetch, không F5
+      window.dispatchEvent(
+        new CustomEvent("doctor:message-refresh", {
           detail: { userId: user?.id },
         })
       );
@@ -188,6 +211,8 @@ const NotificationDoctor = (props: IProps) => {
       return <UserOutlined style={{ color: "#1890ff" }} />;
     if (type === "APPOINTMENT_CREATED")
       return <BellOutlined style={{ color: "#52c41a" }} />;
+    if (type === "MESSAGE_CREATED")
+      return <MessageOutlined style={{ color: "#52c41a" }} />;
     return <BellOutlined />;
   };
 

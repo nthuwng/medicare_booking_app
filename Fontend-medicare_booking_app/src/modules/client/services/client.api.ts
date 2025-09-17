@@ -35,11 +35,6 @@ export const getDoctorDetailBookingById = (doctorId: string) => {
   return axios.get<IBackendRes<IDoctorProfile>>(urlBackend);
 };
 
-export const getConversationByDoctorIdAPI = (doctorId: string) => {
-  const urlBackend = `/api/message/conversations/${doctorId}`;
-  return axios.get<IBackendRes<IConversation>>(urlBackend);
-};
-
 export const createBooking = (data: ICreateAppointmentInput) => {
   const urlBackend = `/api/appointment/appointments/create-appointment`;
   return axios.post<IBackendRes<IBooking>>(urlBackend, data);
@@ -69,8 +64,7 @@ export const getMessagesByConversationIdAPI = (conversationId: string) => {
 };
 
 // API lấy tất cả conversations của patient
-export const getAllConversationsAPI = (patientId: string) => {
+export const getAllConversationsPatientAPI = (patientId: string) => {
   const urlBackend = `/api/message/conversations/patient/${patientId}`;
   return axios.get<IBackendRes<IConversationResponse>>(urlBackend);
 };
-

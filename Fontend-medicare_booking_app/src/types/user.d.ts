@@ -149,3 +149,19 @@ export interface ICreateVNPayPaymentInput {
   amount: number;
   returnUrl: string;
 }
+
+export interface IDoctorProfileResponseMessage {
+  id: string;
+  fullName: string;
+  gender: string;
+  phone: string;
+  experienceYears: number;
+  avatarUrl: string;
+  title: string;
+  approvalStatus: string;
+  consultationFee: string;
+  bookingFee: string;
+  clinicId: number;
+  specialtyId: number;
+  isApproved: boolean;
+}
