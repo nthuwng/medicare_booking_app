@@ -22,3 +22,7 @@ export interface ITimeSlotDetail {
   endTime: string;
 }
 
+export interface ICreateSchedule {
+  schedule: ISchedule;
+  timeSlots: ITimeSlot[];
+}

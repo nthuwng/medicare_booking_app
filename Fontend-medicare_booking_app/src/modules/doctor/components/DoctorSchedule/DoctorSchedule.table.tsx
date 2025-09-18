@@ -19,6 +19,7 @@ import { useCurrentApp } from "@/components/contexts/app.context";
 import {
   getAllClinics,
   getAllTimeSlots,
+  getDoctorProfileByUserId,
   getScheduleByDoctorId,
   updateExpiredTimeSlots,
 } from "../../services/doctor.api";
@@ -26,7 +27,7 @@ import type { ISchedule, ITimeSlotDetail } from "@/types/schedule";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import DoctorScheduleCreate from "./DoctorSchedule.create";
-import type { IClinic } from "@/types";
+import type { IClinic, IDoctorProfile } from "@/types";
 
 dayjs.extend(utc);
 
@@ -42,6 +43,7 @@ const DoctorSchedule = () => {
 
   const [timeSlots, setTimeSlots] = useState<ITimeSlotDetail[]>([]);
   const [clinics, setClinics] = useState<IClinic[]>([]);
+  const [dataDoctor, setDataDoctor] = useState<IDoctorProfile | null>(null);
 
   const fetchDoctorSchedule = useCallback(async () => {
     try {
@@ -56,14 +58,16 @@ const DoctorSchedule = () => {
     }
   }, [user?.id]);
 
+  const fetchDataDoctor = useCallback(async () => {
+    const res = await getDoctorProfileByUserId(user?.id as string);
+    if (res?.data) {
+      setDataDoctor(res?.data);
+    }
+  }, [user?.id]);
+
   const fetchAllTimeSlots = useCallback(async () => {
     const res = await getAllTimeSlots();
     setTimeSlots(res?.data || []);
-  }, []);
-
-  const fetchAllClinics = useCallback(async () => {
-    const res = await getAllClinics();
-    setClinics(res?.data?.result || []);
   }, []);
 
   useEffect(() => {
@@ -77,13 +81,13 @@ const DoctorSchedule = () => {
         }
 
         fetchDoctorSchedule();
+        fetchDataDoctor();
         fetchAllTimeSlots();
-        fetchAllClinics();
       }
     };
 
     initializeData();
-  }, [user?.id, fetchDoctorSchedule, fetchAllTimeSlots, fetchAllClinics]);
+  }, [user?.id, fetchDoctorSchedule, fetchAllTimeSlots, fetchDataDoctor]);
 
   const sortedSchedules = useMemo(() => {
     return [...schedules].sort(
@@ -243,7 +247,9 @@ const DoctorSchedule = () => {
         openModalCreate={openModalCreate}
         setOpenModalCreate={setOpenModalCreate}
         timeSlots={timeSlots}
-        clinics={clinics}
+        dataDoctor={dataDoctor}
+        setDataDoctor={setDataDoctor}
+        onCreated={fetchDoctorSchedule}
       />
     </>
   );

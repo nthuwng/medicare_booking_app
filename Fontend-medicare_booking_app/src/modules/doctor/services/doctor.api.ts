@@ -7,7 +7,11 @@ import type {
   IPatientProfile,
   ISpecialty,
 } from "@/types";
-import type { ISchedule, ITimeSlotDetail } from "@/types/schedule";
+import type {
+  ICreateSchedule,
+  ISchedule,
+  ITimeSlotDetail,
+} from "@/types/schedule";
 import type { IConversationResponseDoctor, IMessage } from "@/types/message";
 
 export const getDoctorProfileByUserId = (userId: string) => {
@@ -117,4 +121,19 @@ export const getPatientDetailBookingById = (patientId: string) => {
 export const getMessagesByConversationIdAPI = (conversationId: string) => {
   const urlBackend = `/api/message/by-conversation-id/${conversationId}`;
   return axios.get<IBackendRes<IMessage[]>>(urlBackend);
+};
+
+export const createSchedule = (
+  doctorId: string,
+  date: string,
+  clinicId: number,
+  timeSlotId: number[]
+) => {
+  const urlBackend = `/api/schedule/schedules`;
+  return axios.post<IBackendRes<ICreateSchedule>>(urlBackend, {
+    doctorId,
+    date,
+    clinicId,
+    timeSlotId,
+  });
 };
