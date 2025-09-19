@@ -3,14 +3,12 @@ import {
   countTotalSpecialtiesPage,
   handleCreateSpecialtiesProfile,
   handleGetAllSpecialties,
+  handleDeleteSpecialty,
+  handleUpdateSpecialty,
 } from "src/services/specialtiesServices";
-import { uploadToCloudinary } from "src/services/upload.services";
-
 const createSpecialtiesController = async (req: Request, res: Response) => {
   try {
-    const specialties = await handleCreateSpecialtiesProfile(
-      req.body,
-    );
+    const specialties = await handleCreateSpecialtiesProfile(req.body);
 
     res.status(201).json({
       success: true,
@@ -75,4 +73,55 @@ const getSpecialtiesController = async (req: Request, res: Response) => {
   }
 };
 
-export { createSpecialtiesController, getSpecialtiesController };
+const deleteSpecialtyController = async (req: Request, res: Response) => {
+  try {
+    const specialtyId = req.params.id;
+    // Call the service function to delete the specialty
+    const isDeleted = await handleDeleteSpecialty(specialtyId);
+    if (!isDeleted) {
+      res.status(404).json({
+        success: false,
+        message: "Chuyên khoa không tồn tại hoặc đã được xóa trước đó.",
+      });
+      return;
+    }
+    res.status(200).json({
+      success: true,
+      message: "Xóa chuyên khoa với ID " + specialtyId + " thành công.",
+    });
+  } catch (error: any) {
+    console.error("Lỗi khi xóa chuyên khoa:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updateSpecialtyController = async (req: Request, res: Response) => {
+  try {
+    const specialtyId = req.params.id;
+    const updateData = req.body;
+    // Call the service function to update the clinic
+    const updatedClinic = await handleUpdateSpecialty(specialtyId, updateData);
+    if (!updatedClinic) {
+      res.status(404).json({
+        success: false,
+        message: "Chuyên khoa không tồn tại.",
+      });
+      return;
+    }
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật thông tin chuyên khoa thành công.",
+      data: updatedClinic,
+    });
+  } catch (error: any) {
+    console.error("Lỗi khi cập nhật chuyên khoa:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export {
+  createSpecialtiesController,
+  getSpecialtiesController,
+  deleteSpecialtyController,
+  updateSpecialtyController,
+};

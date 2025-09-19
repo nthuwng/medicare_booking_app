@@ -2,7 +2,9 @@ import { Request, Response } from "express";
 import {
   handleCreateClinicProfile,
   handleGetAllClinics,
+  handleDeleteClinic,
   countTotalClinicsPage,
+  handleUpdateClinic
 } from "src/services/clinicServices";
 
 const createClinicController = async (req: Request, res: Response) => {
@@ -78,4 +80,50 @@ const getClinicsController = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-export { createClinicController, getClinicsController };
+
+const deleteClinicController = async (req: Request, res: Response) => {
+  try {
+    const clinicId = req.params.id;
+    // Call the service function to delete the clinic
+    const isDeleted = await handleDeleteClinic(clinicId);
+    if (!isDeleted) {
+      res.status(404).json({
+        success: false,
+        message: "Phòng khám không tồn tại hoặc đã được xóa trước đó.",
+      });
+      return;
+    }
+    res.status(200).json({
+      success: true,
+      message: "Xóa phòng khám thành công.",
+    });
+  } catch (error: any) {
+    console.error("Lỗi khi xóa phòng khám:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updateClinicController = async (req: Request, res: Response) => {
+  try {
+    const clinicId = req.params.id;
+    const updateData = req.body;
+    // Call the service function to update the clinic
+    const updatedClinic = await handleUpdateClinic(clinicId, updateData);
+    if (!updatedClinic) {
+      res.status(404).json({
+        success: false,
+        message: "Phòng khám không tồn tại.",
+      });
+      return;
+    }
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật thông tin phòng khám thành công.",
+      data: updatedClinic,
+    });
+  } catch (error: any) {
+    console.error("Lỗi khi cập nhật phòng khám:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+export { createClinicController, getClinicsController, deleteClinicController ,updateClinicController};

@@ -2,9 +2,9 @@ import { CreateSpecialtiesProfileData } from "@shared/interfaces/specialties/ISp
 import { prisma } from "src/config/client";
 
 const handleCreateSpecialtiesProfile = async (
-  body: CreateSpecialtiesProfileData,
+  body: CreateSpecialtiesProfileData
 ) => {
-  const { specialty_name, description , icon_path, icon_public_id} = body;
+  const { specialty_name, description, icon_path, icon_public_id } = body;
   if (!specialty_name || !description || !icon_path || !icon_public_id) {
     throw new Error("Vui lòng nhập đầy đủ thông tin chuyên khoa");
   }
@@ -57,8 +57,49 @@ const countTotalSpecialtiesPage = async (pageSize: number) => {
   return totalPages;
 };
 
+const handleDeleteSpecialty = async (id: string) => {
+  const specialtyId = parseInt(id);
+  const specialty = await prisma.specialty.findUnique({
+    where: { id: specialtyId },
+  });
+  if (!specialty) {
+    throw new Error(" Chuyên khoa không tồn tại");
+  }
+  await prisma.specialty.delete({
+    where: { id: specialtyId },
+  });
+  return true;
+};
+
+const handleUpdateSpecialty = async (
+  id: string,
+  body: CreateSpecialtiesProfileData
+) => {
+  const specialtyId = parseInt(id);
+  const { specialty_name, description, icon_path, icon_public_id } = body;
+  const specialty = await prisma.specialty.findUnique({
+    where: { id: specialtyId },
+  });
+  if (!specialty) {
+    throw new Error(" Chuyên khoa không tồn tại");
+  }
+
+  const updatedSpecialty = await prisma.specialty.update({
+    where: { id: specialtyId },
+    data: {
+      specialtyName: specialty_name,
+      description,
+      iconPath: icon_path,
+      iconPublicId: icon_public_id,
+    },
+  });
+  return updatedSpecialty;
+};
+
 export {
   handleCreateSpecialtiesProfile,
   handleGetAllSpecialties,
   countTotalSpecialtiesPage,
+  handleDeleteSpecialty,
+  handleUpdateSpecialty,
 };

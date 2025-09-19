@@ -2,6 +2,8 @@ import express, { Express } from "express";
 import {
   createSpecialtiesController,
   getSpecialtiesController,
+  deleteSpecialtyController,
+  updateSpecialtyController
 } from "src/controllers/specialtiesController";
 import {
   authenticateToken,
@@ -19,5 +21,7 @@ router.post(
 );
 
 router.get("/", authenticateToken, getSpecialtiesController);
+router.delete("/:id", authenticateToken, authorizeAdmin , deleteSpecialtyController  );
+router.put("/:id", authenticateToken, authorizeAdmin , updateSpecialtyController  );
 
 export default router;
