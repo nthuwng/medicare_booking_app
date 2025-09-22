@@ -9,6 +9,7 @@ import type {
   IPatient,
   IPatientProfile,
 } from "@/types";
+import type { IAppointment } from "@/types/appointment";
 import type {
   IConversation,
   IConversationResponse,
@@ -67,4 +68,10 @@ export const getMessagesByConversationIdAPI = (conversationId: string) => {
 export const getAllConversationsPatientAPI = (patientId: string) => {
   const urlBackend = `/api/message/conversations/patient/${patientId}`;
   return axios.get<IBackendRes<IConversationResponse>>(urlBackend);
+};
+
+// Lấy danh sách lịch đã đặt của bệnh nhân hiện tại
+export const getMyAppointmentsAPI = () => {
+  const urlBackend = `/api/appointment/appointments/my-appointments`;
+  return axios.get<IBackendRes<IAppointment[]>>(urlBackend);
 };

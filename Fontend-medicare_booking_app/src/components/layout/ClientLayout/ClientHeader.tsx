@@ -55,6 +55,10 @@ const ClientHeader = () => {
             label: <Link to={"/message"}>Trang tin nhắn</Link>,
             key: "message",
           },
+          {
+            label: <Link to={"/my-appointments"}>Lịch đã đặt</Link>,
+            key: "message",
+          },
         ]
       : []),
     {

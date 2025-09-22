@@ -14,6 +14,7 @@ import MakeAppointmentPage from "@/modules/client/pages/booking/MakeAppointmentP
 import PaymentSelectionPage from "@/modules/client/pages/booking/PaymentSelectionPage";
 import PaymentReturnPage from "@/modules/client/pages/booking/PaymentReturnPage";
 import MessagePage from "@/modules/client/pages/MessagePage";
+import MyAppointmentsPage from "@/modules/client/pages/booking/MyAppointmentsPage";
 
 const ClientRoutes = () => {
   return (
@@ -24,6 +25,9 @@ const ClientRoutes = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/message" element={<MessagePage />} />
         <Route path="/message/:doctorId" element={<MessagePage />} />
+
+        {/* Lịch đã đặt */}
+        <Route path="/my-appointments" element={<MyAppointmentsPage />} />
 
         {/* Hình thức đặt lịch */}
         <Route path="/booking-options" element={<BookingPage />} />
