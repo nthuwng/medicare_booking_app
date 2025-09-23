@@ -11,6 +11,8 @@ import timezone from "dayjs/plugin/timezone";
 
 import { prisma } from "src/config/client";
 import {
+  checkFullDetailDoctorViaRabbitMQ,
+  checkScheduleAndTimeslotIdViaRabbitMQ,
   checkScheduleViaRabbitMQ,
   getDoctorIdByUserIdViaRabbitMQ,
   getDoctorUserIdByDoctorIdViaRabbitMQ,
@@ -168,7 +170,9 @@ const createAppointmentService = async (
 
   await updateScheduleViaRabbitMQ(scheduleId, timeSlotId);
 
-  const doctorUserId = await getDoctorUserIdByDoctorIdViaRabbitMQ(appointment.doctorId);
+  const doctorUserId = await getDoctorUserIdByDoctorIdViaRabbitMQ(
+    appointment.doctorId
+  );
 
   await publishAppointmentCreatedEvent({
     appointmentId: appointment.id,
@@ -228,7 +232,19 @@ const getAppointmentsByUserService = async (userId: string) => {
     },
   });
 
-  return appointments;
+  const appointmentsWithScheduleInfo = await Promise.all(
+    appointments.map(async (appointment) => {
+      const schedule = await checkScheduleViaRabbitMQ(appointment.scheduleId);
+      const { schedule: scheduleArray, doctor: doctorArray } = schedule.data;
+      return {
+        ...appointment,
+        schedule: scheduleArray,
+        doctor: doctorArray,
+      };
+    })
+  );
+
+  return appointmentsWithScheduleInfo;
 };
 
 // Get appointment by ID
@@ -240,11 +256,21 @@ const getAppointmentByIdService = async (appointmentId: string) => {
     },
   });
 
-  if (!appointment) {
-    throw new Error("Cuộc hẹn không tồn tại");
-  }
+  const schedule = await checkScheduleAndTimeslotIdViaRabbitMQ(
+    appointment?.scheduleId || "",
+    appointment?.timeSlotId || 0
+  );
 
-  return appointment;
+  const doctor = await checkFullDetailDoctorViaRabbitMQ(
+    appointment?.doctorId || ""
+  );
+  const appointmentWithScheduleInfo = {
+    ...appointment,
+    schedule: schedule,
+    doctor: doctor,
+  };
+
+  return appointmentWithScheduleInfo;
 };
 
 // Update appointment status

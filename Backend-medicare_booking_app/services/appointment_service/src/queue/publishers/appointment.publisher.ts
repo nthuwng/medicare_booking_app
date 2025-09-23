@@ -47,6 +47,13 @@ const publishAppointmentCreatedEvent = async (payload: any) => {
     payload
   );
 };
+const checkFullDetailDoctorViaRabbitMQ = async (doctorId: string) => {
+  return rpcRequest("doctor.check_full_detail_doctor", { doctorId });
+};
+
+const checkScheduleAndTimeslotIdViaRabbitMQ = async (scheduleId: string, timeSlotId: number) => {
+  return rpcRequest("schedule.check_schedule_and_timeslot_id", { scheduleId, timeSlotId });
+};
 
 export {
   verifyTokenViaRabbitMQ,
@@ -59,4 +66,6 @@ export {
   getDoctorIdByUserIdViaRabbitMQ,
   publishAppointmentCreatedEvent,
   getDoctorUserIdByDoctorIdViaRabbitMQ,
+  checkFullDetailDoctorViaRabbitMQ,
+  checkScheduleAndTimeslotIdViaRabbitMQ,
 };

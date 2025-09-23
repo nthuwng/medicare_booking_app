@@ -3,11 +3,12 @@ import {
   createAppointmentController,
   getAppointmentsByUserController,
   getAllAppointmentsByDoctorIdController,
+  updateAppointmentStatusController,
+  getAppointmentByIdController,
 } from "src/controller/appointment.controllers";
 import {
   authenticateToken,
   authorizePatient,
-  authorizeAdmin,
   authorizeDoctor,
 } from "src/middleware/auth.middleware";
 
@@ -27,10 +28,22 @@ const appointmentRoutes = (app: Express) => {
     getAllAppointmentsByDoctorIdController
   );
 
+  router.put(
+    "/update-appointment-status/:id",
+    authorizeDoctor,
+    updateAppointmentStatusController
+  );
+
   router.get(
     "/my-appointments",
     authorizePatient,
     getAppointmentsByUserController
+  );
+
+  router.get(
+    "/my-appointments/:id",
+    authorizePatient,
+    getAppointmentByIdController
   );
 
   app.use("/appointments", authenticateToken, router);

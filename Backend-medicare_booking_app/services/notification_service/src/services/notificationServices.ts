@@ -42,6 +42,9 @@ const handleGetNotificationByUserId = async (userId: string) => {
 
   const notifications = await prisma.notification.findMany({
     where: { userId },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
   return notifications;
 };

@@ -93,6 +93,24 @@ const getScheduleByScheduleId = async (scheduleId: string) => {
   return { data: { schedule, doctor } };
 };
 
+const getScheduleByScheduleIdAndTimeSlotId = async (
+  scheduleId: string,
+  timeSlotId: number
+) => {
+  const schedule = await prisma.schedule.findFirst({
+    where: { id: scheduleId },
+    include: {
+      timeSlots: {
+        where: { timeSlotId: timeSlotId },
+        include: {
+          timeSlot: true,
+        },
+      },
+    },
+  });
+  return schedule;
+};
+
 const updateTimeSlotByScheduleIdAndTimeSlotId = async (
   scheduleId: string,
   timeSlotId: number
@@ -122,4 +140,5 @@ export {
   getScheduleByDoctorId,
   getScheduleByScheduleId,
   updateTimeSlotByScheduleIdAndTimeSlotId,
+  getScheduleByScheduleIdAndTimeSlotId,
 };

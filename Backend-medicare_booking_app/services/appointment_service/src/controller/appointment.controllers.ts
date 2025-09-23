@@ -31,6 +31,7 @@ const getAppointmentsByUserController = async (req: Request, res: Response) => {
     const appointments = await getAppointmentsByUserService(userId);
     res.status(200).json({
       success: true,
+      length: appointments.length,
       message: "Lấy danh sách cuộc hẹn thành công.",
       data: appointments,
     });
