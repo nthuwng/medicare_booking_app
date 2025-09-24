@@ -10,9 +10,20 @@ const BookingPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50">
+    <div
+      className="bg-gradient-to-b from-white to-gray-50"
+      style={{
+        backgroundImage: `
+        linear-gradient(to right, rgba(229,231,235,0.8) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(229,231,235,0.8) 1px, transparent 1px),
+        radial-gradient(circle 500px at 0% 20%, rgba(139,92,246,0.3), transparent),
+        radial-gradient(circle 500px at 100% 0%, rgba(59,130,246,0.3), transparent)
+      `,
+        backgroundSize: "48px 48px, 48px 48px, 100% 100%, 100% 100%",
+      }}
+    >
       {/* Breadcrumb Navigation */}
-      <div className="bg-white border-b">
+      <div className="bg-white border-b" >
         <div className="max-w-7xl mx-auto px-4 py-3">
           <Breadcrumb
             separator={<RightOutlined className="text-gray-400" />}

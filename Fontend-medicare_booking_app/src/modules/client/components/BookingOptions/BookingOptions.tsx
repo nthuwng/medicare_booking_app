@@ -97,7 +97,9 @@ const OPTIONS = [
 const BookingOptions = () => {
   const navigate = useNavigate();
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto" 
+    
+    >
       <Row gutter={[24, 24]}>
         {OPTIONS.map((opt) => {
           const c = COLOR_STYLES[opt.color];

@@ -80,7 +80,7 @@ const ClientHeader = () => {
     <>
       <header
         className="fixed top-0 left-0 right-0 z-50 w-full h-16 bg-white shadow-lg  border-b border-gray-100"
-        style={{ backgroundColor: "#f9fafb" }}
+        // style={{ backgroundColor: "#f9fafb" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
           {/* Logo */}
@@ -118,7 +118,10 @@ const ClientHeader = () => {
               to="/about"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 flex items-center group"
             >
-              <span>Giới thiệu</span>
+              <span>
+                {" "}
+                <Link to="/about">Giới thiệu</Link>
+              </span>
               <svg
                 className="w-4 h-4 ml-1 group-hover:translate-y-0.5 transition-transform duration-200"
                 fill="none"

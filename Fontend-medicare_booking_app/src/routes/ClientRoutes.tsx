@@ -17,6 +17,8 @@ import MessagePage from "@/modules/client/pages/MessagePage";
 import MyAppointmentsPage from "@/modules/client/pages/MyAppointmentsPage";
 import AppointmentDetailPage from "@/modules/client/pages/AppointmentDetailPage";
 import MyAccountPage from "@/modules/client/pages/MyAccountPage";
+import PatientProtectedRoute from "@/components/auth/PatientProtectedRoute";
+import AboutPage from "@/modules/client/pages/AboutPage";
 
 const ClientRoutes = () => {
   return (
@@ -32,17 +34,46 @@ const ClientRoutes = () => {
         <Route path="/my-appointments" element={<MyAppointmentsPage />} />
 
         {/* Hình thức đặt lịch */}
-        <Route path="/booking-options" element={<BookingPage />} />
+        <Route
+          path="/booking-options"
+          element={
+            <PatientProtectedRoute>
+              <BookingPage />
+            </PatientProtectedRoute>
+          }
+        />
 
         {/* Đặt lịch bác sĩ */}
-        <Route path="/booking-options/doctor" element={<DoctorBookingPage />} />
+        <Route
+          path="/booking-options/doctor"
+          element={
+            <PatientProtectedRoute>
+              {" "}
+              <DoctorBookingPage />{" "}
+            </PatientProtectedRoute>
+          }
+        />
         {/* Đặt lịch chuyên khoa */}
         <Route
           path="/booking-options/specialty"
-          element={<SpecialtyBookingPage />}
+          element={
+            <PatientProtectedRoute>
+              {" "}
+              <SpecialtyBookingPage />{" "}
+            </PatientProtectedRoute>
+          }
         />
+
         {/* Đặt lịch cơ sở y tế */}
-        <Route path="/booking-options/clinic" element={<ClinicBookingPage />} />
+        <Route
+          path="/booking-options/clinic"
+          element={
+            <PatientProtectedRoute>
+              {" "}
+              <ClinicBookingPage />{" "}
+            </PatientProtectedRoute>
+          }
+        />
 
         {/* Chi tiết bác sĩ */}
         <Route
@@ -63,7 +94,13 @@ const ClientRoutes = () => {
         <Route path="/payment-return" element={<PaymentReturnPage />} />
 
         {/* Trang chi tiết lịch đã đặt */}
-        <Route path="/appointment-detail/:id" element={<AppointmentDetailPage />} />
+        <Route
+          path="/appointment-detail/:id"
+          element={<AppointmentDetailPage />}
+        />
+
+        {/* Trang about */}
+        <Route path="/about" element={<AboutPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

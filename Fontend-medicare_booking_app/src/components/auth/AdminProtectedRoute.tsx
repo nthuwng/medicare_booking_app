@@ -25,6 +25,18 @@ const AdminProtectedRoute = (props: IProps) => {
           alignItems: "center",
           justifyContent: "center",
           zIndex: 9999,
+          backgroundImage: `
+          linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+          radial-gradient(900px 600px at -10% -10%, rgba(99, 102, 241, 0.12), transparent),
+          radial-gradient(900px 600px at 110% -10%, rgba(139, 92, 246, 0.12), transparent)
+        `,
+        backgroundSize: `
+          96px 64px,
+          96px 64px,
+          100% 100%,
+          100% 100%
+        `,
         }}
       >
         <div

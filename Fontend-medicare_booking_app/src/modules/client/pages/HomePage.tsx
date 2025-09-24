@@ -55,7 +55,14 @@ const HomePage = () => {
       <Banner />
 
       {/* Statistics Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <section
+        className="py-20 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"
+        style={{
+          backgroundImage: `
+          radial-gradient(circle at 30% 70%, rgba(173, 216, 230, 0.35), transparent 60%),
+          radial-gradient(circle at 70% 30%, rgba(255, 182, 193, 0.4), transparent 60%)`,
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
@@ -121,7 +128,9 @@ const HomePage = () => {
       </section>
 
       {/* For You Section */}
-      <section className="bg-gray-50 py-12 font-sans w-full">
+      <section className="bg-gray-50 py-12 font-sans w-full" 
+      
+      >
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="mb-8 md:mb-12 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
