@@ -25,10 +25,10 @@ model Admin {
 model Patient {
   id            String    @id @default(uuid()) @map("patient_profile_id")
   user_id       String    @unique
-  full_name     String    @db.VarChar(255)
-  phone         String    @db.VarChar(20)
+  full_name     String?    @db.VarChar(255)
+  phone         String?   @db.VarChar(20)
   date_of_birth DateTime? @db.Date
-  gender        Gender
+  gender        Gender?
   avatar_url    String?   @db.VarChar(255)
   address       String?   @db.Text
   city          String?   @db.VarChar(100)

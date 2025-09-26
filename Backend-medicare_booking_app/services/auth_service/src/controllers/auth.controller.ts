@@ -12,6 +12,7 @@ import {
   handleRevokeRefreshToken,
   handleGetAllUsersAPI,
   countTotalUserPage,
+  handleLoginWithGoogleAPI,
 } from "../services/auth.services";
 import {
   changePasswordSchema,
@@ -422,6 +423,51 @@ const getAllUsersAPI = async (req: Request, res: Response) => {
     },
   });
 };
+
+const postLoginWithGoogleAPI = async (req: Request, res: Response) => {
+  try {
+    const { credential } = req.body;
+    const result = await handleLoginWithGoogleAPI(credential);
+
+    if (typeof result === "object" && "access_token" in result) {
+      // Set refresh token as HTTP-only cookie
+      res.cookie("refresh_token", result.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        path: "/",
+      });
+
+      const response: LoginResponse = {
+        success: true,
+        message: "Đăng nhập thành công",
+        data: {
+          access_token: result.access_token,
+          token_type: "Bearer",
+        },
+      };
+      res.status(200).json(response);
+      return;
+    }
+
+    // Handle login failure (result is an object with success: false)
+    const response: LoginResponse = {
+      success: false,
+      message: result.message || "Đăng nhập thất bại",
+      data: null,
+    };
+    res.status(401).json(response);
+  } catch (error) {
+    console.error("Login error:", error);
+    const response: LoginResponse = {
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+      data: null,
+    };
+    res.status(500).json(response);
+  }
+};
 export {
   postRegisterAPI,
   postLoginAPI,
@@ -432,4 +478,5 @@ export {
   postRevokeRefreshTokenApi,
   getAllUsersAPI,
   getRefreshTokenApi,
+  postLoginWithGoogleAPI,
 };

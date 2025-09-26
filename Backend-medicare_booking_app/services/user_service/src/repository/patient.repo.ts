@@ -1,4 +1,5 @@
 import { prisma } from "src/config/client";
+import { checkUserExits } from "src/services/patient.service";
 
 const createPatient = async (
   userId: string,
@@ -26,6 +27,46 @@ const createPatient = async (
   });
 
   return patient;
+};
+
+const usernameFromEmail = (email: string) => {
+  const local = email.trim().toLowerCase().split("@")[0];
+  // Bỏ phần +tag của Gmail: user+abc@gmail.com -> user
+  const noPlus = local.replace(/\+.*$/, "");
+  // Giữ ký tự an toàn
+  const safe = noPlus.replace(/[^a-z0-9._-]/g, "");
+  return safe.slice(0, 30); // giới hạn chiều dài nếu muốn
+};
+
+const createUserProfile = async (userId: string, email: string) => {
+  try {
+    // Kiểm tra user đã có profile chưa
+    const existingProfile = await findPatientByUserId(userId);
+    if (existingProfile) {
+      return existingProfile;
+    }
+
+    const username = usernameFromEmail(email); // ví dụ: 'luluvogmot23'
+
+    // Tạo profile cơ bản với default values
+    const userProfile = await prisma.patient.create({
+      data: {
+        user_id: userId,
+        full_name: username, // Default name, user có thể update sau
+        phone: "", // Empty, user sẽ cập nhật sau
+        gender: "Other", // Default gender
+        avatar_url: "",
+        address: "",
+        city: "",
+        district: "",
+        date_of_birth: null,
+      },
+    });
+    return userProfile;
+  } catch (error) {
+    console.error("Error creating user profile:", error);
+    throw error;
+  }
 };
 
 const findPatientByUserId = async (userId: string) => {
@@ -98,4 +139,5 @@ export {
   getPatientById,
   getAllPatient,
   deletePatient,
+  createUserProfile,
 };

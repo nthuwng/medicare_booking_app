@@ -8,6 +8,7 @@ import {
   postRefreshTokenApi,
   postRevokeRefreshTokenApi,
   getAllUsersAPI,
+  postLoginWithGoogleAPI,
 } from "../controllers/auth.controller";
 import { authenticateToken, authorizeAdmin } from "src/middleware/jwt.middleware";
 
@@ -17,6 +18,7 @@ const authRoutes = (app: Express) => {
   router.post("/register", postRegisterAPI);
   router.get("/", authenticateToken, authorizeAdmin, getAllUsersAPI);
   router.post("/login", postLoginAPI);
+  router.post("/login-with-google", postLoginWithGoogleAPI);
   router.post("/verify-token", postVerifyTokenAPI);
   router.get("/account", getAccountApi);
   router.post("/refresh-token", postRefreshTokenApi);

@@ -33,10 +33,10 @@ const createPatientProfile = async (
 
   const patient = await checkTypeAndCreatePatientProfile(
     userId,
-    fullName,
-    phone,
+    fullName || "",
+    phone || "",
     avatarUrl || "",
-    gender,
+    gender || "",
     dateOfBirth ? new Date(dateOfBirth) : new Date(),
     address || "",
     city || "",

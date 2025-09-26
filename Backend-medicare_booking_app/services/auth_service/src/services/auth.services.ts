@@ -1,5 +1,6 @@
 import {
   JwtPayload,
+  JwtPayloadGoogle,
   LoginServiceResponse,
   RegisterServiceResponse,
 } from "@shared/index";
@@ -11,6 +12,7 @@ import jwt from "jsonwebtoken";
 import "dotenv/config";
 import { config } from "../config/config.index";
 import dayjs from "dayjs";
+import { createUserProfileViaRabbitMQ } from "src/queue/publishers/auth.publisher";
 const hashPassword = async (password: string) => {
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   return hashedPassword;
@@ -40,6 +42,9 @@ const handleRegister = async (
       userType: userType as UserType,
     },
   });
+
+  await createUserProfileViaRabbitMQ(user.id, email);
+
   return { success: true, user };
 };
 
@@ -378,6 +383,98 @@ const handleGetAllUsers = async () => {
   });
   return users;
 };
+
+const handleLoginWithGoogleAPI = async (
+  credential: string
+): Promise<LoginServiceResponse> => {
+  try {
+    if (!credential) {
+      return { success: false, message: "Thiếu google token" };
+    }
+    const dataDecoded = jwt.decode(credential) as JwtPayloadGoogle;
+
+    if (!dataDecoded) {
+      return { success: false, message: "Google token không hợp lệ" };
+    }
+
+    const emailVerified = dataDecoded?.email as string;
+
+    let user = await prisma.user.findUnique({
+      where: {
+        email: emailVerified,
+      },
+    });
+
+    if (!user) {
+      const randomPassword = `${Math.random()
+        .toString(36)
+        .slice(2)}${Date.now()}`;
+      const hashed = await hashPassword(randomPassword);
+      user = await prisma.user.create({
+        data: {
+          email: emailVerified,
+          password: hashed,
+          userType: UserType.PATIENT,
+        },
+      });
+    }
+
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      userType: user.userType,
+    };
+
+    await createUserProfileViaRabbitMQ(payload.userId, payload.email);
+
+    const secret = config.jwt.secret;
+    const expiresIn: any = config.jwt.expiresIn;
+    if (!secret) {
+      return {
+        success: false,
+        message: `JWT_SECRET is not defined in environment variables`,
+      };
+    }
+    const access_token = jwt.sign(payload, secret, {
+      expiresIn: expiresIn,
+    });
+
+    const refreshSecret = config.jwt.refreshSecret;
+    const refreshExpiresIn: any = config.jwt.refreshExpiresIn;
+    if (!refreshSecret) {
+      return {
+        success: false,
+        message: `JWT_REFRESH_SECRET is not defined in environment variables`,
+      };
+    }
+
+    const refresh_token = jwt.sign(payload, refreshSecret, {
+      expiresIn: refreshExpiresIn,
+    });
+
+    // Save refresh token to database
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+    // Note: This will work after running migration to create refresh_tokens table
+    try {
+      await prisma.refreshToken.create({
+        data: {
+          token: refresh_token,
+          userId: user.id,
+          expiresAt: expiresAt,
+        },
+      });
+    } catch (error) {
+      console.log("Refresh token table not created yet, skipping save");
+    }
+
+    return { access_token, refresh_token };
+  } catch (error) {
+    console.error("Error in handleLoginApi:", error);
+    return { success: false, message: "Error in handleLoginApi:" };
+  }
+};
 export {
   hashPassword,
   handleRegister,
@@ -394,4 +491,5 @@ export {
   handleGetAllUsers,
   handleGetAllUsersAPI,
   countTotalUserPage,
+  handleLoginWithGoogleAPI,
 };
