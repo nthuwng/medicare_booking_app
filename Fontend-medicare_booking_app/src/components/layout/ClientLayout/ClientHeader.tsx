@@ -118,10 +118,7 @@ const ClientHeader = () => {
               to="/about"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 flex items-center group"
             >
-              <span>
-                {" "}
-                <Link to="/about">Giới thiệu</Link>
-              </span>
+              <span>Giới thiệu</span>
               <svg
                 className="w-4 h-4 ml-1 group-hover:translate-y-0.5 transition-transform duration-200"
                 fill="none"

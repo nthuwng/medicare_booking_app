@@ -14,8 +14,8 @@ import MakeAppointmentPage from "@/modules/client/pages/booking/MakeAppointmentP
 import PaymentSelectionPage from "@/modules/client/pages/booking/PaymentSelectionPage";
 import PaymentReturnPage from "@/modules/client/pages/booking/PaymentReturnPage";
 import MessagePage from "@/modules/client/pages/MessagePage";
-import MyAppointmentsPage from "@/modules/client/pages/MyAppointmentsPage";
-import AppointmentDetailPage from "@/modules/client/pages/AppointmentDetailPage";
+import MyAppointmentsPage from "@/modules/client/pages/appointments/MyAppointmentsPage";
+import AppointmentDetailPage from "@/modules/client/pages/appointments/AppointmentDetailPage";
 import MyAccountPage from "@/modules/client/pages/MyAccountPage";
 import PatientProtectedRoute from "@/components/auth/PatientProtectedRoute";
 import AboutPage from "@/modules/client/pages/AboutPage";

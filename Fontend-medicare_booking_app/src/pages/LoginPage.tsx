@@ -18,8 +18,13 @@ import type { FormProps } from "antd";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./register.scss";
-import { loginAPI } from "@/services/api";
+import { loginAPI, loginWithGoogleAPI } from "@/services/api";
 import { useCurrentApp } from "@/components/contexts/app.context";
+import {
+  GoogleLogin,
+  GoogleOAuthProvider,
+  type CredentialResponse,
+} from "@react-oauth/google";
 
 type FieldType = {
   email: string;
@@ -54,14 +59,25 @@ const LoginPage = () => {
     }
   };
 
-  const handleLoginWithGoogle = () => {
-    const baseURL = import.meta.env.VITE_BACKEND_URL || "";
-    window.location.href = `${baseURL}/api/auth/google`;
+  const handleLoginWithGoogle = async (response: CredentialResponse) => {
+    const { credential } = response;
+    const res = await loginWithGoogleAPI(credential as string);
+    if (res?.data) {
+      localStorage.setItem("access_token", res.data.access_token);
+      message.success("Đăng nhập tài khoản thành công!");
+      await refreshUserData();
+      navigate("/");
+    } else {
+      notification.error({
+        message: "Đăng nhập tài khoản thất bại!",
+        description: res?.message || "Vui lòng thử lại sau.",
+        placement: "topRight",
+      });
+    }
   };
 
   return (
     <div
-    
       className="register-page"
       style={{
         minHeight: "80vh",
@@ -70,10 +86,9 @@ const LoginPage = () => {
         justifyContent: "center",
         padding: 16,
         // background: "linear-gradient(135deg, #f0f5ff 0%, #ffffff 60%)",
-      
-        
-          background: "radial-gradient(125% 125% at 50% 10%, #fff 40%, #475569 100%)",
-          
+
+        background:
+          "radial-gradient(125% 125% at 50% 10%, #fff 40%, #475569 100%)",
       }}
     >
       <Card
@@ -155,14 +170,13 @@ const LoginPage = () => {
             >
               Đăng nhập
             </Button>
-            <Button
-              icon={<GoogleOutlined />}
+            <GoogleLogin
+              onSuccess={handleLoginWithGoogle}
+              onError={() => {
+                console.log("Login Failed");
+              }}
               size="large"
-              onClick={handleLoginWithGoogle}
-              block
-            >
-              Đăng nhập với Google
-            </Button>
+            />
           </Space>
 
           <Divider plain>Hoặc</Divider>

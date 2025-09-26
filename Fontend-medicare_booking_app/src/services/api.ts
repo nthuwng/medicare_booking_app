@@ -22,3 +22,8 @@ export const registerAPI = (
     userType,
   });
 };
+
+export const loginWithGoogleAPI = (credential: string) => {
+  const urlBackend = "/api/auth/login-with-google";
+  return axios.post<IBackendRes<ILogin>>(urlBackend, { credential });
+};

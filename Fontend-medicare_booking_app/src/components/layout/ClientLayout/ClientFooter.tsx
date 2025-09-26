@@ -24,6 +24,7 @@ const ClientFooter = () => {
       `,
       backgroundSize: "20px 20px, 30px 30px, 25px 25px",
       backgroundPosition: "0 0, 10px 10px, 15px 5px",
+      marginTop: "auto",
     }}
 
 

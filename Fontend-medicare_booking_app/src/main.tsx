@@ -8,6 +8,9 @@ import "./index.css";
 import { ConfigProvider } from "antd";
 import viVN from "antd/locale/vi_VN";
 import { AppProvider } from "./components/contexts/app.context.tsx";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -15,7 +18,9 @@ createRoot(document.getElementById("root")!).render(
       <AntdApp>
         <AppProvider>
           <ConfigProvider locale={viVN}>
-            <App />
+            <GoogleOAuthProvider clientId={clientId}>
+              <App />
+            </GoogleOAuthProvider>
           </ConfigProvider>
         </AppProvider>
       </AntdApp>

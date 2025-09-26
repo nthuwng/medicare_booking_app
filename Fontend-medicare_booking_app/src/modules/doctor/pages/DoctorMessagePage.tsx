@@ -12,6 +12,9 @@ import {
   Clock,
   User,
 } from "lucide-react";
+import { Avatar } from "antd";
+import { FaUser } from "react-icons/fa";
+import { UserOutlined } from "@ant-design/icons";
 import {
   getAllConversationsDoctorAPI,
   getDoctorProfileByUserId,
@@ -190,9 +193,7 @@ const DoctorMessagePage = () => {
             const displayConv: IConversationDisplay = {
               id: conv.id,
               name: patientRes.data.full_name,
-              avatar:
-                patientRes.data.avatar_url ||
-                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+              avatar: patientRes.data.avatar_url || "",
               lastMessage: lastMessage,
               timestamp: timestamp,
               isOnline: true, // Có thể thêm logic để check online status
@@ -249,8 +250,9 @@ const DoctorMessagePage = () => {
   };
 
   // Lọc conversations theo search query
-  const filteredConversations = displayConversations.filter((conv) =>
-    conv.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConversations = displayConversations.filter(
+    (conv) =>
+      conv.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false
   );
 
   useEffect(() => {
@@ -271,7 +273,6 @@ const DoctorMessagePage = () => {
 
     // 📨 Listen cho tin nhắn được gửi thành công
     socket.on("message-sent", async (message) => {
-
       // Xác định isOwn dựa trên senderId
       const isOwn = message.senderId === user?.id;
 
@@ -459,13 +460,13 @@ const DoctorMessagePage = () => {
                 >
                   <div className="flex items-start space-x-3">
                     <div className="relative">
-                      <img
-                        src={
-                          dataPatient.avatar_url ||
-                          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
-                        }
-                        alt={dataPatient.full_name}
-                        className="w-12 h-12 rounded-full object-cover"
+                      <Avatar
+                        size={48}
+                        {...(dataPatient.avatar_url && {
+                          src: dataPatient.avatar_url,
+                        })}
+                        icon={<FaUser />}
+                        style={{ backgroundColor: "#f0f0f0" }}
                       />
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                     </div>
@@ -530,10 +531,12 @@ const DoctorMessagePage = () => {
                   >
                     <div className="flex items-start space-x-3">
                       <div className="relative">
-                        <img
-                          src={conv.avatar}
-                          alt={conv.name}
-                          className="w-12 h-12 rounded-full object-cover"
+                        <Avatar
+                          size={48}
+                          {...(conv.avatar && {
+                            src: conv.avatar,
+                          })}
+                          icon={<FaUser />}
                         />
                         {conv.isOnline && (
                           <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
@@ -615,13 +618,12 @@ const DoctorMessagePage = () => {
                       </button>
 
                       <div className="relative">
-                        <img
-                          src={
-                            (selectedPatientInfo || dataPatient)?.avatar_url ||
-                            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
-                          }
-                          alt={(selectedPatientInfo || dataPatient)?.full_name}
-                          className="w-10 h-10 rounded-full object-cover"
+                        <Avatar
+                          size={40}
+                          {...(dataPatient?.avatar_url && {
+                            src: dataPatient.avatar_url,
+                          })}
+                          icon={<FaUser />}
                         />
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
