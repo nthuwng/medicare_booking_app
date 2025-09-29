@@ -180,6 +180,7 @@ const createAppointmentService = async (
     userId: doctorUserId,
     patientName,
     patientPhone,
+    patientEmail,
     appointmentDateTime: appointment.appointmentDateTime,
     reason: reason || "Không có lý do cụ thể",
     totalFee: appointment.totalFee,

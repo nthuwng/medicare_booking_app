@@ -193,6 +193,8 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=mysql://root:medicare_booking@notification_db:3306/notification_db
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - GMAIL_USER=nguyenthinhhung150603@gmail.com
+      - GMAIL_PASS=xpwa ksec zysd pbfd
     volumes:
       - ./services/notification_service:/app
       - /app/node_modules
@@ -342,7 +344,6 @@ services:
     networks:
       - healthcare_network
     command: npm start
-
 
   message_db:
     image: mysql:8.0

@@ -3,6 +3,7 @@ import { handleCreateNotification } from "src/services/notificationServices";
 import { getChannel } from "../connection";
 import { getIO } from "src/socket";
 import { getUserByIdViaRabbitMQ } from "../publishers/notification.publisher";
+import { sendAppointmentCreatedEmail } from "src/services/email.service";
 
 interface AppointmentEventPayload {
   appointmentId: string;
@@ -10,6 +11,7 @@ interface AppointmentEventPayload {
   userId: string;
   patientName: string;
   patientPhone: string;
+  patientEmail: string;
   appointmentDateTime: string;
   reason: string;
   totalFee: number;
@@ -38,8 +40,16 @@ export const initNotificationAppointmentConsumer = async () => {
         return;
       }
 
-
       const user = await getUserByIdViaRabbitMQ(payload.userId);
+
+      await sendAppointmentCreatedEmail(payload.patientEmail, {
+        appointmentId: payload.appointmentId,
+        patientName: payload.patientName,
+        patientPhone: payload.patientPhone,
+        appointmentDateTime: payload.appointmentDateTime,
+        reason: payload.reason,
+        totalFee: payload.totalFee,
+      });
 
       // Lưu notification cho chính doctor đó
       const notification = await handleCreateNotification({
