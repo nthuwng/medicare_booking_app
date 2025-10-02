@@ -2,16 +2,26 @@ import type { IDoctorProfileResponseMessage, IPatientProfile } from "./user";
 
 export interface IConversation {
   id: number;
-  patientId: string;
   doctorId: string;
+  patientId: string;
+  doctorInfo: IDoctorProfileResponseMessage;
+  patientInfo: IPatientProfile;
   supportId: string | null;
-  type: string;
+  lastMessage: ILastMessage;
   lastMessageAt: string;
   createdAt: string;
-  updatedAt: string;
-  messages?: IMessage[];
+  type: string;
 }
 
+export interface ILastMessage {
+  id: number;
+  content: string;
+  senderId: string;
+  senderType: string;
+  messageType: string;
+  createdAt: string;
+  timestamp: string;
+}
 // Interface để hiển thị trong conversation list
 export interface IConversationDisplay {
   id: number;
@@ -43,8 +53,9 @@ export interface IMessage {
 }
 
 export interface IConversationResponse {
-  patient: IPatientProfile;
+  user: IPatientProfile;
   conversations: IConversation[];
+  total: number;
 }
 
 export interface IConversationResponseDoctor {

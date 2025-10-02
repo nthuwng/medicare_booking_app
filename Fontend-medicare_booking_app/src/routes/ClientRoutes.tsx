@@ -28,12 +28,12 @@ const ClientRoutes = () => {
         <Route index element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/message/:doctorId" element={<MessagePage />} />
 
         <Route element={<LayoutAccount />}>
           <Route path="/my-appointments" element={<MyAppointmentsPage />} />
           <Route path="/message" element={<MessagePage />} />
           <Route path="/my-account" element={<MyAccountPage />} />
+          <Route path="/message/:doctorId" element={<MessagePage />} />
         </Route>
 
         {/* Hình thức đặt lịch */}

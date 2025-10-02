@@ -195,7 +195,9 @@ const DoctorDetailPage = () => {
                       type="primary"
                       icon={<MessageOutlined />}
                       className="bg-blue-600 hover:bg-blue-700 border-blue-600"
-                      onClick={() => navigate(`/message/${doctorId}`)}
+                      onClick={() =>
+                        navigate("/message", { state: { doctorId } })
+                      }
                     >
                       Tin nhắn
                     </Button>

@@ -9,7 +9,7 @@ import type {
   IPatientProfile,
 } from "@/types";
 import type { IAppointment, IAppointmentFullDetail } from "@/types/appointment";
-import type { IConversationResponse, IMessage } from "@/types/message";
+import type {IConversationResponse, IMessage } from "@/types/message";
 
 export const getAllApprovedDoctorsBooking = (query: string) => {
   const urlBackend = `/api/doctor/doctors/approved?${query}`;
@@ -61,7 +61,7 @@ export const getMessagesByConversationIdAPI = (conversationId: string) => {
 
 // API lấy tất cả conversations của patient
 export const getAllConversationsPatientAPI = (patientId: string) => {
-  const urlBackend = `/api/message/conversations/patient/${patientId}`;
+  const urlBackend = `/api/message/conversations/PATIENT/${patientId}`;
   return axios.get<IBackendRes<IConversationResponse>>(urlBackend);
 };
 

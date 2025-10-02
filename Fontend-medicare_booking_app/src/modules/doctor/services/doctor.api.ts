@@ -141,7 +141,7 @@ export const getAllAppointmentsByDoctorId = (query: string) => {
 };
 
 export const getAllConversationsDoctorAPI = (doctorId: string) => {
-  const urlBackend = `/api/message/conversations/doctor/${doctorId}`;
+  const urlBackend = `/api/message/conversations/DOCTOR/${doctorId}`;
   return axios.get<IBackendRes<IConversationResponseDoctor>>(urlBackend);
 };
 
