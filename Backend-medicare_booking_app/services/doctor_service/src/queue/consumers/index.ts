@@ -2,6 +2,7 @@ import { initCheckClinicConsumer } from "./checkClinic.consumer";
 import { initCheckDoctorConsumer } from "./checkDoctor.consumer";
 import { initCheckFullDetailDoctorConsumer } from "./checkFullDetailDoctor.consumer";
 import { initGetDoctorIdByUserIdConsumer } from "./getDoctorIdByUserId.consumer";
+import { initGetDoctorIdMessage } from "./getDoctorIdMessage";
 import { initGetDoctorUserIdByDoctorIdConsumer } from "./getUserIdByDoctorId";
 
 export const initializeAllRabbitMQConsumers = async () => {
@@ -11,6 +12,7 @@ export const initializeAllRabbitMQConsumers = async () => {
     await initGetDoctorIdByUserIdConsumer();
     await initGetDoctorUserIdByDoctorIdConsumer();
     await initCheckFullDetailDoctorConsumer();
+    await initGetDoctorIdMessage();
 
     console.log(
       "✅ All RabbitMQ consumers doctor_service initialized successfully."

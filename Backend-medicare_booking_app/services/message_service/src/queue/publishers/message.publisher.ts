@@ -5,6 +5,14 @@ const getUserByIdViaRabbitMQ = async (userId: string) => {
   return rpcRequest("auth.get_user", { userId });
 };
 
+const getPatientIdByUserIdViaRabbitMQ = async (userId: string) => {
+  return rpcRequest("user.getPatientIdByUserId", { userId });
+};
+
+const getDoctorIdByUserIdViaRabbitMQ = async (userId: string) => {
+  return rpcRequest("doctor.getDoctorIdByUserId", { userId });
+};
+
 const verifyTokenViaRabbitMQ = async (token: string) => {
   return rpcRequest("auth.verify_token", { token });
 };
@@ -48,4 +56,6 @@ export {
   getDoctorByIdViaRabbitMQ,
   publishMsgCreatedEvent,
   getDoctorUserIdByDoctorIdViaRabbitMQ,
+  getPatientIdByUserIdViaRabbitMQ,
+  getDoctorIdByUserIdViaRabbitMQ,
 };

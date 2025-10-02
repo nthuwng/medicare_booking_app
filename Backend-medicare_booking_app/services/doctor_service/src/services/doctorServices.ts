@@ -442,6 +442,7 @@ const getUserIdByDoctorIdService = async (doctorId: string) => {
   return doctor.userId;
 };
 
+
 export {
   createDoctorProfile,
   getDoctorByIdService,
@@ -452,4 +453,5 @@ export {
   checkDoctorInfor,
   getDoctorByUserIdService,
   getUserIdByDoctorIdService,
+  
 };

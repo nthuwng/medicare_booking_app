@@ -132,6 +132,13 @@ const deletePatient = async (id: string) => {
   return patient;
 };
 
+const getPatientIdByUserId = async (userId: string) => {
+  const patient = await prisma.patient.findUnique({
+    where: { user_id: userId },
+  });
+  return patient;
+};
+
 export {
   findPatientByUserId,
   createPatient,
@@ -140,4 +147,5 @@ export {
   getAllPatient,
   deletePatient,
   createUserProfile,
+  getPatientIdByUserId,
 };

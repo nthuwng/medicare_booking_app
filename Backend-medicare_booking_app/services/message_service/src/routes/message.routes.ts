@@ -3,21 +3,45 @@ import {
   getMessagesByConversationIdAPI,
   getAllConversationsPatientAPI,
   getAllConversationsDoctorAPI,
+  createOrGetConversationAPI,
+  getConversationsByRoleAPI,
+  sendMessageAPI,
+  markMessagesAsReadAPI,
+  getUnreadCountAPI,
 } from "src/controllers/messageControllers";
 
 const router = express.Router();
 
 const messageRoutes = (app: Express) => {
-  // API lấy conversation theo doctorId
+  // API tạo hoặc lấy conversation giữa doctor và patient
+  router.post("/conversations", createOrGetConversationAPI);
+
+  // API lấy danh sách conversations theo role (DOCTOR|PATIENT)
+  router.get("/conversations/:role/:userId", getConversationsByRoleAPI);
+
+  // API gửi tin nhắn
+  router.post("/messages", sendMessageAPI);
+
+  // API đánh dấu tin nhắn đã đọc
+  router.patch("/messages/read", markMessagesAsReadAPI);
+
+  // API đếm tin nhắn chưa đọc
+  router.get("/unread-count/:userId", getUnreadCountAPI);
+
+  // API lấy tin nhắn theo conversation ID
   router.get(
     "/by-conversation-id/:conversationId",
     getMessagesByConversationIdAPI
   );
-  router.get(
-    "/conversations/patient/:patientId",
-    getAllConversationsPatientAPI
-  );
-  router.get("/conversations/doctor/:doctorId", getAllConversationsDoctorAPI);
+
+  // API lấy tất cả conversations của patient
+  // router.get(
+  //   "/conversations/patient/:patientId",
+  //   getAllConversationsPatientAPI
+  // );
+
+  // API lấy tất cả conversations của doctor
+  // router.get("/conversations/doctor/:doctorId", getAllConversationsDoctorAPI);
 
   app.use("/", router);
 };
