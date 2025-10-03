@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Popconfirm, Button, App } from "antd";
+import { Popconfirm, Button, App, notification, message } from "antd";
 import {
   DeleteTwoTone,
   EditTwoTone,
@@ -9,18 +9,24 @@ import {
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
-import { getAllSpecialties } from "../../services/admin.api";
+import { deleteSpecialites, getAllSpecialties } from "../../services/admin.api";
 import SpecialitesCreate from "./SpecialitesCreate";
-import type { ISpecialtyTable } from "@/types";
+import type { IClinicTable, ISpecialtyTable } from "@/types";
 import SpecialitesDetail from "./SpecialitesDetail";
+import SpecialitesUpdate from "./SpecialitesUpdate";
 
 const SpecialitesTable = () => {
   const actionRef = useRef<ActionType>(null);
-  const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
+
+  const [openModalCreate, setOpenModalCreate] = useState(false);
+  const [openModalUpdate, setOpenModalUpdate] = useState(false);
+
+  const [openViewDetail, setOpenViewDetail] = useState(false);
   const [dataViewDetail, setDataViewDetail] = useState<ISpecialtyTable | null>(
     null
   );
-  const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
+  const [dataUpdate, setDataUpdate] = useState<ISpecialtyTable | null>(null);
+
   const [meta, setMeta] = useState({
     current: 1,
     pageSize: 5,
@@ -28,8 +34,30 @@ const SpecialitesTable = () => {
     total: 0,
   });
 
-  const refreshTable = () => {
-    actionRef.current?.reload();
+  const { message } = App.useApp();
+
+  const refreshTable = () => actionRef.current?.reload();
+
+  const handleDelete = async (record: ISpecialtyTable) => {
+    try {
+      const res = await deleteSpecialites(record.id);
+      // BE xoá thường trả 200 hoặc 204
+      if (res.success === true) {
+        message.success("Xoá chuyên khoa thành công");
+        actionRef.current?.reload();
+        return;
+      }
+      notification.error({
+        message: "Không thể xoá chuyên khoa",
+        description: (res as any)?.data?.message || "Đã có lỗi xảy ra",
+      });
+    } catch (e: any) {
+      notification.error({
+        message: "Không thể xoá chuyên khoa",
+        description:
+          e?.response?.data?.message || e?.message || "Đã có lỗi xảy ra",
+      });
+    }
   };
 
   const columns: ProColumns<ISpecialtyTable>[] = [
@@ -37,19 +65,19 @@ const SpecialitesTable = () => {
       title: "Id",
       dataIndex: "id",
       hideInSearch: true,
-      render(dom, entity, index, action, schema) {
-        return (
-          <a
-            href="#"
-            onClick={() => {
-              // setDataViewDetail(entity);
-              // setOpenViewDetail(true);
-            }}
-          >
-            {entity.id}
-          </a>
-        );
-      },
+      render: (_, entity) => (
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDataViewDetail(entity);
+            setOpenViewDetail(true);
+          }}
+        >
+          {entity.id}
+        </a>
+      ),
     },
     {
       title: "Tên chuyên khoa",
@@ -62,24 +90,20 @@ const SpecialitesTable = () => {
       hideInTable: true,
       fieldProps: {
         placeholder: "Nhập tên chuyên khoa để tìm kiếm",
-        style: {
-          width: "280px",
-        },
+        style: { width: 280 },
       },
     },
     {
       title: "Hình ảnh",
       dataIndex: "iconPath",
-      render(dom, entity, index, action, schema) {
-        return (
-          <img
-            src={entity.iconPath}
-            alt=""
-            className="w-10 h-10 object-cover"
-          />
-        );
-      },
       hideInSearch: true,
+      render: (_, entity) => (
+        <img
+          src={entity.iconPath}
+          alt=""
+          className="w-10 h-10 object-cover rounded"
+        />
+      ),
     },
     {
       title: "Mô tả",
@@ -88,12 +112,12 @@ const SpecialitesTable = () => {
       render: (_, record) => (
         <div
           style={{
-            maxWidth: 300, // giới hạn chiều rộng
+            maxWidth: 300,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
           }}
-          title={record.description} // hover sẽ hiện full text
+          title={record.description}
         >
           {record.description}
         </div>
@@ -102,61 +126,47 @@ const SpecialitesTable = () => {
     {
       title: "Action",
       hideInSearch: true,
-      render: (_, entity) => {
-        return (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px", // khoảng cách đều giữa các icon
+      width: 140,
+      render: (_, entity) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <EyeOutlined
+            style={{ cursor: "pointer", color: "#1890ff", fontSize: 16 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDataViewDetail(entity);
+              setOpenViewDetail(true);
             }}
+          />
+
+          <EditTwoTone
+            twoToneColor="#f57800"
+            style={{ cursor: "pointer", fontSize: 16 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDataUpdate(entity);
+              setOpenModalUpdate(true);
+            }}
+          />
+
+          <Popconfirm
+            placement="leftTop"
+            title="Xác nhận xoá chuyên khoa"
+            description="Bạn có chắc chắn muốn xoá chuyên khoa này?"
+            onConfirm={(e) => {
+              e?.stopPropagation?.();
+              return handleDelete(entity);
+            }}
+            okText="Xác nhận"
+            cancelText="Hủy"
           >
-            {/* Xem chi tiết */}
-            <EyeOutlined
-              style={{
-                cursor: "pointer",
-                color: "#1890ff",
-                fontSize: 16,
-                transition: "all 0.3s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#40a9ff")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#1890ff")}
-              onClick={() => {
-                setDataViewDetail(entity);
-                setOpenViewDetail(true);
-              }}
+            <DeleteTwoTone
+              twoToneColor="#ff4d4f"
+              style={{ cursor: "pointer", fontSize: 16 }}
+              onClick={(e) => e.stopPropagation()}
             />
-
-            {/* Chỉnh sửa */}
-            <EditTwoTone
-              twoToneColor="#f57800"
-              style={{
-                cursor: "pointer",
-                fontSize: 16,
-              }}
-              onClick={() => {}}
-            />
-
-            {/* Xóa */}
-            <Popconfirm
-              placement="leftTop"
-              title={"Xác nhận xóa chuyên khoa"}
-              description={"Bạn có chắc chắn muốn xóa chuyên khoa này ?"}
-              onConfirm={() => {}}
-              okText="Xác nhận"
-              cancelText="Hủy"
-            >
-              <DeleteTwoTone
-                twoToneColor="#ff4d4f"
-                style={{
-                  cursor: "pointer",
-                  fontSize: 16,
-                }}
-              />
-            </Popconfirm>
-          </div>
-        );
-      },
+          </Popconfirm>
+        </div>
+      ),
     },
   ];
 
@@ -166,54 +176,43 @@ const SpecialitesTable = () => {
         columns={columns}
         actionRef={actionRef}
         cardBordered
-        search={{
-          labelWidth: 150,
-        }}
-        request={async (params, sort, filter) => {
+        search={{ labelWidth: 150 }}
+        request={async (params) => {
           let query = "";
           if (params) {
             query += `current=${params.current}&pageSize=${params.pageSize}`;
-            if (params.specialtyName) {
+            if (params.specialtyName)
               query += `&specialtyName=${params.specialtyName}`;
-            }
           }
           const res = await getAllSpecialties(query);
-          if (res.data) {
-            setMeta(res.data.meta);
-          }
+          if (res?.data?.meta) setMeta(res.data.meta);
           return {
-            data: res.data?.result,
-            page: 1,
+            data: res.data?.result || [],
             success: true,
-            total: res.data?.meta.total,
+            total: res.data?.meta?.total || 0,
           };
         }}
-        rowKey="_id"
+        rowKey="id"
         pagination={{
           current: meta.current,
           pageSize: meta.pageSize,
           showSizeChanger: true,
           total: meta.total,
-          showTotal: (total, range) => {
-            return (
-              <div>
-                {" "}
-                {range[0]}-{range[1]} trên {total} rows
-              </div>
-            );
-          },
+          showTotal: (total, range) => (
+            <div>
+              {range[0]}-{range[1]} trên {total} rows
+            </div>
+          ),
         }}
         headerTitle="Danh sách chuyên khoa"
         toolBarRender={() => [
-          <Button icon={<ExportOutlined />} type="primary">
+          <Button key="export" icon={<ExportOutlined />} type="primary">
             Export
           </Button>,
           <Button
-            key="button"
+            key="create"
             icon={<PlusOutlined />}
-            onClick={() => {
-              setOpenModalCreate(true);
-            }}
+            onClick={() => setOpenModalCreate(true)}
             type="primary"
           >
             Add new
@@ -221,17 +220,35 @@ const SpecialitesTable = () => {
         ]}
       />
 
+      {/* Create */}
       <SpecialitesCreate
         openModalCreate={openModalCreate}
         setOpenModalCreate={setOpenModalCreate}
         refreshTable={refreshTable}
       />
 
+      {/* Detail */}
       <SpecialitesDetail
         openViewDetail={openViewDetail}
         setOpenViewDetail={setOpenViewDetail}
         dataViewDetail={dataViewDetail}
         setDataViewDetail={setDataViewDetail}
+      />
+
+      <SpecialitesUpdate
+        openModalUpdate={openModalUpdate}
+        setOpenModalUpdate={setOpenModalUpdate}
+        refreshTable={refreshTable}
+        dataSpecialty={
+          dataUpdate
+            ? {
+                id: dataUpdate.id,
+                specialtyName: dataUpdate.specialtyName,
+                iconPath: dataUpdate.iconPath,
+                description: dataUpdate.description,
+              }
+            : null
+        }
       />
     </>
   );

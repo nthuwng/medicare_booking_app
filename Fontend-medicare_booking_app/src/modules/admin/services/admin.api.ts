@@ -114,3 +114,53 @@ export const createClinic = (
     icon_public_id: iconPublicId,
   });
 };
+
+export const updateClinics = (
+  id: number,
+  clinic_name: string,
+  city: string,
+  district: string,
+  street: string,
+  phone: string,
+  description: string,
+  iconPath: string,
+  iconPublicId: string
+) => {
+  const urlBackend = `/api/doctor/clinics/${id}`;
+  return axios.put<IBackendRes<IClinic>>(urlBackend, {
+    clinic_name,
+    city,
+    district,
+    street,
+    phone,
+    description,
+    icon_path: iconPath,
+    icon_public_id: iconPublicId,
+  });
+};
+
+export const deleteClinics = (clinicId: string) => {
+  const urlBackend = `/api/doctor/clinics/${clinicId}`;
+  return axios.delete<IBackendRes<string>>(urlBackend);
+};
+
+export const updateSpecialty = (
+  id: string,
+  specialty_name: string,
+  description: string,
+  iconPath: string,
+  iconPublicId: string
+) => {
+  const urlBackend = `/api/doctor/specialties/${id}`;
+  return axios.put<IBackendRes<ISpecialty>>(urlBackend, {
+    specialty_name,
+    description,
+    icon_path: iconPath,
+    icon_public_id: iconPublicId,
+  });
+};
+
+export const deleteSpecialites = (specialtyId: string) => {
+  const urlBackend = `/api/doctor/specialties/${specialtyId}`;
+  return axios.delete<IBackendRes<string>>(urlBackend);
+};
