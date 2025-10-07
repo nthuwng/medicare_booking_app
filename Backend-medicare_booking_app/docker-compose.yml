@@ -1,6 +1,6 @@
 services:
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:3.13-management
     container_name: rabbitmq
     ports:
       - "5672:5672" # AMQP protocol port
@@ -30,7 +30,7 @@ services:
       - PAYMENT_SERVICE_URL=http://payment-service:8085
       - AUTH_SERVICE_URL=http://auth-service:8086
       - RATING_SERVICE_URL=http://rating-service:8087
-      - SCHEDULE_SERVICE_URL=http://ai-service:8088
+      - SCHEDULE_SERVICE_URL=http://schedule-service:8088
       - AI_SERVICE_URL=http://ai-service:8089
       - MESSAGE_SERVICE_URL=http://message-service:9000
     depends_on:
@@ -70,14 +70,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
+    env_file:
+      - ./services/user_service/.env
     environment:
-      - PORT=8081
-      - NODE_ENV=development
       - DATABASE_URL=mysql://root:medicare_booking@user_db:3306/user_db # Fixed port
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
     volumes:
-      - ./services/user_service:/app
-      - /app/node_modules
+      - ./services/user_service:/app:cached
+      - user_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -110,14 +109,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8082:8082"
+    env_file:
+      - ./services/appointment_service/.env
     environment:
-      - PORT=8082
-      - NODE_ENV=development
       - DATABASE_URL=mysql://root:medicare_booking@appointment_db:3306/appointment_db # Fixed port
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
     volumes:
-      - ./services/appointment_service:/app
-      - /app/node_modules
+      - ./services/appointment_service:/app:cached
+      - appointment_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -134,15 +132,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8089:8089"
-    environment:
-      - PORT=8089
-      - NODE_ENV=development
-      - GEMINI_API_KEY=AIzaSyCcgJjc4-DOMGt4RjRIkvDRYOJPSdGZW6U
-      - GEMINI_IMAGE_MODEL_NAME=gemini-2.5-flash
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    env_file:
+      - ./services/ai_service/.env
     volumes:
-      - ./services/ai_service:/app
-      - /app/node_modules
+      - ./services/ai_service:/app:cached
+      - ai_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -173,17 +167,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8083:8083"
+    env_file:
+      - ./services/doctor_service/.env
     environment:
-      - PORT=8083
-      - NODE_ENV=development
       - DATABASE_URL=mysql://root:medicare_booking@doctor_db:3306/doctor_db # Fixed port
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - CLOUDINARY_CLOUD_NAME=dwevfv0is
-      - CLOUDINARY_API_KEY=944935451945886
-      - CLOUDINARY_API_SECRET=WBB7Gx4Uz2ivsPFK1jM8_XxeeAo
     volumes:
-      - ./services/doctor_service:/app
-      - /app/node_modules
+      - ./services/doctor_service:/app:cached
+      - doctor_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -215,16 +205,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8084:8084"
+    env_file:
+      - ./services/notification_service/.env
     environment:
-      - PORT=8084
-      - NODE_ENV=development
-      - DATABASE_URL=mysql://root:medicare_booking@notification_db:3306/notification_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - GMAIL_USER=nguyenthinhhung150603@gmail.com
-      - GMAIL_PASS=xpwa ksec zysd pbfd
+      - DATABASE_URL=mysql://root:medicare_booking@notification_db:3306/notification_db # Fixed port
     volumes:
-      - ./services/notification_service:/app
-      - /app/node_modules
+      - ./services/notification_service:/app:cached
+      - notification_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -257,14 +244,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8085:8085"
+    env_file:
+      - ./services/payment_service/.env
     environment:
-      - PORT=8085
-      - NODE_ENV=development
-      - DATABASE_URL=mysql://root:medicare_booking@payment_db:3306/payment_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=mysql://root:medicare_booking@payment_db:3306/payment_db # Fixed port
     volumes:
-      - ./services/payment_service:/app
-      - /app/node_modules
+      - ./services/payment_service:/app:cached
+      - payment_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -297,18 +283,13 @@ services:
     restart: unless-stopped
     ports:
       - "8086:8086"
+    env_file:
+      - ./services/auth_service/.env
     environment:
-      - PORT=8086
-      - NODE_ENV=development
-      - DATABASE_URL=mysql://root:medicare_booking@auth_db:3306/auth_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - JWT_SECRET=4a47a04c-579e-4585-889b-8129913ae93e
-      - JWT_EXPIRES_IN=365d
-      - JWT_REFRESH_SECRET=b7c1e22b-97d0-405a-870c-651be092d96f
-      - JWT_REFRESH_EXPIRES_IN=7d
+      - DATABASE_URL=mysql://root:medicare_booking@auth_db:3306/auth_db # Fixed port
     volumes:
-      - ./services/auth_service:/app
-      - /app/node_modules
+      - ./services/auth_service:/app:cached
+      - auth_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -341,14 +322,13 @@ services:
     restart: unless-stopped
     ports:
       - "8088:8088"
+    env_file:
+      - ./services/schedule_service/.env
     environment:
-      - PORT=8088
-      - NODE_ENV=development
-      - DATABASE_URL=mysql://root:medicare_booking@schedule_db:3306/schedule_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=mysql://root:medicare_booking@schedule_db:3306/schedule_db # Fixed port
     volumes:
-      - ./services/schedule_service:/app
-      - /app/node_modules
+      - ./services/schedule_service:/app:cached
+      - schedule_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -363,11 +343,12 @@ services:
     build: ./services/rating_service
     ports:
       - "8087:8087"
-    environment:
-      - PORT=8087
+    env_file:
+      - ./services/rating_service/.env
     volumes:
-      - ./services/rating_service:/app
-      - /app/node_modules
+      - ./services/rating_service:/app:cached
+      - rating_node_modules:/app/node_modules
+      - ./shared:/shared
     networks:
       - healthcare_network
     command: npm start
@@ -394,14 +375,13 @@ services:
     restart: unless-stopped
     ports:
       - "9000:9000"
+    env_file:
+      - ./services/message_service/.env
     environment:
-      - PORT=9000
-      - NODE_ENV=development
-      - DATABASE_URL=mysql://root:medicare_booking@message_db:3306/message_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=mysql://root:medicare_booking@message_db:3306/message_db # Fixed port
     volumes:
-      - ./services/message_service:/app
-      - /app/node_modules
+      - ./services/message_service:/app:cached
+      - message_node_modules:/app/node_modules
       - ./shared:/shared
     depends_on:
       rabbitmq:
@@ -420,11 +400,21 @@ networks:
 # Define volumes
 volumes:
   user_mysql_data:
+  user_node_modules:
   doctor_mysql_data:
+  doctor_node_modules:
   auth_mysql_data:
+  auth_node_modules:
   appointment_mysql_data:
+  appointment_node_modules:
   rabbitmq_data:
   schedule_mysql_data:
+  schedule_node_modules:
   notification_mysql_data:
+  notification_node_modules:
   payment_mysql_data:
+  payment_node_modules:
   message_mysql_data:
+  message_node_modules:
+  ai_node_modules:
+  rating_node_modules:

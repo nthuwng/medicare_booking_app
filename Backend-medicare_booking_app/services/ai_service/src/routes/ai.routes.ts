@@ -1,9 +1,6 @@
 import express, { Express } from "express";
 import multer from "multer";
-import {
-  AIServiceController,
-  recommendSpecialtyFromImage,
-} from "src/controller/ai.controller";
+import { chatController } from "src/controller/ai.controller";
 
 const router = express.Router();
 const upload = multer({
@@ -12,12 +9,7 @@ const upload = multer({
 });
 
 const aiRoutes = (app: Express) => {
-  router.post("/get-ai-services", AIServiceController);
-  router.post(
-    "/recommend-specialty",
-    upload.single("image"),
-    recommendSpecialtyFromImage
-  );
+  router.post("/chat", upload.single("image"), chatController);
 
   app.use("/v1", router);
 };
