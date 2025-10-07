@@ -17,7 +17,7 @@ const FloatingAIAssistant = () => {
       style={{
         position: "fixed",
         bottom: "24px",
-        right: "10px",
+        right: "20px",
         zIndex: 1000,
       }}
     >
@@ -72,31 +72,6 @@ const FloatingAIAssistant = () => {
           />
         </Badge>
       </Tooltip>
-
-      {/* Floating text animation */}
-      {isHovered && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "0",
-            right: "80px", // Đổi từ left sang right để text hiển thị bên trái nút
-            background: "rgba(255, 255, 255, 0.95)",
-            color: "#1f2937",
-            padding: "8px 16px",
-            borderRadius: "20px",
-            fontSize: "14px",
-            fontWeight: "500",
-            whiteSpace: "nowrap",
-            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            animation: "slideInRight 0.3s ease-out",
-          }}
-        >
-          <MessageOutlined style={{ marginRight: "6px", color: "#a855f7" }} />
-          Trợ lý AI
-        </div>
-      )}
 
       <style>{`
         @keyframes slideInRight {

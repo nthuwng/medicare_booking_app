@@ -23,7 +23,7 @@ const ScrollToTopButton = () => {
   return (
     <button
       className={`
-        fixed !bottom-[90px] !right-[12px] 
+        fixed !bottom-[90px] !right-[20px] 
         w-[55px] h-[55px] 
         bg-orange-500 hover:bg-orange-600 
         text-white 

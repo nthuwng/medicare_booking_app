@@ -15,12 +15,12 @@ import {
   Modal,
 } from "antd";
 import { ArrowUpOutlined, EyeOutlined, CloseOutlined } from "@ant-design/icons";
-import {
-  getAIServicesAPI,
-  recommendSpecialtyFromImageAPI,
-} from "../services/client.api";
+import { chatWithAIAPI } from "../services/client.api";
 import ClientHeader from "@/components/layout/ClientLayout/ClientHeader";
 import { FiPaperclip } from "react-icons/fi";
+import type { IAiRecommendSpecialty } from "@/types";
+import { SpecialtyRecommendation } from "../components/AI/SpecialtyRecommendation";
+import IntentRenderer from "../components/AI/IntentRender";
 
 const { Content } = Layout;
 const { TextArea } = Input;
@@ -47,6 +47,9 @@ const AIPage = () => {
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const [resText, setResText] = useState<string | null>(null);
+  const [resData, setResData] = useState<IAiRecommendSpecialty | null>(null);
 
   const onPickImage = (file: File) => {
     setImageFile(file);
@@ -121,34 +124,34 @@ const AIPage = () => {
 
     try {
       let aiText = "";
+      let displayContent: string | React.ReactNode = ""; // Biến mới để chứa nội dung hiển thị
 
-      if (imageFile) {
-        // Gọi API form-data
-        const res = await recommendSpecialtyFromImageAPI(imageFile, trimmed);
-        aiText = res?.text || "";
+      const res = await chatWithAIAPI(imageFile || new File([], ""), trimmed);
+      console.log("res <><><>>", res);
+
+      if (res?.intent === "recommend_specialty_text") {
+        setResData(res?.data ?? null); // Bạn có thể giữ state này nếu cần dùng ở nơi khác
+        setResText(res?.text ?? ""); // Bạn có thể giữ state này nếu cần dùng ở nơi khác
+
+        // *** Thay vì chỉ gọi component, ta gán component này vào displayContent ***
+        displayContent = (
+          <IntentRenderer
+            intent={res?.intent}
+            text={res?.text}
+            data={res?.data}
+          />
+        );
       } else {
-        // Gọi API text cũ
-        const response = await getAIServicesAPI(trimmed);
-        aiText = response?.text || "";
+        // Nếu không phải intent đặc biệt, vẫn hiển thị text thông thường
+        aiText = res?.text ?? "Tôi không thể xử lí yêu cầu này.";
+        displayContent = aiText;
       }
 
-      // Nếu backend trả JSON string trong "text", parse đẹp hơn
-      let display = aiText;
-      try {
-        const obj = JSON.parse(aiText);
-        // tuỳ bạn format:
-        display =
-          `🩺 Chuyên khoa: ${obj.specialty ?? obj.speciality ?? "—"}\n` +
-          `✅ Độ tự tin: ${obj.confidence ?? "—"}\n` +
-          `${obj.reasoning ?? obj.explanation ?? ""}`;
-      } catch {
-        // không phải JSON → giữ nguyên
-      }
-
+      // *** Cập nhật content của aiMessage bằng displayContent (string hoặc JSX) ***
       setMessages((prev) =>
         prev.map((m) =>
           m.id === aiMessage.id
-            ? { ...m, content: display, isLoading: false }
+            ? { ...m, content: displayContent as string, isLoading: false }
             : m
         )
       );
@@ -177,6 +180,7 @@ const AIPage = () => {
 
   useEffect(() => {
     if (isNearBottom()) scrollToBottom();
+    console.log("messages <><><>>", messages);
   }, [messages]);
 
   useEffect(() => {
@@ -402,83 +406,85 @@ const AIPage = () => {
                         }}
                       >
                         {messages.map((msg) => (
-                          <div
-                            id={`msg-${msg.id}`}
-                            key={msg.id}
-                            style={{
-                              display: "flex",
-                              justifyContent:
-                                msg.type === "user" ? "flex-end" : "flex-start",
-                              marginBottom: "16px",
-                              alignItems: "flex-start",
-                              gap: "12px",
-                            }}
-                          >
+                          <>
                             <div
+                              id={`msg-${msg.id}`}
+                              key={msg.id}
                               style={{
-                                maxWidth: "75%",
-                                background:
+                                display: "flex",
+                                justifyContent:
                                   msg.type === "user"
-                                    ? "linear-gradient(135deg, #57534e 0%, #44403c 100%)"
-                                    : "#ffffff",
-                                color:
-                                  msg.type === "user" ? "white" : "#1f2937",
-                                padding: "12px 16px",
-                                borderRadius:
-                                  msg.type === "user"
-                                    ? "18px 18px 4px 18px"
-                                    : "18px 18px 18px 4px",
-                                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                                border:
-                                  msg.type === "ai"
-                                    ? "1px solid #e7e5e4"
-                                    : "none",
+                                    ? "flex-end"
+                                    : "flex-start",
+                                marginBottom: "16px",
+                                alignItems: "flex-start",
+                                gap: "12px",
                               }}
                             >
-                              {msg.isLoading ? (
-                                <Space>
-                                  <Spin size="small" />
-                                  <Text
-                                    style={{
-                                      color:
-                                        msg.type === "user"
-                                          ? "white"
-                                          : "#6b7280",
-                                    }}
-                                  >
-                                    AI đang suy nghĩ...
-                                  </Text>
-                                </Space>
-                              ) : (
-                                <div>
-                                  <Paragraph
-                                    style={{
-                                      margin: 0,
-                                      whiteSpace: "pre-wrap",
-                                      color:
-                                        msg.type === "user"
-                                          ? "white"
-                                          : "#1f2937",
-                                    }}
-                                  >
-                                    {msg.content}
-                                  </Paragraph>
-                                  <Text
-                                    style={{
-                                      fontSize: "11px",
-                                      opacity: 0.7,
-                                      color:
-                                        msg.type === "user"
-                                          ? "white"
-                                          : "#6b7280",
-                                    }}
-                                  >
-                                    {formatTime(msg.timestamp)}
-                                  </Text>
-                                </div>
-                              )}
+                              <div
+                                style={{
+                                  maxWidth: "75%",
+                                  background:
+                                    msg.type === "user" ? "#555555" : "#ffffff",
+                                  color:
+                                    msg.type === "user" ? "white" : "#1f2937",
+                                  padding: "12px 16px",
+                                  borderRadius:
+                                    msg.type === "user"
+                                      ? "18px 18px 4px 18px"
+                                      : "18px 18px 18px 4px",
+                                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                                  border:
+                                    msg.type === "ai"
+                                      ? "1px solid #e7e5e4"
+                                      : "none",
+                                }}
+                              >
+                                {msg.isLoading ? (
+                                  <Space>
+                                    <Spin size="small" />
+                                    <Text
+                                      style={{
+                                        color:
+                                          msg.type === "user"
+                                            ? "white"
+                                            : "#6b7280",
+                                      }}
+                                    >
+                                      AI đang suy nghĩ...
+                                    </Text>
+                                  </Space>
+                                ) : (
+                                  <div>
+                                    <Paragraph
+                                      style={{
+                                        margin: 0,
+                                        whiteSpace: "pre-wrap",
+                                        color:
+                                          msg.type === "user"
+                                            ? "white"
+                                            : "#1f2937",
+                                      }}
+                                    >
+                                      {msg.content}
+                                    </Paragraph>
+                                    <Text
+                                      style={{
+                                        fontSize: "11px",
+                                        opacity: 0.7,
+                                        color:
+                                          msg.type === "user"
+                                            ? "white"
+                                            : "#6b7280",
+                                      }}
+                                    >
+                                      {formatTime(msg.timestamp)}
+                                    </Text>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          </>
                         ))}
                         <div ref={messagesEndRef} />
                       </div>

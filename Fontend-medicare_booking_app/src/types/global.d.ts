@@ -10,6 +10,15 @@ declare global {
     text?: string;
   }
 
+  interface IBackendAiRes<T> {
+    success: boolean;
+    intent: string;
+    model: string;
+    error?: string | string[];
+    data?: T;
+    text?: string;
+  }
+
   interface IModelPaginate<T> {
     meta: {
       current: number;
