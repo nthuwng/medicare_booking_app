@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import ClientHeader from "./ClientHeader";
 import ClientFooter from "./ClientFooter";
 import ScrollToTopButton from "@/modules/client/components/ScrollToTopButton/ScrollToTopButton";
+import FloatingAIAssistant from "@/modules/client/components/FloatingAIAssistant/FloatingAIAssistant";
 
 const LayoutClient = () => {
   return (
@@ -12,6 +13,7 @@ const LayoutClient = () => {
           <Outlet />
         </main>
         <ScrollToTopButton />
+        <FloatingAIAssistant />
         <ClientFooter />
       </div>
     </>

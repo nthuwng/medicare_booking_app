@@ -104,6 +104,7 @@ const ClientRoutes = () => {
 
         {/* Trang about */}
         <Route path="/about" element={<AboutPage />} />
+
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

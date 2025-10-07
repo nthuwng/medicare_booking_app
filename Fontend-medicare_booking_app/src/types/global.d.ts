@@ -7,6 +7,7 @@ declare global {
     message: string;
     statusCode: number | string;
     data?: T;
+    text?: string;
   }
 
   interface IModelPaginate<T> {

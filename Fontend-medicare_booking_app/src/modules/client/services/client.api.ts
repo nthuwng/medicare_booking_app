@@ -9,7 +9,7 @@ import type {
   IPatientProfile,
 } from "@/types";
 import type { IAppointment, IAppointmentFullDetail } from "@/types/appointment";
-import type {IConversationResponse, IMessage } from "@/types/message";
+import type { IConversationResponse, IMessage } from "@/types/message";
 
 export const getAllApprovedDoctorsBooking = (query: string) => {
   const urlBackend = `/api/doctor/doctors/approved?${query}`;
@@ -74,4 +74,26 @@ export const getMyAppointmentsAPI = () => {
 export const getMyAppointmentByIdAPI = (id: string) => {
   const urlBackend = `/api/appointment/appointments/my-appointments/${id}`;
   return axios.get<IBackendRes<IAppointmentFullDetail>>(urlBackend);
+};
+
+export const getAIServicesAPI = (prompt: string) => {
+  const urlBackend = `/api/ai/v1/get-ai-services`;
+  return axios.post<any>(urlBackend, { prompt });
+};
+
+export const recommendSpecialtyFromImageAPI = async (
+  file: File,
+  prompt: string
+) => {
+  const fd = new FormData();
+  fd.append("image", file);
+
+  // Tùy backend: nếu lúc test ở Postman bạn dùng "propmt" (bị typo)
+  // thì thêm cả 2 key để chắc cú:
+  fd.append("prompt", prompt);
+  fd.append("propmt", prompt);
+
+  return axios.post("/api/ai/v1/recommend-specialty", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };

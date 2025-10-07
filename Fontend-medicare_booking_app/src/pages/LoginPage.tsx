@@ -23,7 +23,7 @@ import { useCurrentApp } from "@/components/contexts/app.context";
 import {
   GoogleLogin,
   GoogleOAuthProvider,
-  type CredentialResponse,
+  type CredentialResponse,  
 } from "@react-oauth/google";
 
 type FieldType = {
