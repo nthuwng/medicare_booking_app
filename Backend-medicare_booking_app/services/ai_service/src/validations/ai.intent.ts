@@ -10,6 +10,7 @@ export const IntentSchema = z.object({
     "smalltalk",
     "recommend_specialty_image",
     "recommend_specialty_text",
+    "medical_qa",
     "other",
   ]),
   args: z.object({
@@ -21,8 +22,12 @@ export type ParsedIntent = z.infer<typeof IntentSchema>;
 
 // Gom mọi biến thể (text / symptom / info.symptom / args.symptoms) về args.symptoms
 function normalizeParsed(raw: any, originalMessage: string): ParsedIntent {
-  const intent: "smalltalk" | "recommend_specialty_text" | "other" =
-    raw?.intent ?? "other";
+  const intent:
+    | "smalltalk"
+    | "recommend_specialty_text"
+    | "recommend_specialty_image"
+    | "medical_qa"
+    | "other" = raw?.intent ?? "other";
 
   const symptomsCandidate =
     raw?.args?.symptoms ??
@@ -43,9 +48,10 @@ function normalizeParsed(raw: any, originalMessage: string): ParsedIntent {
 
 export async function parseIntent(message: string): Promise<ParsedIntent> {
   const sys = `
-Bạn là Trợ lý AI MediCare. Hãy phân loại intent và trả đúng JSON theo schema.
+Bạn là Trợ lý AI MediCare, chỉ hỗ trợ các chủ đề: sức khỏe/y tế cơ bản, gợi ý chuyên khoa, tìm bác sĩ, đặt lịch khám, thông tin dịch vụ trong ứng dụng MediCare. Hãy phân loại intent và trả đúng JSON theo schema.
 - smalltalk: chào hỏi ("xin chào", "chào bạn", "hello"...)
 - recommend_specialty_text: người dùng mô tả triệu chứng để gợi ý chuyên khoa
+- medical_qa: câu hỏi y tế/sức khỏe tổng quát (thuốc, triệu chứng, phòng bệnh, dinh dưỡng...)
 - other: mọi thứ còn lại
 Yêu cầu: chỉ trả JSON DUY NHẤT theo schema sau (không thêm chữ nào khác).
 Schema: ${IntentSchema.toString()}
@@ -64,7 +70,7 @@ Schema: ${IntentSchema.toString()}
     const parsed = JSON.parse(cleanedText);
     return normalizeParsed(parsed, message);
   } catch {
-    // Nếu JSON fail, fallback: coi như recommend_specialty_text và dùng trực tiếp message
-    return { intent: "other", args: { symptoms: "" } };
+    // Nếu JSON fail, fallback "medical_qa" để vẫn trả lời các câu hỏi y tế
+    return { intent: "medical_qa", args: { symptoms: "" } };
   }
 }

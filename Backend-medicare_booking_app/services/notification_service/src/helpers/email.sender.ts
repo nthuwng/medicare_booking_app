@@ -22,11 +22,11 @@ const sendEmail = async ({
   });
 
   const mailOptions = {
-    from: "Medicare Booking",
+    from: '"MediCare" <' + process.env.GMAIL_USER + ">",
     to: email,
     subject,
     html,
- };
+  };
 
   const info = await transporter.sendMail(mailOptions);
   return info;

@@ -1,4 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
+import {
+  promptMedicalQA,
+  promptRecommendSpecialtyText,
+} from "src/prompts/prompts";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 const MODEL_AI = process.env.GEMINI_MODEL_NAME || "gemini-2.0-flash";
 
@@ -79,11 +83,7 @@ const handleRecommendSpecialtyText = async (
   }
 
   // 2) LLM (ép JSON thuần)
-  const promptText =
-    `Người dùng mô tả triệu chứng: "${prompt}". ` +
-    `Hãy trả về duy nhất **JSON hợp lệ** theo schema: ` +
-    `{"specialty_name":"string","confidence":number,"reasoning":"string (tiếng Việt, ngắn gọn)"} ` +
-    `(confidence có thể là 0-1 hoặc 0-100). Không thêm văn bản nào khác.`;
+  const promptText = promptRecommendSpecialtyText(prompt);
 
   const resp = await ai.models.generateContent({
     model: MODEL_AI,
@@ -157,4 +157,33 @@ const handleRecommendSpecialtyFromImage = async (
   return text;
 };
 
-export { handleRecommendSpecialtyText, handleRecommendSpecialtyFromImage };
+const handleMedicalQA = async (question: string): Promise<ToolResult> => {
+  if (!question?.trim())
+    return { content: "Bạn hãy nhập câu hỏi y tế cần tư vấn." };
+  const sys = promptMedicalQA();
+  const prompt = `Câu hỏi: ${question}`;
+  const resp = await ai.models.generateContent({
+    model: MODEL_AI,
+    contents: [{ text: sys }, { text: prompt }],
+  });
+  const text =
+    (resp as any)?.response?.text?.() ??
+    (resp as any)?.text ??
+    "Xin lỗi, tôi chưa có câu trả lời phù hợp.";
+  return {
+    content: String(text)
+      .replace(/```/g, "")
+      .replace(/[*•\-]+/g, "")
+      .replace(/#+/g, "")
+      .replace(/\n{2,}/g, "\n")
+      .trim(),
+  };
+};
+
+export {
+  handleRecommendSpecialtyText,
+  handleRecommendSpecialtyFromImage,
+  handleMedicalQA,
+};
+
+// Generic medical Q&A using the model with safety rails

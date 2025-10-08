@@ -5,6 +5,7 @@ import {
   handleRecommendSpecialtyFromImage,
   handleRecommendSpecialtyText,
 } from "./ai.tools";
+import { handleMedicalQA } from "./ai.tools";
 // ^ dùng đúng file export của bạn (ai.tools hoặc ai.service)
 
 // helper nhỏ để parse JSON lỏng nếu cần
@@ -86,11 +87,22 @@ export const dispatchByIntent = async (
       };
     }
 
-    default:
+    case "medical_qa": {
+      const question = (ctx?.prompt || parsed.args?.symptoms || "").trim();
+      const result = await handleMedicalQA(question);
+      return {
+        intent: "medical_qa",
+        content: result.content ?? "Xin lỗi, tôi chưa có câu trả lời phù hợp.",
+        data: null,
+      };
+    }
+
+    case "other": {
       return {
         intent: "other",
         content:
           "Xin lỗi, câu hỏi của bạn không thuộc lĩnh vực tôi có thể trả lời. Vui lòng hỏi câu hỏi khác. Xin cảm ơn",
       };
+    }
   }
 };
