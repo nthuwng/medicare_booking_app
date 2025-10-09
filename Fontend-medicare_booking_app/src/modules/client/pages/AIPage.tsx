@@ -144,7 +144,7 @@ const AIPage = () => {
 
       const res = await chatWithAIAPI(imageFile || new File([], ""), trimmed);
 
-      if (res?.intent === "recommend_specialty_text") {
+      if (res?.intent) {
         // *** Thay vì chỉ gọi component, ta gán component này vào displayContent ***
         displayContent = (
           <IntentRenderer
@@ -606,7 +606,13 @@ const AIPage = () => {
                 {/* Sticky bottom composer */}
                 <div style={{ position: "sticky", bottom: 16, marginTop: 20 }}>
                   {imagePreview && !isLoading && (
-                    <div style={{ marginBottom: 8 }}>
+                    <div
+                      style={{
+                        marginBottom: 8,
+                        width: "90%",
+                        margin: "0 auto",
+                      }}
+                    >
                       <div
                         style={{
                           position: "relative",
@@ -624,6 +630,7 @@ const AIPage = () => {
                             width: 120,
                             height: 120,
                             objectFit: "cover",
+                            borderRadius: 16,
                           }}
                           preview={{
                             mask: <div style={{ color: "white" }}>Xem ảnh</div>,

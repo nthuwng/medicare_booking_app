@@ -8,6 +8,7 @@ import type {
   ICreateVNPayPaymentInput,
   IPatientProfile,
   IAiRecommendSpecialty,
+  IAiSpecialtyDoctorCheck,
 } from "@/types";
 import type { IAppointment, IAppointmentFullDetail } from "@/types/appointment";
 import type { IConversationResponse, IMessage } from "@/types/message";
@@ -83,11 +84,9 @@ export const chatWithAIAPI = async (file: File, prompt: string) => {
   fd.append("image", file);
   fd.append("prompt", prompt);
   const urlBackend = `/api/ai/v1/chat`;
-  return axios.post<IBackendAiRes<IAiRecommendSpecialty | null>>(
-    urlBackend,
-    fd,
-    {
-      headers: { "Content-Type": "multipart/form-data" },
-    }
-  );
+  return axios.post<
+    IBackendAiRes<IAiRecommendSpecialty | IAiSpecialtyDoctorCheck | null>
+  >(urlBackend, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
