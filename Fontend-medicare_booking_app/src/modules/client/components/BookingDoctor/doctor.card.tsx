@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Card,
   Avatar,
@@ -9,190 +9,312 @@ import {
   Typography,
   Tag,
   Badge,
+  Grid,
 } from "antd";
 import {
   StarFilled,
   ClockCircleOutlined,
   EnvironmentOutlined,
-  UserOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import type { IDoctorProfile } from "@/types";
 
 const { Title, Text, Paragraph } = Typography;
+const { useBreakpoint } = Grid;
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("vi-VN", {
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-  }).format(amount);
-};
+    maximumFractionDigits: 0,
+  }).format(isNaN(Number(amount)) ? 0 : Number(amount));
 
 type DoctorCardProps = {
   dataDoctors: IDoctorProfile[];
-  setDataDoctors: (doctors: IDoctorProfile[]) => void;
-  searchText: string;
+  setDataDoctors?: (doctors: IDoctorProfile[]) => void;
+  searchText?: string;
 };
 
-const DoctorCard = (props: DoctorCardProps) => {
-  const { dataDoctors } = props;
+const DoctorCard: React.FC<DoctorCardProps> = ({ dataDoctors }) => {
   const navigate = useNavigate();
+  const screens = useBreakpoint();
+
+  // breakpoints
+  const isXs = !!screens.xs && !screens.sm;
+  const isSm = !!screens.sm && !screens.md;
+  const isMdUp = !!screens.md;
+
+  const avatarSize = isXs ? 72 : isSm ? 88 : 104;
+  const cardPadding = isXs ? 16 : 24;
+  const btnSize: "small" | "middle" = isXs ? "small" : "middle";
 
   const handleViewDoctorDetail = (doctorId: string) => {
-    // Navigate to doctor detail page
     navigate(`/booking-options/doctor/${doctorId}`);
   };
 
   return (
-    <>
-      {dataDoctors.length > 0 && (
-        <Row gutter={[24, 24]}>
-          {dataDoctors.map((doctor) => (
-            <Col key={doctor.id} xs={24} lg={12}>
-              <Card
-                className="hover:shadow-lg transition-all duration-300 border-0 shadow-sm"
-                bodyStyle={{ padding: "24px" }}
-              >
-                <div className="flex gap-4">
-                  {/* Avatar Section */}
-                  <div className="flex-shrink-0">
-                    <Badge dot={true} color="#52c41a" offset={[-5, 5]}>
-                      <Avatar
-                        size={104}
-                        src={doctor.avatarUrl || undefined}
+    <div style={{ paddingInline: isXs ? 8 : 0 }}>
+      {Array.isArray(dataDoctors) && dataDoctors.length > 0 && (
+        <Row
+          gutter={[
+            { xs: 12, sm: 16, md: 24 },
+            { xs: 12, sm: 16, md: 24 },
+          ]}
+          wrap
+        >
+          {dataDoctors.map((doctor) => {
+            const name = doctor?.fullName || "Bác sĩ";
+            const specialty =
+              doctor?.specialty?.specialtyName || "Chuyên khoa";
+            const clinicName = doctor?.clinic?.clinicName || "Phòng khám";
+            const exp = doctor?.experienceYears ?? 0;
+            const rating = Number((doctor as any)?.rating ?? 4.5);
+            const ratingCount = Number((doctor as any)?.ratingCount ?? 127);
+            const consultationFee = Number(doctor?.consultationFee ?? 0);
+            const bookingFee = Number(doctor?.bookingFee ?? 0);
+
+            return (
+              <Col key={doctor.id} xs={24} sm={24} md={12} lg={12} xl={8}>
+                <Card
+                  className="hover:shadow-lg transition-all duration-300 border-0 shadow-sm"
+                  bodyStyle={{ padding: cardPadding }}
+                  style={{ height: "100%", borderRadius: 12, overflow: "hidden" }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: isXs ? 12 : 16,
+                      flexDirection: isXs ? "column" : "row",
+                      flexWrap: "wrap", // tránh tràn khi thiếu chỗ
+                      alignItems: isXs ? "stretch" : "flex-start",
+                      minWidth: 0, // cho phép ellipsis hoạt động
+                    }}
+                  >
+                    {/* Avatar */}
+                    <div
+                      style={{
+                        flexShrink: 0,
+                        display: "flex",
+                        justifyContent: isXs ? "center" : "flex-start",
+                        width: isXs ? "100%" : "auto",
+                      }}
+                    >
+                      <Badge dot color="#52c41a" offset={[-5, 5]}>
+                        <Avatar
+                          size={avatarSize}
+                          src={doctor?.avatarUrl || undefined}
+                          style={{
+                            backgroundImage: !doctor?.avatarUrl
+                              ? "linear-gradient(135deg, #1890ff, #096dd9)"
+                              : undefined,
+                            color: "#fff",
+                            fontSize: isXs ? 28 : 42,
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            border: "4px solid #ffffff",
+                            boxShadow: "0 6px 20px rgba(24, 144, 255, 0.25)",
+                          }}
+                        >
+                          {!doctor?.avatarUrl && name.charAt(0).toUpperCase()}
+                        </Avatar>
+                      </Badge>
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {/* Header + Rating */}
+                      <div
                         style={{
-                          backgroundImage: !doctor.avatarUrl
-                            ? "linear-gradient(135deg, #1890ff, #096dd9)"
-                            : undefined,
-                          color: "#fff",
-                          fontSize: "42px",
-                          fontWeight: "600",
                           display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          border: "4px solid #ffffff",
-                          boxShadow: "0 6px 20px rgba(24, 144, 255, 0.25)",
+                          alignItems: isXs ? "flex-start" : "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                          marginBottom: 8,
+                          flexDirection: isXs ? "column" : "row",
+                          minWidth: 0,
                         }}
                       >
-                        {!doctor.avatarUrl &&
-                          doctor.fullName?.charAt(0).toUpperCase()}
-                      </Avatar>
-                    </Badge>
-                  </div>
-
-                  {/* Doctor Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 min-w-0">
-                        <Title
-                          level={4}
-                          className="!mb-1 !text-gray-800 truncate"
-                        >
-                          {doctor.fullName}
-                        </Title>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Tag color="blue" className="rounded-full">
-                            {doctor.specialty.specialtyName}
-                          </Tag>
-                          <Text className="text-gray-500 text-sm">
-                            {doctor.experienceYears} năm kinh nghiệm
-                          </Text>
-                        </div>
-                      </div>
-
-                      {/* Rating */}
-                      <div className="text-right">
-                        <div className="flex items-center gap-1 mb-1">
-                          <Rate
-                            disabled
-                            defaultValue={4.5}
-                            className="text-sm"
-                            character={<StarFilled />}
-                          />
-                          <Text className="text-sm font-medium text-gray-700">
-                            4.5
-                          </Text>
-                        </div>
-                        <Text className="text-xs text-gray-500">
-                          (127 đánh giá)
-                        </Text>
-                      </div>
-                    </div>
-
-                    {/* Clinic & Location */}
-                    <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <EnvironmentOutlined />
-                        <span>{doctor.clinic.clinicName}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <ClockCircleOutlined />
-                        <span>8 lịch trống</span>
-                      </div>
-                    </div>
-
-                    {/* Bio */}
-                    <Paragraph
-                      className="!mb-4 !text-gray-600 !text-sm line-clamp-2"
-                      ellipsis={{ rows: 2 }}
-                    >
-                      {doctor.bio ||
-                        "Bác sĩ chuyên khoa với nhiều năm kinh nghiệm trong lĩnh vực y tế."}
-                    </Paragraph>
-
-                    {/* Fees & Action */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <Text className="text-xs text-gray-500">
-                            Phí khám
-                          </Text>
-                          <div className="font-semibold text-blue-600">
-                            {formatCurrency(Number(doctor.consultationFee))}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Title
+                            level={4}
+                            className="!mb-1 !text-gray-800"
+                            style={{ marginBottom: 4 }}
+                            ellipsis
+                          >
+                            {name}
+                          </Title>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              marginBottom: 6,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Tag color="blue" style={{ borderRadius: 999 }}>
+                              {specialty}
+                            </Tag>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              {exp} năm kinh nghiệm
+                            </Text>
                           </div>
                         </div>
-                        <div>
-                          <Text className="text-xs text-gray-500">
-                            Phí đặt lịch
-                          </Text>
-                          <div className="font-semibold text-green-600">
-                            {formatCurrency(Number(doctor.bookingFee))}
+
+                        <div
+                          style={{
+                            textAlign: isXs ? "left" : "right",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              marginBottom: 2,
+                              flexWrap: "nowrap",
+                            }}
+                          >
+                            <Rate
+                              disabled
+                              allowHalf
+                              value={rating}
+                              character={<StarFilled />}
+                            />
+                            <Text style={{ fontSize: 12, fontWeight: 600 }}>
+                              {rating.toFixed(1)}
+                            </Text>
                           </div>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            ({ratingCount} đánh giá)
+                          </Text>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="middle"
-                          onClick={() => handleViewDoctorDetail(doctor.id)}
-                          className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      {/* Clinic & Location */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 16,
+                          marginBottom: 8,
+                          flexWrap: "wrap",
+                          color: "rgba(0,0,0,.65)",
+                          fontSize: 13,
+                          minWidth: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            minWidth: 0,
+                          }}
                         >
-                          Xem chi tiết
-                        </Button>
-                        <Button
-                          type="primary"
-                          size="middle"
-                          onClick={() =>
-                            navigate(
-                              `/booking-options/doctor/${doctor.id}/appointment`
-                            )
-                          }
-                          className="bg-blue-600 hover:bg-blue-700 border-blue-600"
-                          icon={<CalendarOutlined />}
+                          <EnvironmentOutlined />
+                          <Text ellipsis style={{ minWidth: 0 }}>
+                            {clinicName}
+                          </Text>
+                        </span>
+                        <span
+                          style={{ display: "flex", alignItems: "center", gap: 6 }}
                         >
-                          Đặt lịch
-                        </Button>
+                          <ClockCircleOutlined />
+                          8 lịch trống
+                        </span>
+                      </div>
+
+                      {/* Bio */}
+                      <Paragraph
+                        ellipsis={{ rows: 2 }}
+                        style={{
+                          marginBottom: 12,
+                          color: "rgba(0,0,0,.65)",
+                          fontSize: 13,
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {doctor?.bio ||
+                          "Bác sĩ chuyên khoa với nhiều năm kinh nghiệm trong lĩnh vực y tế."}
+                      </Paragraph>
+
+                      {/* Fees & Actions */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: isXs ? "stretch" : "center",
+                          justifyContent: "space-between",
+                          gap: 12,
+                          flexDirection: isXs ? "column" : "row",
+                          minWidth: 0,
+                        }}
+                      >
+                        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                          <div>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              Phí khám
+                            </Text>
+                            <div style={{ fontWeight: 600, color: "#1677ff" }}>
+                              {formatCurrency(consultationFee)}
+                            </div>
+                          </div>
+                          <div>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              Phí đặt lịch
+                            </Text>
+                            <div style={{ fontWeight: 600, color: "#52c41a" }}>
+                              {formatCurrency(bookingFee)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            flexWrap: "wrap",
+                            justifyContent: isXs ? "stretch" : "flex-end",
+                            width: isXs ? "100%" : "auto",
+                          }}
+                        >
+                          <Button
+                            size={btnSize}
+                            onClick={() => handleViewDoctorDetail(doctor.id)}
+                            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                            style={{ width: isXs ? "100%" : "auto" }}
+                          >
+                            Xem chi tiết
+                          </Button>
+                          <Button
+                            type="primary"
+                            size={btnSize}
+                            onClick={() =>
+                              navigate(
+                                `/booking-options/doctor/${doctor.id}/appointment`
+                              )
+                            }
+                            className="bg-blue-600 hover:bg-blue-700 border-blue-600"
+                            icon={<CalendarOutlined />}
+                            style={{ width: isXs ? "100%" : "auto" }}
+                          >
+                            Đặt lịch
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            </Col>
-          ))}
+                </Card>
+              </Col>
+            );
+          })}
         </Row>
       )}
-    </>
+    </div>
   );
 };
 

@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Avatar,
   Typography,
-  Tag,
   Button,
-  Rate,
   Card,
   Row,
   Col,
@@ -13,26 +11,22 @@ import {
   Spin,
   message,
   Divider,
-  Space,
+  Rate,
 } from "antd";
 import {
   HomeOutlined,
   RightOutlined,
   EnvironmentOutlined,
-  ClockCircleOutlined,
-  StarFilled,
   ShareAltOutlined,
   CalendarOutlined,
   UserOutlined,
+  StarFilled,
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { IDoctorProfile } from "@/types";
-import {
-  getAllApprovedDoctorsBooking,
-  getDoctorDetailBookingById,
-} from "../../services/client.api";
+import { getDoctorDetailBookingById } from "../../services/client.api";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 const DoctorDetailPage = () => {
@@ -43,7 +37,6 @@ const DoctorDetailPage = () => {
   const [selectedDate, setSelectedDate] = useState<string>("today");
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
 
-  // Mock time slots - trong thực tế sẽ lấy từ API
   const timeSlots = [
     "13:00 - 13:30",
     "13:30 - 14:00",
@@ -55,17 +48,11 @@ const DoctorDetailPage = () => {
 
   const fetchDoctorDetail = async () => {
     if (!doctorId) return;
-
     setLoading(true);
     try {
-      // Tạm thời sử dụng API hiện có để lấy thông tin bác sĩ
       const response = await getDoctorDetailBookingById(doctorId);
-      console.log("response.data", response.data);
-      if (response.data) {
-        setDoctor(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching doctor detail:", error);
+      if (response.data) setDoctor(response.data);
+    } catch {
       message.error("Không thể tải thông tin bác sĩ");
       navigate("/booking/doctor");
     } finally {
@@ -87,12 +74,8 @@ const DoctorDetailPage = () => {
     );
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 
   if (loading) {
     return (
@@ -101,19 +84,17 @@ const DoctorDetailPage = () => {
       </div>
     );
   }
-
-  if (!doctor) {
-    return null;
-  }
+  if (!doctor) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Breadcrumb Navigation */}
+    // THÊM class doctor-text để reset word-break
+    <div className="doctor-text min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <Breadcrumb
             separator={<RightOutlined className="text-gray-400" />}
-            className="text-sm"
+            className="text-sm overflow-x-auto whitespace-nowrap"
           >
             <Breadcrumb.Item>
               <Button
@@ -153,25 +134,23 @@ const DoctorDetailPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <Row gutter={[32, 32]}>
-          {/* Left Column - Doctor Info */}
-          <Col xs={24} lg={16}>
-            {/* Doctor Profile Section */}
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+        <Row gutter={[24, 24]}>
+          {/* Left */}
+          <Col xs={24} lg={16} className="min-w-0">
             <Card className="mb-6 border-0 shadow-sm">
-              <div className="flex gap-6">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                 {/* Avatar */}
-                <div className="flex-shrink-0">
+                <div className="md:self-start flex-shrink-0">
                   <Avatar
-                    size={120}
+                    size={{ xs: 72, sm: 88, md: 108, lg: 120, xl: 128 }}
                     src={doctor.avatarUrl || undefined}
                     style={{
                       backgroundImage: !doctor.avatarUrl
                         ? "linear-gradient(135deg, #1890ff, #096dd9)"
                         : undefined,
                       color: "#fff",
-                      fontSize: "48px",
-                      fontWeight: "600",
+                      fontWeight: 600,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -179,41 +158,42 @@ const DoctorDetailPage = () => {
                       boxShadow: "0 8px 25px rgba(24, 144, 255, 0.25)",
                     }}
                   >
-                    {!doctor.avatarUrl &&
-                      doctor.fullName?.charAt(0).toUpperCase()}
+                    {!doctor.avatarUrl && doctor.fullName?.charAt(0).toUpperCase()}
                   </Avatar>
                 </div>
 
-                {/* Doctor Info */}
-                <div className="flex-1">
-                  <Title level={2} className="!mb-3 !text-gray-800">
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <Title
+                    level={3}
+                    className="!mb-2 md:!mb-3 !text-gray-800 !leading-tight truncate"
+                  >
                     {doctor.title} {doctor.fullName}
                   </Title>
 
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <UserOutlined />
+                  <div className="space-y-2 md:space-y-2.5 mb-3 md:mb-4 text-[14px] md:text-[15px] leading-snug">
+                    <div className="flex items-start gap-2 text-gray-600">
+                      <UserOutlined className="relative top-[2px]" />
                       <span>
-                        Hơn {doctor.experienceYears} năm kinh nghiệm khám các
-                        vấn đề sức khỏe
+                        Hơn {doctor.experienceYears} năm kinh nghiệm khám các vấn đề sức khỏe
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <EnvironmentOutlined />
-                      <span>Từng công tác tại {doctor.clinic.clinicName}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <EnvironmentOutlined />
-                      <span>
-                        Từng tu nghiệp tại nước ngoài: Singapore, Hoa Kì
+                    <div className="flex items-start gap-2 text-gray-600 min-w-0">
+                      <EnvironmentOutlined className="relative top-[2px]" />
+                      <span className="truncate max-w-full">
+                        {doctor.clinic.clinicName}
                       </span>
+                    </div>
+                    <div className="flex items-start gap-2 text-gray-600">
+                      <EnvironmentOutlined className="relative top-[2px]" />
+                      <span>Từng tu nghiệp tại nước ngoài: Singapore, Hoa Kỳ</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex flex-wrap items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2 text-gray-600 min-w-0">
                       <EnvironmentOutlined />
-                      <span>{doctor.clinic.city}</span>
+                      <span className="truncate max-w-full">{doctor.clinic.city}</span>
                     </div>
                     <Button
                       type="primary"
@@ -227,55 +207,28 @@ const DoctorDetailPage = () => {
               </div>
             </Card>
 
-            {/* Doctor Services Section */}
             <Card className="border-0 shadow-sm">
-              <Title level={3} className="!mb-4 !text-gray-800">
-                {doctor.title} {doctor.fullName}
-              </Title>
-
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <UserOutlined />
-                  <span>
-                    Hơn {doctor.experienceYears} năm kinh nghiệm khám các vấn đề
-                    sức khỏe
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <EnvironmentOutlined />
-                  <span>Từng công tác tại {doctor.clinic.clinicName}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <EnvironmentOutlined />
-                  <span>Bác sĩ nhận khám mọi độ tuổi</span>
-                </div>
-              </div>
-
               <Title level={4} className="!mb-3 !text-gray-800">
                 Khám và điều trị
               </Title>
 
-              <div className="space-y-3 text-gray-600">
+              <div className="space-y-2.5 text-gray-700 leading-relaxed text-[14px] md:text-[15px]">
                 <div>
-                  • Phẫu thuật điều trị các bệnh lý cột sống – tủy sống: thoát
-                  vị đĩa đệm cột sống cổ, cột sống lưng; hẹp ống sống cổ, ống
-                  sống thắt lưng; u tủy sống, lao cột sống; cordoma; viêm dính
-                  khớp dạng thấp cột sống; trượt đốt sống thắt lưng,...
+                  • Phẫu thuật điều trị các bệnh lý cột sống – tủy sống: thoát vị đĩa đệm cổ/lưng;
+                  hẹp ống sống; u tủy sống; lao cột sống; viêm dính khớp; trượt đốt sống…
                 </div>
                 <div>• Tạo hình thân sống bằng cement sinh học</div>
                 <div>
-                  • Phẫu thuật các bệnh lý về não: u não giãn não thất túi phình
-                  mạch máu não di dạng mạch máu não xuất huyết não chấn thương
-                  sọ não
+                  • Phẫu thuật các bệnh lý về não: u não, giãn não thất, túi phình mạch, dị dạng mạch,
+                  xuất huyết não, chấn thương sọ não…
                 </div>
               </div>
             </Card>
           </Col>
 
-          {/* Right Column - Booking Section */}
-          <Col xs={24} lg={8}>
-            <div className="space-y-6">
-              {/* Date Selection */}
+          {/* Right */}
+          <Col xs={24} lg={8} className="min-w-0">
+            <div className="space-y-6 lg:sticky lg:top-4">
               <Card className="border-0 shadow-sm">
                 <Select
                   value={selectedDate}
@@ -288,16 +241,17 @@ const DoctorDetailPage = () => {
                   <Option value="day3">Thứ 6 - 21/8</Option>
                 </Select>
 
-                <Title level={4} className="!mb-3 !text-gray-800">
+                <Title level={5} className="!mb-3 !text-gray-800">
                   LỊCH KHÁM
                 </Title>
 
-                <div className="grid grid-cols-2 gap-2 mb-4">
+                {/* mobile 2 cột, >=sm 3 cột */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                   {timeSlots.map((slot) => (
                     <Button
                       key={slot}
                       type={selectedTimeSlot === slot ? "primary" : "default"}
-                      className={`${
+                      className={`w-full text-xs md:text-sm ${
                         selectedTimeSlot === slot
                           ? "bg-blue-600 border-blue-600"
                           : "border-gray-300 hover:border-blue-600"
@@ -309,7 +263,7 @@ const DoctorDetailPage = () => {
                   ))}
                 </div>
 
-                <Text className="text-sm text-gray-500 mb-4">
+                <Text className="block text-sm text-gray-500 mb-3">
                   Chọn và đặt (Phí đặt lịch 0đ)
                 </Text>
 
@@ -325,46 +279,34 @@ const DoctorDetailPage = () => {
                 </Button>
               </Card>
 
-              {/* Clinic Address */}
               <Card className="border-0 shadow-sm">
-                <Title level={4} className="!mb-3 !text-gray-800">
+                <Title level={5} className="!mb-3 !text-gray-800">
                   ĐỊA CHỈ KHÁM
                 </Title>
-
-                <div className="space-y-3">
+                <div className="space-y-2 text-[14px] md:text-[15px]">
                   <div className="text-blue-600 font-medium">
                     {doctor.clinic.clinicName}
                   </div>
                   <div className="text-gray-600">
-                    {doctor.clinic.street}, {doctor.clinic.district},{" "}
-                    {doctor.clinic.city}
+                    {doctor.clinic.street}, {doctor.clinic.district}, {doctor.clinic.city}
                   </div>
                 </div>
               </Card>
 
-              {/* Pricing */}
               <Card className="border-0 shadow-sm">
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Text className="text-gray-600">GIÁ KHÁM:</Text>
-                      <Text className="font-semibold text-blue-600 text-lg">
-                        {formatCurrency(Number(doctor.consultationFee))}
-                      </Text>
-                    </div>
-                    <Button type="link" className="!p-0 !h-auto text-blue-600">
-                      Xem chi tiết
-                    </Button>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Text className="text-gray-600">GIÁ KHÁM:</Text>
+                    <Text className="font-semibold text-blue-600 text-lg">
+                      {formatCurrency(Number(doctor.consultationFee))}
+                    </Text>
                   </div>
-
+                  <Button type="link" className="!p-0 !h-auto text-blue-600">
+                    Xem chi tiết
+                  </Button>
                   <Divider className="!my-2" />
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Text className="text-gray-600">
-                        LOẠI BẢO HIỂM ÁP DỤNG.
-                      </Text>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <Text className="text-gray-600">BẢO HIỂM ÁP DỤNG</Text>
                     <Button type="link" className="!p-0 !h-auto text-blue-600">
                       Xem chi tiết
                     </Button>
@@ -372,14 +314,9 @@ const DoctorDetailPage = () => {
                 </div>
               </Card>
 
-              {/* Rating */}
               <Card className="border-0 shadow-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <Rate
-                    disabled
-                    defaultValue={4.5}
-                    character={<StarFilled />}
-                  />
+                <div className="flex items-center gap-2">
+                  <Rate disabled defaultValue={4.5} character={<StarFilled />} />
                   <Text className="font-medium">4.5</Text>
                   <Text className="text-gray-500">(127 đánh giá)</Text>
                 </div>
