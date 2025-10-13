@@ -21,12 +21,13 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   HomeOutlined,
-  UserOutlined,
-  SettingOutlined,
+  // UserOutlined,
+  // SettingOutlined,
   PlusOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { chatWithAIAPI } from "../services/client.api";
-import ClientHeader from "@/components/layout/ClientLayout/ClientHeader";
+// import ClientHeader from "@/components/layout/ClientLayout/ClientHeader";
 import { FiPaperclip } from "react-icons/fi";
 import IntentRenderer from "../components/AI/IntentRender";
 import { Link, useNavigate } from "react-router-dom";
@@ -145,7 +146,6 @@ const AIPage = () => {
       const res = await chatWithAIAPI(imageFile || new File([], ""), trimmed);
 
       if (res?.intent) {
-        // *** Thay vì chỉ gọi component, ta gán component này vào displayContent ***
         displayContent = (
           <IntentRenderer
             intent={res?.intent}
@@ -223,12 +223,34 @@ const AIPage = () => {
         className="!flex  !flex-row ai-chat-page"
       >
         <div style={{ width: isSidebarCollapsed ? 64 : "15%" }}>
-          <div
-            className="text-2xl font-bold text-blue-600 cursor-pointer text-center"
-            style={{ padding: 12 }}
-          >
-            <Link to="/">
-              <span className="text-blue-800">Medi</span>Care
+          <div className="cursor-pointer text-center" style={{ padding: 12 }}>
+            <Link to="/" style={{ display: "inline-block" }}>
+              {isSidebarCollapsed ? (
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#ffffff",
+                    border: "1px solid #e5e7eb",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+                    margin: "0 auto",
+                    fontWeight: 800,
+                    color: "#2563eb",
+                    fontSize: 14,
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  MC
+                </div>
+              ) : (
+                <div className="text-2xl font-bold text-blue-600">
+                  <span className="text-blue-800">Medi</span>Care
+                </div>
+              )}
             </Link>
           </div>
           <div
@@ -280,6 +302,13 @@ const AIPage = () => {
               onClick={() => navigate("/")}
             >
               {!isSidebarCollapsed && "Trang chủ"}
+            </Button>
+            <Button
+              style={{ width: isSidebarCollapsed ? 40 : "100%" }}
+              icon={<UserOutlined />}
+              onClick={() => navigate("/my-account")}
+            >
+              {!isSidebarCollapsed && "Quản lí tài khoản"}
             </Button>
           </div>
         </div>

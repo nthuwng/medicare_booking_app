@@ -23,11 +23,18 @@ const SpecialtyRecommendation = (props: Props) => {
       style={{ background: "#fff" }}
     >
       <Space direction="vertical" style={{ width: "100%", gap: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 ,justifyContent: "space-between"}}>
-          <Title level={5} style={{ margin: 0, fontSize: 16 }}>
-            Gợi ý chuyên khoa
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            justifyContent: "space-between",
+          }}
+        >
+          <Title level={5} style={{ margin: 0, fontSize: 17 }}>
+            {text}
           </Title>
-          <Tag color="blue" style={{ marginLeft: "auto" ,fontSize: 12}}>
+          <Tag color="blue" style={{ marginLeft: "auto", fontSize: 12 }}>
             Độ tin cậy : {confidencePct}%
           </Tag>
         </div>

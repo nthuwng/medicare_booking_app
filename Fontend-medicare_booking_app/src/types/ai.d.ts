@@ -11,3 +11,4 @@ export interface IAiSpecialtyDoctorCheck {
   message: string;
   data: IDoctorProfile[];
 }
+

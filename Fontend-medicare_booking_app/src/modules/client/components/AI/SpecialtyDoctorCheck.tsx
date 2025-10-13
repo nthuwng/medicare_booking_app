@@ -1,18 +1,6 @@
 import type { IAiSpecialtyDoctorCheck } from "@/types";
 import {
-  Card,
-  Tag,
-  Button,
-  Typography,
-  Space,
-  Avatar,
-  Badge,
-  Divider,
-} from "antd";
-import {
-  RobotOutlined,
   UserOutlined,
-  MedicineBoxOutlined,
   PhoneOutlined,
   StarOutlined,
   DollarOutlined,

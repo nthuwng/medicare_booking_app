@@ -165,7 +165,9 @@ const ClinicTable = () => {
         request={async (params) => {
           let query = "";
           if (params) {
-            query += `current=${params.current}&pageSize=${params.pageSize}`;
+            const page = params.current || 1;
+            const pageSize = params.pageSize || 5;
+            query += `page=${page}&pageSize=${pageSize}`;
           }
           const res = await getAllClinics(query);
           if (res?.data?.meta) setMeta(res.data.meta);
@@ -180,6 +182,7 @@ const ClinicTable = () => {
         pagination={{
           current: meta.current,
           pageSize: meta.pageSize,
+          pageSizeOptions: [5, 10, 20, 50, 100],
           showSizeChanger: true,
           total: meta.total,
           showTotal: (total, range) => (

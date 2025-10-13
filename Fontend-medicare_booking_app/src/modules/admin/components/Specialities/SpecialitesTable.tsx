@@ -180,12 +180,14 @@ const SpecialitesTable = () => {
         request={async (params) => {
           let query = "";
           if (params) {
-            query += `current=${params.current}&pageSize=${params.pageSize}`;
+            query += `page=${params.current}&pageSize=${params.pageSize}`;
             if (params.specialtyName)
               query += `&specialtyName=${params.specialtyName}`;
           }
+          console.log("query", query);
           const res = await getAllSpecialties(query);
           if (res?.data?.meta) setMeta(res.data.meta);
+          console.log("meta", meta);
           return {
             data: res.data?.result || [],
             success: true,
@@ -196,6 +198,7 @@ const SpecialitesTable = () => {
         pagination={{
           current: meta.current,
           pageSize: meta.pageSize,
+          pageSizeOptions: [5, 10, 20, 50, 100],
           showSizeChanger: true,
           total: meta.total,
           showTotal: (total, range) => (
