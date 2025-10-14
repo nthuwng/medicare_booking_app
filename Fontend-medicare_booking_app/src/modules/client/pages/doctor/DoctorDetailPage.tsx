@@ -11,7 +11,11 @@ import {
   Spin,
   message,
   Divider,
+  List,
+  Empty,
 } from "antd";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
 import {
   HomeOutlined,
   RightOutlined,
@@ -23,7 +27,11 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { IDoctorProfile } from "@/types";
-import { getDoctorDetailBookingById } from "../../services/client.api";
+import {
+  getDoctorDetailBookingById,
+  getRatingByDoctorIdAPI,
+} from "../../services/client.api";
+import type { IRating, IRatingStats } from "@/types/rating";
 
 const { Title, Text } = Typography;
 
@@ -32,6 +40,8 @@ const DoctorDetailPage = () => {
   const { doctorId } = useParams<{ doctorId: string }>();
   const [loading, setLoading] = useState(true);
   const [doctor, setDoctor] = useState<IDoctorProfile | null>(null);
+  const [rating, setRating] = useState<IRating[]>([]);
+  const [ratingStats, setRatingStats] = useState<IRatingStats | null>(null);
 
   const fetchDoctorDetail = async () => {
     if (!doctorId) return;
@@ -52,8 +62,17 @@ const DoctorDetailPage = () => {
     }
   };
 
+  const fetchRatingByDoctorId = async () => {
+    if (!doctorId) return;
+    const response = await getRatingByDoctorIdAPI(doctorId);
+    const data = response.data;
+    setRating(data?.ratings || []);
+    setRatingStats(data?.ratingStats || null);
+  };
+
   useEffect(() => {
     fetchDoctorDetail();
+    fetchRatingByDoctorId();
   }, [doctorId]);
 
   const formatCurrency = (amount: number) => {
@@ -61,6 +80,23 @@ const DoctorDetailPage = () => {
       style: "currency",
       currency: "VND",
     }).format(amount);
+  };
+
+  // simple hash-to-label for anonymized user display
+  const hashUser = (userId: string) => {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = (hash << 5) - hash + userId.charCodeAt(i);
+      hash |= 0;
+    }
+    const hex = Math.abs(hash).toString(16).toUpperCase();
+    return `User-${hex.slice(0, 6)}`;
+  };
+
+  const formatDate = (isoString: string) => {
+    const d = dayjs(isoString);
+    if (!d.isValid()) return isoString;
+    return d.locale("vi").format("DD/MM/YYYY HH:mm");
   };
 
   if (loading) {
@@ -205,7 +241,6 @@ const DoctorDetailPage = () => {
                 </div>
               </div>
             </Card>
-
             {/* Doctor Services Section */}
             <Card className="border-0 shadow-sm">
               <Title level={3} className="!mb-4 !text-gray-800">
@@ -248,6 +283,81 @@ const DoctorDetailPage = () => {
                   sọ não
                 </div>
               </div>
+            </Card>
+            <Card className="border-0 shadow-sm mt-6">
+              <Title level={4} className="!mb-3 !text-gray-800">
+                Đánh giá của bệnh nhân
+              </Title>
+
+              <div className="flex items-center gap-2 mb-3">
+                <Rate
+                  disabled
+                  allowHalf
+                  value={
+                    ratingStats?.avgScore ? Number(ratingStats.avgScore) : 0
+                  }
+                  character={<StarFilled />}
+             
+                />
+                <Text className="font-medium">{ratingStats?.avgScore}</Text>
+                <Text className="text-gray-500">
+                  ({ratingStats?.totalReviews} đánh giá)
+                </Text>
+              </div>
+
+              {rating?.length === 0 ? (
+                <Empty
+                  description="Chưa có đánh giá"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              ) : (
+                <List
+                  itemLayout="horizontal"
+                  dataSource={rating}
+                  renderItem={(item: IRating) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={
+                          <Avatar>
+                            {item.userProfile?.full_name
+                              ? item.userProfile.full_name
+                                  .charAt(0)
+                                  .toUpperCase()
+                              : "U"}
+                          </Avatar>
+                        }
+                        title={
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-800">
+                              {item.userProfile.full_name}
+                            </span>
+                            <span className="text-gray-500 text-xs">
+                              {formatDate(item.createdAt)}
+                            </span>
+                          </div>
+                        }
+                        description={
+                          <div>
+                            <Rate
+                              disabled
+                              allowHalf
+                              value={item.score}
+                              character={<StarFilled />}
+                              className="!text-[15px]"
+                 
+                            />
+                            {item.content && (
+                              <div className="text-gray-600 mt-1 !text-[16px]">
+                                {item.content}
+                              </div>
+                            )}
+                          </div>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              )}
             </Card>
           </Col>
 
@@ -301,16 +411,22 @@ const DoctorDetailPage = () => {
                 </div>
               </Card>
 
-              {/* Rating */}
+              {/* Rating summary */}
               <Card className="border-0 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Rate
                     disabled
-                    defaultValue={4.5}
+                    allowHalf
+                    value={Number(ratingStats?.avgScore || 0)}
                     character={<StarFilled />}
+        
                   />
-                  <Text className="font-medium">4.5</Text>
-                  <Text className="text-gray-500">(127 đánh giá)</Text>
+                  <Text className="font-medium">
+                    {ratingStats?.avgScore ?? "0.0"}
+                  </Text>
+                  <Text className="text-gray-500">
+                    ({ratingStats?.totalReviews ?? 0} đánh giá)
+                  </Text>
                 </div>
               </Card>
             </div>

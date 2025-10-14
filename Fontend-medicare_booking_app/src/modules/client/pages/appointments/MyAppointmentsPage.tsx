@@ -24,6 +24,8 @@ import type { IAppointment } from "@/types";
 import { getMyAppointmentsAPI } from "@/modules/client/services/client.api";
 import { FaPhoneAlt } from "react-icons/fa";
 import { Navigate, useNavigate } from "react-router-dom";
+import EvaluateRating from "@/modules/client/components/Rating/EvaluateRating";
+import { useCurrentApp } from "@/components/contexts/app.context";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -35,6 +37,10 @@ const MyAppointmentsPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "upcoming" | "past">("upcoming");
+  const [ratingModalOpen, setRatingModalOpen] = useState<boolean>(false);
+  const [ratingDoctor, setRatingDoctor] = useState<string>("");
+
+  const { user } = useCurrentApp();
 
   const filtered = useMemo(() => {
     if (filter === "all") return appointments;
@@ -107,6 +113,7 @@ const MyAppointmentsPage = () => {
         <div className=" grid md:grid-cols-2 gap-4">
           {filtered.map((a) => {
             const status = getStatusTag(a.status);
+            const isConfirmed = (a.status || "").toLowerCase() === "confirmed";
             return (
               <Card key={a.id} className="shadow-sm">
                 <Flex justify="space-between" align="center" className="mb-3">
@@ -181,20 +188,50 @@ const MyAppointmentsPage = () => {
                       ) + " VNĐ"}
                     </span>
                   </div>
-                  <div>
+                  <div className="ml-auto grid grid-cols-2 gap-2">
                     <Button
                       onClick={() =>
-                        navigate("/message", { state: { doctorId: a.doctorId } })
+                        navigate("/message", {
+                          state: { doctorId: a.doctorId },
+                        })
                       }
-                      className="!mr-2 bg-blue-600 hover:bg-blue-700 border-blue-600"
+                      className="bg-blue-600 hover:bg-blue-700 border-blue-600 !w-full"
                     >
                       Nhắn tin
                     </Button>
+                    <Tooltip
+                      title={
+                        isConfirmed
+                          ? undefined
+                          : "Chỉ có thể đánh giá khi lịch hẹn đã được xác nhận"
+                      }
+                    >
+                      <Button
+                        className="!w-full"
+                        disabled={!isConfirmed}
+                        onClick={() => {
+                          setRatingModalOpen(true);
+                          setRatingDoctor(a.doctorId);
+                        }}
+                      >
+                        Đánh giá bác sĩ
+                      </Button>
+                    </Tooltip>
                     <Button
                       type="primary"
+                      className="!w-full"
                       onClick={() => navigate(`/appointment-detail/${a.id}`)}
                     >
-                      Xem chi tiết
+                      Xem chi tiết lịch hẹn
+                    </Button>
+                    <Button
+                      type="primary"
+                      className="!w-full"
+                      onClick={() =>
+                        navigate(`/booking-options/doctor/${a.doctorId}`)
+                      }
+                    >
+                      Xem chi tiết bác sĩ
                     </Button>
                   </div>
                 </Flex>
@@ -203,6 +240,12 @@ const MyAppointmentsPage = () => {
           })}
         </div>
       )}
+      <EvaluateRating
+        ratingModalOpen={ratingModalOpen}
+        setRatingModalOpen={setRatingModalOpen}
+        userId={user?.id || ""}
+        doctorId={ratingDoctor || ""}
+      />
     </div>
   );
 };

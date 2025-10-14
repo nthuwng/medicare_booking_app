@@ -12,6 +12,7 @@ import type {
 } from "@/types";
 import type { IAppointment, IAppointmentFullDetail } from "@/types/appointment";
 import type { IConversationResponse, IMessage } from "@/types/message";
+import type {IRating, IRatingResponse } from "@/types/rating";
 
 export const getAllApprovedDoctorsBooking = (query: string) => {
   const urlBackend = `/api/doctor/doctors/approved?${query}`;
@@ -89,4 +90,14 @@ export const chatWithAIAPI = async (file: File, prompt: string) => {
   >(urlBackend, fd, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+};
+
+export const getRatingByDoctorIdAPI = (doctorId: string) => {
+  const urlBackend = `/api/rating/by-doctorId/${doctorId}`;
+  return axios.get<IBackendRes<IRatingResponse>>(urlBackend);
+};
+
+export const createRatingAPI = (doctorId: string, score: number, content: string) => {
+  const urlBackend = `/api/rating`;
+  return axios.post<IBackendRes<IRating>>(urlBackend, { doctorId, score, content });
 };
