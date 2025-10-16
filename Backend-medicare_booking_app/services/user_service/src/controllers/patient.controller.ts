@@ -6,6 +6,8 @@ import {
   deletePatientService,
   countTotalPatientPage,
   getPatientByUserId,
+  deletePatientAvatarService,
+  updatePatientProfile,
 } from "../services/patient.service";
 
 const createPatientController = async (req: Request, res: Response) => {
@@ -120,10 +122,68 @@ const getPatientByUserIdController = async (req: Request, res: Response) => {
   });
 };
 
+const updatePatientProfileController = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const {
+    fullName,
+    phone,
+    dateOfBirth,
+    gender,
+    address,
+    city,
+    district,
+    avatarUrl,
+  } = req.body;
+  const patient = await updatePatientProfile(
+    id,
+    fullName,
+    phone,
+    dateOfBirth,
+    gender,
+    address,
+    city,
+    district,
+    avatarUrl
+  );
+  if (!patient) {
+    res.status(404).json({ success: false, message: "Patient not found" });
+    return;
+  }
+  res.status(200).json({
+    success: true,
+    message: "Cập nhật thông tin patient thành công.",
+    data: patient,
+  });
+};
+
+const deletePatientAvatarController = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const patient = await deletePatientAvatarService(id);
+
+    if (!patient) {
+      res.status(404).json({ success: false, message: "Patient not found" });
+      return;
+    }
+    res.status(200).json({
+      success: true,
+      message: "Xóa ảnh đại diện patient thành công.",
+    });
+  } catch (error: any) {
+    console.error("Error deleting patient avatar:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+  res.status(200).json({
+    success: true,
+    message: "Xóa ảnh đại diện patient thành công.",
+  });
+};
 export {
   createPatientController,
   getPatientByIdController,
   getAllPatientController,
   deletePatientController,
   getPatientByUserIdController,
+  deletePatientAvatarController,
+  updatePatientProfileController,
 };

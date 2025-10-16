@@ -1,6 +1,6 @@
-import { uploadToCloudinary } from "src/services/upload.services";
+
 import { prisma } from "./client";
-import cloudinary from "./cloudinary";
+
 
 type SeedClinic = {
   clinicName: string;

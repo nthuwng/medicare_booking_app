@@ -6,7 +6,7 @@ import {
 } from "@shared/index";
 import bcrypt from "bcrypt";
 import { prisma } from "../config/client";
-import { UserType } from "@prisma/client";
+import { AuthProvider, UserType } from "@prisma/client";
 const saltRounds = 10;
 import jwt from "jsonwebtoken";
 import "dotenv/config";
@@ -154,6 +154,7 @@ const handleGetUserById = async (id: string) => {
     select: {
       id: true,
       email: true,
+      authProvider: true,
       userType: true,
       isActive: true,
     },
@@ -180,6 +181,7 @@ const handleGetAccount = async (token: string) => {
     select: {
       id: true,
       email: true,
+      authProvider: true,
       userType: true,
       isActive: true,
       createdAt: true,
@@ -375,6 +377,7 @@ const handleGetAllUsers = async () => {
     select: {
       id: true,
       email: true,
+      authProvider: true,
       userType: true,
       isActive: true,
       createdAt: true,
@@ -415,6 +418,7 @@ const handleLoginWithGoogleAPI = async (
           email: emailVerified,
           password: hashed,
           userType: UserType.PATIENT,
+          authProvider: AuthProvider.GOOGLE,
         },
       });
     }

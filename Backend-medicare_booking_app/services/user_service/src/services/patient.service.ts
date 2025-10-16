@@ -168,13 +168,52 @@ const getPatientByUserId = async (userId: string) => {
   };
 };
 
+const updatePatientProfile = async (
+  id: string,
+  fullName: string,
+  phone: string,
+  dateOfBirth: Date,
+  gender: "Male" | "Female" | "Other",
+  address: string,
+  city: string,
+  district: string,
+  avatarUrl: string
+) => {
+  const patient = await prisma.patient.update({
+    where: { id },
+    data: {
+      full_name: fullName,
+      phone,
+      date_of_birth: new Date(dateOfBirth),
+      gender,
+      address,
+      city,
+      district,
+      avatar_url: avatarUrl,
+    },
+  });
+  return patient;
+};
+
+const deletePatientAvatarService = async (id: string) => {
+  const patient = await prisma.patient.update({
+    where: { id },
+    data: {
+      avatar_url: "",
+    },
+  });
+  return patient;
+};
+
 export {
   createPatientProfile,
   checkTypeAndCreatePatientProfile,
   checkUserExits,
+  deletePatientAvatarService,
   getPatientByIdService,
   getAllPatientService,
   countTotalPatientPage,
   deletePatientService,
   getPatientByUserId,
+  updatePatientProfile,
 };
