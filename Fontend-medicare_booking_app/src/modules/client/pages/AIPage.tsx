@@ -31,6 +31,7 @@ import { chatWithAIAPI } from "../services/client.api";
 import { FiPaperclip } from "react-icons/fi";
 import IntentRenderer from "../components/AI/IntentRender";
 import { Link, useNavigate } from "react-router-dom";
+import Logo from "@/assets/Logo/LOGO_MEDICARE.png";
 
 const { Content } = Layout;
 const { TextArea } = Input;
@@ -211,40 +212,39 @@ const AIPage = () => {
       {/* Page-scoped styles */}
       <style>{`
         .ai-chat-page .composer textarea::placeholder {
-          color: #ffffff !important;
+          color: #6b7280 !important;
           opacity: 1;
         }
       `}</style>
       <Layout
         style={{
           minHeight: "100vh",
-          background: "#F4F4F9",
+          background: "#F5F7FA",
         }}
         className="!flex  !flex-row ai-chat-page"
       >
-        <div style={{ width: isSidebarCollapsed ? 64 : "15%" }}>
+        <div style={{ width: isSidebarCollapsed ? 100 : "15%" }}>
           <div className="cursor-pointer text-center" style={{ padding: 12 }}>
             <Link to="/" style={{ display: "inline-block" }}>
               {isSidebarCollapsed ? (
                 <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#ffffff",
-                    border: "1px solid #e5e7eb",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
-                    margin: "0 auto",
-                    fontWeight: 800,
-                    color: "#2563eb",
-                    fontSize: 14,
-                    letterSpacing: 0.5,
-                  }}
+                  className="
+                  group mx-auto my-3 size-20 shrink-0
+                  rounded-2xl bg-white/80 backdrop-blur
+                  ring-1 ring-black/5 shadow-sm
+                  transition-all duration-300 hover:shadow-md
+                "
                 >
-                  MC
+                  <img
+                    src={Logo}
+                    alt="Medicare Logo"
+                    className="
+                    block w-full h-full
+                    object-contain
+                    transition-transform duration-300 group-hover:scale-110
+                    select-none pointer-events-none
+                  "
+                  />
                 </div>
               ) : (
                 <div className="text-2xl font-bold text-blue-600">
@@ -274,13 +274,13 @@ const AIPage = () => {
                   <MenuFoldOutlined />
                 )
               }
-              style={{ width: isSidebarCollapsed ? 40 : "100%" }}
+              style={{ width: isSidebarCollapsed ? 80 : "100%" }}
             >
               {!isSidebarCollapsed && "Thu gọn"}
             </Button>
             <Button
               type="primary"
-              style={{ width: isSidebarCollapsed ? 40 : "100%" }}
+              style={{ width: isSidebarCollapsed ? 80 : "100%" }}
               icon={<PlusOutlined />}
               onClick={handleNewChat}
             >
@@ -297,14 +297,14 @@ const AIPage = () => {
               Menu
             </div>
             <Button
-              style={{ width: isSidebarCollapsed ? 40 : "100%" }}
+              style={{ width: isSidebarCollapsed ? 80 : "100%" }}
               icon={<HomeOutlined />}
               onClick={() => navigate("/")}
             >
               {!isSidebarCollapsed && "Trang chủ"}
             </Button>
             <Button
-              style={{ width: isSidebarCollapsed ? 40 : "100%" }}
+              style={{ width: isSidebarCollapsed ? 80 : "100%" }}
               icon={<UserOutlined />}
               onClick={() => navigate("/my-account")}
             >
@@ -336,13 +336,9 @@ const AIPage = () => {
               >
                 <Title
                   level={2}
-                  className="!text-4xl md:!text-4xl !leading-[1.2]"
+                  className="!text-4xl md:!text-4xl !leading-[1.2] !text-blue-700"
                 >
-                  <span
-                    className="inline-block pb-[2px]
-                 bg-gradient-to-r from-sky-500 via-emerald-500 to-amber-400
-                 bg-clip-text text-transparent"
-                  >
+                  <span className="inline-block pb-[2px]">
                     Trợ lí tìm thông tin về sức khỏe
                   </span>
                 </Title>
@@ -456,6 +452,7 @@ const AIPage = () => {
                       <div className="flex items-center gap-3">
                         <Tooltip title="Gửi tin nhắn (Enter hoặc Ctrl+Enter)">
                           <Button
+                            type="primary"
                             shape="circle"
                             icon={<ArrowUpOutlined />}
                             onClick={() => handleSendMessage(inputValue)}
@@ -463,7 +460,7 @@ const AIPage = () => {
                             disabled={
                               isLoading || (!inputValue.trim() && !imageFile)
                             }
-                            className="!size-10 hover:!bg-gray-100"
+                            className="!size-10"
                           />
                         </Tooltip>
                       </div>
@@ -475,13 +472,9 @@ const AIPage = () => {
               <>
                 <Title
                   level={2}
-                  className="!text-4xl md:!text-4xl !leading-[1.2] text-center"
+                  className="!text-4xl md:!text-4xl !leading-[1.2] text-center !text-blue-700"
                 >
-                  <span
-                    className="inline-block pb-[2px]
-                 bg-gradient-to-r from-sky-500 via-emerald-500 to-amber-400
-                 bg-clip-text text-transparent"
-                  >
+                  <span className="inline-block pb-[2px]">
                     Trợ lí tìm thông tin về sức khỏe
                   </span>
                 </Title>
@@ -505,7 +498,7 @@ const AIPage = () => {
                           display: "flex",
                           flexDirection: "column",
                         }}
-                        className="rounded-2xl"
+                        className="!rounded-3xl"
                       >
                         {/* Chat Messages */}
                         <div
@@ -538,7 +531,7 @@ const AIPage = () => {
                                     maxWidth: "75%",
                                     background:
                                       msg.type === "user"
-                                        ? "#ffffff"
+                                        ? "#eff6ff" /* subtle blue-50 for user bubble */
                                         : "#ffffff",
                                     color:
                                       msg.type === "user" ? "black" : "#000000",
@@ -687,10 +680,11 @@ const AIPage = () => {
                   )}
                   <div
                     style={{
-                      background: "#303030",
+                      background: "#ffffff",
                       borderRadius: 24,
                       padding: 15,
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+                      boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
+                      border: "1px solid #e5e7eb",
                       width: "90%",
                       margin: "0 auto",
                     }}
@@ -738,7 +732,7 @@ const AIPage = () => {
                         style={{
                           background: "transparent",
                           border: "none",
-                          color: "#ffffff",
+                          color: "#111827",
                           paddingTop: 4,
                           fontSize: "20px",
                           outline: "none",
@@ -755,7 +749,7 @@ const AIPage = () => {
                           >
                             <Button
                               shape="circle"
-                              className="!size-10 hover:!bg-gray-100"
+                              className="!size-10"
                               icon={<FiPaperclip size={18} />}
                               title="Tải ảnh lên"
                             />
@@ -764,6 +758,7 @@ const AIPage = () => {
                         <div className="flex items-center gap-3">
                           <Tooltip title="Gửi tin nhắn (Enter hoặc Ctrl+Enter)">
                             <Button
+                              type="primary"
                               shape="circle"
                               icon={<ArrowUpOutlined />}
                               onClick={() => handleSendMessage(inputValue)}
@@ -771,7 +766,7 @@ const AIPage = () => {
                               disabled={
                                 isLoading || (!inputValue.trim() && !imageFile)
                               }
-                              className="!size-10 hover:!text-blue-500 hover:!bg-white !text-black !bg-white hover:!border-blue-500"
+                              className="!size-10"
                             />
                           </Tooltip>
                         </div>

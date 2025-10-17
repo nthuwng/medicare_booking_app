@@ -297,7 +297,6 @@ const DoctorDetailPage = () => {
                     ratingStats?.avgScore ? Number(ratingStats.avgScore) : 0
                   }
                   character={<StarFilled />}
-             
                 />
                 <Text className="font-medium">{ratingStats?.avgScore}</Text>
                 <Text className="text-gray-500">
@@ -344,13 +343,53 @@ const DoctorDetailPage = () => {
                               value={item.score}
                               character={<StarFilled />}
                               className="!text-[15px]"
-                 
                             />
                             {item.content && (
                               <div className="text-gray-600 mt-1 !text-[16px]">
                                 {item.content}
                               </div>
                             )}
+                            {/* Doctor replies */}
+                            {Array.isArray(item.replies) &&
+                              item.replies.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                  {item.replies.map((reply) => (
+                                    <div
+                                      key={reply.id}
+                                      className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2"
+                                    >
+                                      <div className="flex items-start gap-2">
+                                        <Avatar
+                                          size={24}
+                                          src={doctor.avatarUrl || undefined}
+                                        >
+                                          {!doctor.avatarUrl &&
+                                            (doctor.fullName
+                                              ?.charAt(0)
+                                              .toUpperCase() ||
+                                              "B")}
+                                        </Avatar>
+                                        <div className="flex-1">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium text-gray-800">
+                                              {doctor.title} {doctor.fullName}
+                                              <span className="ml-2 rounded bg-blue-100 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700">
+                                                Phản hồi bác sĩ
+                                              </span>
+                                            </span>
+                                            <span className="text-[11px] text-gray-500">
+                                              {formatDate(reply.createdAt)}
+                                            </span>
+                                          </div>
+                                          <div className="mt-1 text-[14px] text-gray-700">
+                                            {reply.content}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                           </div>
                         }
                       />
@@ -419,7 +458,6 @@ const DoctorDetailPage = () => {
                     allowHalf
                     value={Number(ratingStats?.avgScore || 0)}
                     character={<StarFilled />}
-        
                   />
                   <Text className="font-medium">
                     {ratingStats?.avgScore ?? "0.0"}

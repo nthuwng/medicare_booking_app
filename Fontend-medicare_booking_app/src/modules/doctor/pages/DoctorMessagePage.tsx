@@ -21,6 +21,10 @@ import {
   getMessagesByConversationIdAPI,
   getPatientDetailBookingById,
 } from "../services/doctor.api";
+import {
+  getUnreadCountMessageAPI,
+  markMessagesAsReadAPI,
+} from "../services/doctor.api";
 import { useCurrentApp } from "@/components/contexts/app.context";
 import { useParams, useNavigate } from "react-router-dom";
 import type { IDoctorProfile, IPatientProfile } from "@/types";
@@ -73,6 +77,7 @@ const DoctorMessagePage = () => {
   >([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [unreadByConv, setUnreadByConv] = useState<Record<number, number>>({});
 
   // ====== Socket ======
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -159,7 +164,18 @@ const DoctorMessagePage = () => {
       const res = await getDoctorProfileByUserId(uid);
       const doc = res.data as IDoctorProfile;
       setDataDoctor(doc ?? null);
-      if (doc?.id) await fetchConversationsForDoctor(doc.id);
+      if (doc?.id) {
+        await fetchConversationsForDoctor(doc.id);
+        // load unread counts for this doctor
+        try {
+          const unread = await getUnreadCountMessageAPI(uid);
+          const map: Record<number, number> = {};
+          (unread.data?.byConversation || []).forEach((it: any) => {
+            map[it.conversationId] = it.count;
+          });
+          setUnreadByConv(map);
+        } catch {}
+      }
       return doc;
     },
     [fetchConversationsForDoctor]
@@ -221,6 +237,13 @@ const DoctorMessagePage = () => {
       // join conversation room
       if (socket && user?.id) joinConversationRoom(socket, convId, user.id);
 
+      // mark as read
+      if (user?.id) {
+        markMessagesAsReadAPI(convId, user.id).finally(() =>
+          setUnreadByConv((prev) => ({ ...prev, [convId]: 0 }))
+        );
+      }
+
       // fetch patient info for header
       if (patientIdOfConv) {
         try {
@@ -245,26 +268,33 @@ const DoctorMessagePage = () => {
   useEffect(() => {
     if (!socket) return;
     const handleNew = (msg: any) => {
-      // chỉ append nếu đang mở đúng conv
-      if (
-        String(msg.conversationId) !== String(currentConversationIdRef.current)
-      )
-        return;
-
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === msg.id)) return prev;
-        return [
+      const isCurrent =
+        String(msg.conversationId) === String(currentConversationIdRef.current);
+      if (isCurrent) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [
+            ...prev,
+            {
+              id: msg.id,
+              content: msg.content,
+              timestamp: msg.timestamp ?? fmtTimeVN(msg.createdAt),
+              isOwn: msg.senderId === user?.id,
+              conversationId: msg.conversationId,
+              senderId: msg.senderId,
+            },
+          ];
+        });
+        if (user?.id) {
+          markMessagesAsReadAPI(Number(msg.conversationId), user.id);
+        }
+      } else if (msg.senderId !== user?.id) {
+        setUnreadByConv((prev) => ({
           ...prev,
-          {
-            id: msg.id,
-            content: msg.content,
-            timestamp: msg.timestamp ?? fmtTimeVN(msg.createdAt),
-            isOwn: msg.senderId === user?.id,
-            conversationId: msg.conversationId,
-            senderId: msg.senderId,
-          },
-        ];
-      });
+          [Number(msg.conversationId)]:
+            (prev[Number(msg.conversationId)] || 0) + 1,
+        }));
+      }
     };
     onMessageNew(socket, handleNew);
     return () => offMessageNew(socket, handleNew);
@@ -568,14 +598,20 @@ const DoctorMessagePage = () => {
                           </span>
                         </div>
                         <div className="flex items-center justify-between mt-1">
-                          <p className="text-sm text-gray-600 truncate">
+                          <p
+                            className={`text-sm truncate ${
+                              unreadByConv[conv.id]
+                                ? "font-semibold text-gray-900"
+                                : "text-gray-600"
+                            }`}
+                          >
                             {conv.lastMessage}
                           </p>
-                          {conv.unreadCount > 0 && (
-                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                              {conv.unreadCount}
+                          {unreadByConv[conv.id] ? (
+                            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                              {unreadByConv[conv.id]}
                             </span>
-                          )}
+                          ) : null}
                         </div>
                         <div className="mt-2 flex items-center justify-between">
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -674,7 +710,7 @@ const DoctorMessagePage = () => {
                 {/* Messages */}
                 <div
                   ref={messagesContainerRef}
-                  className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+                  className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50"
                 >
                   {/* Banner */}
                   <div className="flex justify-center">

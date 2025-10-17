@@ -13,6 +13,7 @@ import type {
   ITimeSlotDetail,
 } from "@/types/schedule";
 import type { IConversationResponseDoctor, IMessage } from "@/types/message";
+import type { IRatingReply, IRatingResponse } from "@/types/rating";
 
 const getDoctorProfileByUserId = (userId: string) => {
   const urlBackend = `/api/doctor/doctors/profile/${userId}`;
@@ -155,6 +156,27 @@ const getMessagesByConversationIdAPI = (conversationId: string) => {
   return axios.get<IBackendRes<IMessage[]>>(urlBackend);
 };
 
+// Unread helpers for doctor side (same endpoints)
+const getUnreadCountMessageAPI = (userId: string) => {
+  const urlBackend = `/api/message/unread-count/${userId}`;
+  return axios.get<
+    IBackendRes<{
+      total: number;
+      byConversation: { conversationId: number; count: number }[];
+    }>
+  >(urlBackend);
+};
+
+const markMessagesAsReadAPI = (conversationId: number, userId: string) => {
+  const urlBackend = `/api/message/messages/read`;
+  return axios.patch<
+    IBackendRes<{ conversationId: number; updatedCount: number }>
+  >(urlBackend, {
+    conversationId,
+    userId,
+  });
+};
+
 const createSchedule = (
   doctorId: string,
   date: string,
@@ -189,8 +211,23 @@ const deleteTimeSlotFromScheduleAPI = (
   return axios.delete<IBackendRes<any>>(urlBackend);
 };
 
+const fetchRatingByDoctorIdAPI = (doctorId: string) => {
+  const urlBackend = `/api/rating/by-doctorId/${doctorId}`;
+  return axios.get<IBackendRes<IRatingResponse>>(urlBackend);
+};
+
+const replyRatingAPI = (ratingId: string, content: string) => {
+  const urlBackend = `/api/rating/reply`;
+  return axios.post<IBackendRes<IRatingReply>>(urlBackend, {
+    ratingId,
+    content,
+  });
+};
+
 export {
   getDoctorProfileByUserId,
+  fetchRatingByDoctorIdAPI,
+  replyRatingAPI,
   getAllSpecialtiesDoctorProFile,
   getAllClinics,
   markAsReadNotification,
@@ -206,6 +243,8 @@ export {
   getAllConversationsDoctorAPI,
   getPatientDetailBookingById,
   getMessagesByConversationIdAPI,
+  getUnreadCountMessageAPI,
+  markMessagesAsReadAPI,
   createSchedule,
   updateAppointmentStatus,
   deleteScheduleByScheduleIdAPI,

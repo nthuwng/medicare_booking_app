@@ -7,6 +7,7 @@ import type {
   INotificationDataAdmin,
   IPatientProfile,
   ISpecialty,
+  ITimeSlotDetail,
 } from "@/types";
 
 export const getAllSpecialties = (query: string) => {
@@ -163,4 +164,9 @@ export const updateSpecialty = (
 export const deleteSpecialites = (specialtyId: string) => {
   const urlBackend = `/api/doctor/specialties/${specialtyId}`;
   return axios.delete<IBackendRes<string>>(urlBackend);
+};
+
+export const getAllTimeSlotsAdmin = () => {
+  const urlBackend = `/api/schedule/time-slots`;
+  return axios.get<IBackendRes<ITimeSlotDetail[]>>(urlBackend);
 };

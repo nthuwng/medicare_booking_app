@@ -18,20 +18,15 @@ import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import {
   getAllPatientsProfile,
+  getAllTimeSlotsAdmin,
 } from "../../services/admin.api";
-import type { IPatientProfile } from "@/types";
-import PatientDetail from "./PatientDetail";
+import type { ITimeSlotDetail } from "@/types";
 
-const PatientTable = () => {
+const TimeslotTable = () => {
   const actionRef = useRef<ActionType>(null);
-  const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
-  const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
-  const [dataViewDetail, setDataViewDetail] = useState<IPatientProfile | null>(
-    null
-  );
   const [meta, setMeta] = useState({
     current: 1,
-    pageSize: 5,
+    pageSize: 10,
     pages: 0,
     total: 0,
   });
@@ -40,7 +35,7 @@ const PatientTable = () => {
     actionRef.current?.reload();
   };
 
-  const columns: ProColumns<IPatientProfile>[] = [
+  const columns: ProColumns<ITimeSlotDetail>[] = [
     {
       title: "Id",
       dataIndex: "id",
@@ -49,56 +44,22 @@ const PatientTable = () => {
         return (
           <a
             href="#"
-            onClick={() => {
-              setDataViewDetail(entity);
-              setOpenViewDetail(true);
-            }}
           >
             {entity.id}
           </a>
         );
       },
-      width: 300,
     },
     {
-      title: "Tên",
-      dataIndex: "full_name",
-      width: 150,
-      fieldProps: {
-        placeholder: "Nhập tên để tìm kiếm",
-      },
-    },
-    {
-      title: "Số điện thoại",
-      dataIndex: "phone",
-      fieldProps: {
-        placeholder: "Nhập số điện thoại để tìm kiếm",
-        style: {
-          width: "250px",
-        },
-      },
-    },
-    {
-      title: "Giới tính",
-      dataIndex: "gender",
+      title: "Thời gian bắt đầu",
+      dataIndex: "startTime",
       hideInSearch: true,
-      render(dom, entity, index, action, schema) {
-        return entity.gender === "Male" ? (
-          <Tag color="blue">Nam</Tag>
-        ) : (
-          <Tag color="pink">Nữ</Tag>
-        );
-      },
     },
     {
-      title: "Ngày sinh",
-      dataIndex: "date_of_birth",
+      title: "Thời gian kết thúc",
+      dataIndex: "endTime",
       hideInSearch: true,
-      render(dom, entity, index, action, schema) {
-        return dayjs(entity.date_of_birth).format("DD/MM/YYYY");
-      },
     },
-
     {
       title: "Action",
       hideInSearch: true,
@@ -112,21 +73,16 @@ const PatientTable = () => {
                 color: "#1890ff",
                 fontSize: 15,
               }}
-              onClick={() => {
-                setDataViewDetail(entity);
-                setOpenViewDetail(true);
-              }}
             />
             <EditTwoTone
               twoToneColor="#f57800"
-              style={{ cursor: "pointer", marginRight: 10, fontSize: 15 }}
-              onClick={() => {}}
+              style={{ cursor: "pointer", marginRight: 10, fontSize: 15 }}  
             />
 
             <Popconfirm
               placement="leftTop"
-              title={"Xác nhận xóa chuyên khoa"}
-              description={"Bạn có chắc chắn muốn xóa chuyên khoa này ?"}
+              title={"Xác nhận xóa thời gian"}
+              description={"Bạn có chắc chắn muốn xóa thời gian này ?"}
               onConfirm={() => {}}
               okText="Xác nhận"
               cancelText="Hủy"
@@ -146,7 +102,7 @@ const PatientTable = () => {
 
   return (
     <>
-      <ProTable<IPatientProfile>
+      <ProTable<ITimeSlotDetail>
         columns={columns}
         actionRef={actionRef}
         cardBordered
@@ -154,24 +110,11 @@ const PatientTable = () => {
           labelWidth: 120,
         }}
         request={async (params, sort, filter) => {
-          let query = "";
-          if (params) {
-            query += `page=${params.current}&pageSize=${params.pageSize}`;
-            if (params.full_name) {
-              query += `&fullName=${params.full_name}`;
-            }
-            if (params.phone) {
-              query += `&phone=${params.phone}`;
-            }
-          }
-          const res = await getAllPatientsProfile(query);
-          if (res?.data?.meta) {
-            setMeta(res.data.meta);
-          }
+          const res = await getAllTimeSlotsAdmin();
           return {
-            data: res.data?.result || [],
+            data: res.data || [],
             success: true,
-            total: res.data?.meta?.total || 0,
+            total: res.data?.length || 0,
           };
         }}
         rowKey="id"
@@ -190,7 +133,7 @@ const PatientTable = () => {
             );
           },
         }}
-        headerTitle="Danh sách thông tin bệnh nhân"
+        headerTitle="Danh sách thời gian"
         toolBarRender={() => [
           <Button icon={<ExportOutlined />} type="primary">
             Export
@@ -199,7 +142,6 @@ const PatientTable = () => {
             key="button"
             icon={<PlusOutlined />}
             onClick={() => {
-              setOpenModalCreate(true);
             }}
             type="primary"
           >
@@ -207,20 +149,8 @@ const PatientTable = () => {
           </Button>,
         ]}
       />
-
-      <PatientDetail
-        openViewDetail={openViewDetail}
-        setOpenViewDetail={setOpenViewDetail}
-        dataViewDetail={dataViewDetail}
-        setDataViewDetail={setDataViewDetail}
-      />
-      {/* <SpecialitesCreate
-        openModalCreate={openModalCreate}
-        setOpenModalCreate={setOpenModalCreate}
-        refreshTable={refreshTable}
-      /> */}
     </>
   );
 };
 
-export default PatientTable;
+export default TimeslotTable;

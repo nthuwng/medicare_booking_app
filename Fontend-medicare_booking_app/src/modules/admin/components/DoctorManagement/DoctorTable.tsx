@@ -17,9 +17,7 @@ import {
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import {
-  getAllAdminsProfile,
   getAllDoctorsProfile,
-  getAllUsers,
 } from "../../services/admin.api";
 import type { IDoctorProfile } from "@/types";
 import DoctorDetail from "./DoctorDetail";
@@ -203,20 +201,20 @@ const DoctorTable = () => {
             }
           }
           const res = await getAllDoctorsProfile(query);
-          if (res.data) {
+          if (res?.data?.meta) {
             setMeta(res.data.meta);
           }
           return {
-            data: res.data?.result,
-            page: 1,
+            data: res.data?.result || [],
             success: true,
-            total: res.data?.meta.total,
+            total: res.data?.meta?.total || 0,
           };
         }}
-        rowKey="_id"
+        rowKey="id"
         pagination={{
           current: meta.current,
           pageSize: meta.pageSize,
+          pageSizeOptions: [5, 10, 20, 50, 100],
           showSizeChanger: true,
           total: meta.total,
           showTotal: (total, range) => {

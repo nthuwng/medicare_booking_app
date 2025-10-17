@@ -68,6 +68,27 @@ const getAllConversationsPatientAPI = (patientId: string) => {
   return axios.get<IBackendRes<IConversationResponse>>(urlBackend);
 };
 
+// Unread helpers
+const getUnreadCountMessageAPI = (userId: string) => {
+  const urlBackend = `/api/message/unread-count/${userId}`;
+  return axios.get<
+    IBackendRes<{
+      total: number;
+      byConversation: { conversationId: number; count: number }[];
+    }>
+  >(urlBackend);
+};
+
+const markMessagesAsReadAPI = (conversationId: number, userId: string) => {
+  const urlBackend = `/api/message/messages/read`;
+  return axios.patch<
+    IBackendRes<{ conversationId: number; updatedCount: number }>
+  >(urlBackend, {
+    conversationId,
+    userId,
+  });
+};
+
 // Lấy danh sách lịch đã đặt của bệnh nhân hiện tại
 const getMyAppointmentsAPI = () => {
   const urlBackend = `/api/appointment/appointments/my-appointments`;
@@ -167,6 +188,8 @@ export {
   getPatientByUserIdAPI,
   getMessagesByConversationIdAPI,
   getAllConversationsPatientAPI,
+  getUnreadCountMessageAPI,
+  markMessagesAsReadAPI,
   getMyAppointmentsAPI,
   getMyAppointmentByIdAPI,
   chatWithAIAPI,

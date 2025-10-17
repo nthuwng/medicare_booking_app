@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   Card,
   Avatar,
@@ -14,7 +13,6 @@ import {
   StarFilled,
   ClockCircleOutlined,
   EnvironmentOutlined,
-  UserOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -49,17 +47,17 @@ const DoctorCard = (props: DoctorCardProps) => {
       {dataDoctors.length > 0 && (
         <Row gutter={[24, 24]}>
           {dataDoctors.map((doctor) => (
-            <Col key={doctor.id} xs={24} lg={12}>
+            <Col key={doctor.id} xs={24} sm={24} md={12} lg={12} xl={12}>
               <Card
-                className="hover:shadow-lg transition-all duration-300 border-0 shadow-sm"
+                className="hover:shadow-lg transition-all duration-300 border-0 shadow-sm h-full"
                 bodyStyle={{ padding: "24px" }}
               >
-                <div className="flex gap-4">
+                <div className="flex flex-col md:flex-row gap-4">
                   {/* Avatar Section */}
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 md:self-start self-center">
                     <Badge dot={true} color="#52c41a" offset={[-5, 5]}>
                       <Avatar
-                        size={104}
+                        size={96}
                         src={doctor.avatarUrl || undefined}
                         style={{
                           backgroundImage: !doctor.avatarUrl
@@ -83,7 +81,7 @@ const DoctorCard = (props: DoctorCardProps) => {
 
                   {/* Doctor Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex md:flex-row flex-col items-start md:items-center justify-between mb-3 gap-2">
                       <div className="flex-1 min-w-0">
                         <Title
                           level={4}
@@ -91,8 +89,11 @@ const DoctorCard = (props: DoctorCardProps) => {
                         >
                           {doctor.fullName}
                         </Title>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Tag color="blue" className="rounded-full">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <Tag
+                            color="blue"
+                            className="rounded-full whitespace-normal"
+                          >
                             {doctor.specialty.specialtyName}
                           </Tag>
                           <Text className="text-gray-500 text-sm">
@@ -102,8 +103,8 @@ const DoctorCard = (props: DoctorCardProps) => {
                       </div>
 
                       {/* Rating */}
-                      <div className="text-right">
-                        <div className="flex items-center gap-1 mb-1">
+                      <div className="text-right md:self-start self-stretch">
+                        <div className="flex items-center gap-1 mb-1 md:justify-end">
                           <Rate
                             disabled
                             defaultValue={4.5}
@@ -121,7 +122,7 @@ const DoctorCard = (props: DoctorCardProps) => {
                     </div>
 
                     {/* Clinic & Location */}
-                    <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-3 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <EnvironmentOutlined />
                         <span>{doctor.clinic.clinicName}</span>
@@ -134,16 +135,16 @@ const DoctorCard = (props: DoctorCardProps) => {
 
                     {/* Bio */}
                     <Paragraph
-                      className="!mb-4 !text-gray-600 !text-sm line-clamp-2"
-                      ellipsis={{ rows: 2 }}
+                      className="!mb-4 !text-gray-600 !text-sm line-clamp-3 md:line-clamp-2"
+                      ellipsis={{ rows: 3 }}
                     >
                       {doctor.bio ||
                         "Bác sĩ chuyên khoa với nhiều năm kinh nghiệm trong lĩnh vực y tế."}
                     </Paragraph>
 
                     {/* Fees & Action */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                    <div className="flex md:flex-row flex-col md:items-center items-start justify-between gap-3">
+                      <div className="flex items-center gap-6">
                         <div>
                           <Text className="text-xs text-gray-500">
                             Phí khám
@@ -162,11 +163,11 @@ const DoctorCard = (props: DoctorCardProps) => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 w-full md:w-auto">
                         <Button
                           size="middle"
                           onClick={() => handleViewDoctorDetail(doctor.id)}
-                          className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                          className="border-blue-600 text-blue-600 hover:bg-blue-50 w-full md:w-auto"
                         >
                           Xem chi tiết
                         </Button>
@@ -178,7 +179,7 @@ const DoctorCard = (props: DoctorCardProps) => {
                               `/booking-options/doctor/${doctor.id}/appointment`
                             )
                           }
-                          className="bg-blue-600 hover:bg-blue-700 border-blue-600"
+                          className="bg-blue-600 hover:bg-blue-700 border-blue-600 w-full md:w-auto"
                           icon={<CalendarOutlined />}
                         >
                           Đặt lịch

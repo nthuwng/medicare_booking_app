@@ -6,9 +6,10 @@ import {
   CalendarOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
+import { useEffect, useMemo, useState } from "react";
 
 const { Title, Text } = Typography;
-const { Option } = Select;
+// const { Option } = Select; // unused
 const { TextArea } = Input;
 
 interface IProps {
@@ -17,22 +18,44 @@ interface IProps {
 
 const PatientInfoForm = (props: IProps) => {
   const { bookingFor } = props;
+  // Vietnam provinces/districts via public API
+  type TDistrict = { code: number; name: string };
+  type TProvince = { code: number; name: string; districts: TDistrict[] };
 
-  const provinces = [
-    { label: "Hà Nội", value: "hanoi" },
-    { label: "Hồ Chí Minh", value: "hcm" },
-    { label: "Đà Nẵng", value: "danang" },
-    { label: "Hải Phòng", value: "haiphong" },
-    { label: "Cần Thơ", value: "cantho" },
-  ];
+  const [provinces, setProvinces] = useState<TProvince[]>([]);
+  const [loadingLocations, setLoadingLocations] = useState<boolean>(false);
+  const [selectedCityName, setSelectedCityName] = useState<string | undefined>(
+    undefined
+  );
+  const form = Form.useFormInstance();
 
-  const districts = [
-    { label: "Ba Đình", value: "ba-dinh" },
-    { label: "Hoàn Kiếm", value: "hoan-kiem" },
-    { label: "Đống Đa", value: "dong-da" },
-    { label: "Cầu Giấy", value: "cau-giay" },
-    { label: "Thanh Xuân", value: "thanh-xuan" },
-  ];
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        setLoadingLocations(true);
+        const res = await fetch("https://provinces.open-api.vn/api/?depth=2");
+        const data: TProvince[] = await res.json();
+        setProvinces(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setProvinces([]);
+      } finally {
+        setLoadingLocations(false);
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  const selectedProvince = useMemo(() => {
+    if (!selectedCityName) return undefined;
+    return provinces.find((p) => p.name === selectedCityName);
+  }, [provinces, selectedCityName]);
+
+  const handleCityChange = (value: string) => {
+    setSelectedCityName(value);
+    if (form) form.setFieldsValue({ province: value, district: undefined });
+  };
+
+  const currentYear = new Date().getFullYear();
   return (
     <>
       <Card
@@ -92,6 +115,10 @@ const PatientInfoForm = (props: IProps) => {
                   required: true,
                   message: "Vui lòng nhập họ tên!",
                 },
+                {
+                  whitespace: true,
+                  message: "Họ tên không được chỉ chứa khoảng trắng!",
+                },
               ]}
             >
               <Input
@@ -134,6 +161,10 @@ const PatientInfoForm = (props: IProps) => {
                   pattern: /^[0-9]{10,11}$/,
                   message: "Số điện thoại không hợp lệ!",
                 },
+                {
+                  whitespace: true,
+                  message: "Số điện thoại không được để trống!",
+                },
               ]}
             >
               <Input
@@ -150,6 +181,7 @@ const PatientInfoForm = (props: IProps) => {
               rules={[
                 { required: true, message: "Vui lòng nhập email!" },
                 { type: "email", message: "Email không hợp lệ!" },
+                { whitespace: true, message: "Email không được để trống!" },
               ]}
             >
               <Input
@@ -164,7 +196,27 @@ const PatientInfoForm = (props: IProps) => {
         <Form.Item
           label={<Text strong>Năm sinh</Text>}
           name="dateOfBirth"
-          rules={[{ required: true, message: "Vui lòng nhập năm sinh!" }]}
+          rules={[
+            { required: true, message: "Vui lòng nhập năm sinh!" },
+            {
+              pattern: /^\d{4}$/,
+              message: "Năm sinh phải gồm 4 chữ số (ví dụ: 1990)",
+            },
+            () => ({
+              validator(_, value) {
+                if (!value) return Promise.resolve();
+                const yearNum = Number(String(value).trim());
+                if (Number.isNaN(yearNum))
+                  return Promise.reject("Năm sinh không hợp lệ!");
+                if (yearNum < 1900 || yearNum > currentYear) {
+                  return Promise.reject(
+                    `Năm sinh phải trong khoảng 1900-${currentYear}`
+                  );
+                }
+                return Promise.resolve();
+              },
+            }),
+          ]}
         >
           <Input
             size="large"
@@ -185,13 +237,18 @@ const PatientInfoForm = (props: IProps) => {
                 },
               ]}
             >
-              <Select size="large" placeholder="-- Chọn Tỉnh/Thành --">
-                {provinces.map((province) => (
-                  <Option key={province.value} value={province.value}>
-                    {province.label}
-                  </Option>
-                ))}
-              </Select>
+              <Select
+                showSearch
+                size="large"
+                placeholder="-- Chọn Tỉnh/Thành --"
+                loading={loadingLocations}
+                optionFilterProp="label"
+                onChange={handleCityChange}
+                options={provinces.map((p) => ({
+                  label: p.name,
+                  value: p.name,
+                }))}
+              />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
@@ -205,13 +262,17 @@ const PatientInfoForm = (props: IProps) => {
                 },
               ]}
             >
-              <Select size="large" placeholder="-- Chọn Quận/Huyện --">
-                {districts.map((district) => (
-                  <Option key={district.value} value={district.value}>
-                    {district.label}
-                  </Option>
-                ))}
-              </Select>
+              <Select
+                showSearch
+                size="large"
+                placeholder="-- Chọn Quận/Huyện --"
+                optionFilterProp="label"
+                disabled={!selectedProvince}
+                options={(selectedProvince?.districts || []).map((d) => ({
+                  label: d.name,
+                  value: d.name,
+                }))}
+              />
             </Form.Item>
           </Col>
         </Row>
@@ -219,7 +280,13 @@ const PatientInfoForm = (props: IProps) => {
         <Form.Item
           label={<Text strong>Địa chỉ</Text>}
           name="address"
-          rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
+          rules={[
+            { required: true, message: "Vui lòng nhập địa chỉ!" },
+            {
+              whitespace: true,
+              message: "Địa chỉ không được chỉ chứa khoảng trắng!",
+            },
+          ]}
         >
           <Input
             size="large"

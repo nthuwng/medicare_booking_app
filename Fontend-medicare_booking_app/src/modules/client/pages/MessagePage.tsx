@@ -32,6 +32,10 @@ import {
   getMessagesByConversationIdAPI,
   getPatientByUserIdAPI,
 } from "../services/client.api";
+import {
+  getUnreadCountMessageAPI,
+  markMessagesAsReadAPI,
+} from "../services/client.api";
 import { Avatar } from "antd";
 
 // Function để chuyển đổi ký hiệu thành tên đầy đủ
@@ -70,6 +74,8 @@ const MessagePage = () => {
   const [selectedConversationId, setSelectedConversationId] = useState<
     number | null
   >(null);
+  // map convId -> unread count
+  const [unreadByConv, setUnreadByConv] = useState<Record<number, number>>({});
   // thêm dưới các useState hiện có
   const didAutoOpenRef = useRef(false); // chặn auto-open lặp lại
   const currentConvIdRef = useRef<number | null>(null); // giữ convId hiện tại cho socket
@@ -94,6 +100,17 @@ const MessagePage = () => {
     const pid = (await fetchPatientProfile()) || "";
     const res = await getAllConversationsPatientAPI(pid);
     setDisplayConversations(res?.data?.conversations ?? []);
+    // load unread counts
+    if (user?.id) {
+      try {
+        const unread = await getUnreadCountMessageAPI(user.id);
+        const map: Record<number, number> = {};
+        (unread.data?.byConversation || []).forEach((it: any) => {
+          map[it.conversationId] = it.count;
+        });
+        setUnreadByConv(map);
+      } catch {}
+    }
   };
 
   const scrollToBottom = () => {
@@ -152,6 +169,17 @@ const MessagePage = () => {
   useEffect(() => {
     if (!socket || !selectedConversationId) return;
     joinConversationRoom(socket, Number(selectedConversationId), user?.id);
+    // mark read when opening a conversation
+    if (user?.id) {
+      markMessagesAsReadAPI(Number(selectedConversationId), user.id).finally(
+        () => {
+          setUnreadByConv((prev) => ({
+            ...prev,
+            [Number(selectedConversationId)]: 0,
+          }));
+        }
+      );
+    }
   }, [socket, selectedConversationId, user?.id]);
 
   // auto open conv by doctorId if exists
@@ -178,21 +206,37 @@ const MessagePage = () => {
   useEffect(() => {
     if (!socket) return;
     const handleNew = (msg: any) => {
-      if (String(msg.conversationId) !== String(selectedConversationId)) return;
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === msg.id)) return prev;
-        return [
-          ...prev,
-          {
-            id: msg.id,
-            content: msg.content,
-            timestamp: msg.timestamp,
-            isOwn: msg.senderId === user?.id,
-            conversationId: msg.conversationId,
-            senderId: msg.senderId,
-          },
-        ];
-      });
+      const isCurrent =
+        String(msg.conversationId) === String(selectedConversationId);
+      if (isCurrent) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [
+            ...prev,
+            {
+              id: msg.id,
+              content: msg.content,
+              timestamp: msg.timestamp,
+              isOwn: msg.senderId === user?.id,
+              conversationId: msg.conversationId,
+              senderId: msg.senderId,
+            },
+          ];
+        });
+        // mark read immediately when viewing this conversation
+        if (user?.id) {
+          markMessagesAsReadAPI(Number(msg.conversationId), user.id);
+        }
+      } else {
+        // increase unread for that conversation if message from other
+        if (msg.senderId !== user?.id) {
+          setUnreadByConv((prev) => ({
+            ...prev,
+            [Number(msg.conversationId)]:
+              (prev[Number(msg.conversationId)] || 0) + 1,
+          }));
+        }
+      }
     };
     onMessageNew(socket, handleNew);
     return () => offMessageNew(socket, handleNew);
@@ -414,6 +458,12 @@ const MessagePage = () => {
                       await loadMessages(String(conv.id));
                       if (socket && user?.id)
                         joinConversationRoom(socket, conv.id, user.id);
+                      // clear unread for this conv
+                      if (user?.id) {
+                        markMessagesAsReadAPI(conv.id, user.id).finally(() =>
+                          setUnreadByConv((prev) => ({ ...prev, [conv.id]: 0 }))
+                        );
+                      }
                       try {
                         const doctorRes = await getDoctorDetailBookingById(
                           conv.doctorId
@@ -466,10 +516,21 @@ const MessagePage = () => {
                         </div>
 
                         <div className="flex items-center justify-between mt-1">
-                          <p className="text-sm text-gray-600 truncate">
+                          <p
+                            className={`text-sm truncate ${
+                              unreadByConv[conv.id]
+                                ? "font-semibold text-gray-900"
+                                : "text-gray-600"
+                            }`}
+                          >
                             {conv.lastMessage?.content ??
                               "Bắt đầu cuộc trò chuyện"}
                           </p>
+                          {unreadByConv[conv.id] ? (
+                            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                              {unreadByConv[conv.id]}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -559,7 +620,7 @@ const MessagePage = () => {
               {/* Messages */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+                className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50"
               >
                 {/* Tin nhắn chào mừng */}
                 <div className="flex justify-center">

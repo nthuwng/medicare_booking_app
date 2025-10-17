@@ -6,6 +6,7 @@ import DoctorProFileManagePage from "@/modules/doctor/pages/DoctorProFileManageP
 import DoctorSchedulePage from "@/modules/doctor/pages/DoctorSchedulePage";
 import DoctorAppointmentPage from "@/modules/doctor/pages/DoctorAppointmentPage";
 import DoctorMessagePage from "@/modules/doctor/pages/DoctorMessagePage";
+import DoctorRatingPage from "@/modules/doctor/pages/DoctorRatingPage";
 
 const DoctorRoutes = () => {
   return (
@@ -16,6 +17,7 @@ const DoctorRoutes = () => {
         <Route path="schedule" element={<DoctorSchedulePage />} />
         <Route path="appointments" element={<DoctorAppointmentPage />} />
         <Route path="messages" element={<DoctorMessagePage />} />
+        <Route path="ratings" element={<DoctorRatingPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

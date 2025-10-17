@@ -14,7 +14,7 @@ import { Outlet } from "react-router-dom";
 import { Link } from "react-router-dom";
 import type { MenuProps } from "antd";
 import { RiAdminFill } from "react-icons/ri";
-import { FaUserDoctor } from "react-icons/fa6";
+import { FaClock, FaUserDoctor } from "react-icons/fa6";
 import { AiOutlineUser } from "react-icons/ai";
 import { LiaClinicMedicalSolid } from "react-icons/lia";
 import { MdAccountCircle } from "react-icons/md";
@@ -56,7 +56,7 @@ const LayoutAdmin = () => {
     {
       label: <span>User Profiles</span>,
       key: "user",
-      icon: <Users size={20} />,
+      icon: <Users size={20} />,  
       children: [
         {
           label: <Link to="/admin/admin-management">Admin</Link>,
@@ -84,6 +84,11 @@ const LayoutAdmin = () => {
       label: <Link to="/admin/clinic">Clinic</Link>,
       key: "clinic",
       icon: <LiaClinicMedicalSolid size={20} />,
+    },
+    {
+      label: <Link to="/admin/time-slot-management">Time Slot</Link>,
+      key: "time-slot-management",
+      icon: <FaClock size={20} />,
     },
   ];
 

@@ -9,7 +9,7 @@ import ClinicManagementPage from "@/modules/admin/pages/ClinicManagementPage";
 import AccountManagementPage from "@/modules/admin/pages/AccountManagementPage";
 import AdminManagementPage from "@/modules/admin/pages/AdminManagementPage";
 import PatientManagementPage from "@/modules/admin/pages/PatientManagementPage";
-
+import TimeSlotManagementPage from "@/modules/admin/pages/TimeSlotManagementPage";
 const AdminRoutes = () => {
   return (
     <Routes>
@@ -21,6 +21,7 @@ const AdminRoutes = () => {
         <Route path="specialities" element={<SpecialitiesManagementPage />} />
         <Route path="clinic" element={<ClinicManagementPage />} />
         <Route path="account-management" element={<AccountManagementPage />} />
+        <Route path="time-slot-management" element={<TimeSlotManagementPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

@@ -139,26 +139,28 @@ const AccountTable = () => {
         request={async (params, sort, filter) => {
           let query = "";
           if (params) {
-            query += `page=${params.current}&pageSize=${params.pageSize}`;
+            const page = params.current || 1;
+            const pageSize = params.pageSize || 5;
+            query += `page=${page}&pageSize=${pageSize}`;
             if (params.email) {
               query += `&email=${params.email}`;
             }
           }
           const res = await getAllUsers(query);
-          if (res.data) {
+          if (res?.data?.meta) {
             setMeta(res.data.meta);
           }
           return {
-            data: res.data?.result,
-            page: 1,
+            data: res.data?.result || [],
             success: true,
-            total: res.data?.meta.total,
+            total: res.data?.meta?.total || 0,
           };
         }}
-        rowKey="_id"
+        rowKey="id"
         pagination={{
           current: meta.current,
           pageSize: meta.pageSize,
+          pageSizeOptions: [5, 10, 20, 50, 100],
           showSizeChanger: true,
           total: meta.total,
           showTotal: (total, range) => {
