@@ -304,6 +304,11 @@ const countTotalDoctorPage = async (pageSize: number) => {
   return totalPages;
 };
 
+const countTotalDoctor = async () => {
+  const totalItems = await prisma.doctor.count();
+  return totalItems;
+};
+
 const handleGetAllApprovedDoctors = async (
   page: number,
   pageSize: number,
@@ -471,6 +476,7 @@ export {
   updateDoctorStatusService,
   handleGetAllDoctors,
   countTotalDoctorPage,
+  countTotalDoctor,
   handleGetAllApprovedDoctors,
   checkDoctorInfor,
   getDoctorByUserIdService,

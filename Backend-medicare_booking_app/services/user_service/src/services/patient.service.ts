@@ -49,6 +49,11 @@ const createPatientProfile = async (
   };
 };
 
+const countTotalPatient = async () => {
+  const totalItems = await prisma.patient.count();
+  return totalItems;
+};
+
 const checkUserExits = async (userId: string) => {
   const userExits = (await getUserByIdViaRabbitMQ(userId)) as UserInfo;
 
@@ -209,6 +214,7 @@ export {
   createPatientProfile,
   checkTypeAndCreatePatientProfile,
   checkUserExits,
+  countTotalPatient,
   deletePatientAvatarService,
   getPatientByIdService,
   getAllPatientService,

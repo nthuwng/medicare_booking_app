@@ -39,8 +39,6 @@ export const initNotificationMsgCreateConsumer = async () => {
 
       const patient = await getPatientByIdViaRabbitMQ(payload.patientId);
 
-      console.log("patient", patient);
-
       // Lưu notification cho chính doctor đó
       const notification = await handleCreateNotification({
         userId: payload.doctorUserId, // người nhận là bác sĩ
@@ -54,8 +52,6 @@ export const initNotificationMsgCreateConsumer = async () => {
           doctorUserId: payload.doctorUserId,
         },
       });
-
-      console.log("notification", notification);
 
       // Gửi realtime đúng user
       const io = getIO();

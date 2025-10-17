@@ -1,5 +1,9 @@
 import { hashPassword } from "src/services/auth.services";
 import { prisma } from "./client";
+import {
+  createAdminProfileViaRabbitMQ,
+  createUserProfileViaRabbitMQ,
+} from "src/queue/publishers/auth.publisher";
 
 const initDatabase = async () => {
   const countUser = await prisma.user.count();
@@ -27,6 +31,30 @@ const initDatabase = async () => {
       ],
     });
   }
+
+  const admin = await prisma.user.findUnique({
+    where: {
+      email: "admin@gmail.com",
+    },
+    select: {
+      id: true,
+      email: true,
+    },
+  });
+
+  const patient = await prisma.user.findUnique({
+    where: {
+      email: "patient@gmail.com",
+    },
+    select: {
+      id: true,
+      email: true,
+    },
+  });
+
+  await createUserProfileViaRabbitMQ(patient?.id || "", patient?.email || "");
+
+  await createAdminProfileViaRabbitMQ(admin?.id || "", admin?.email || "");
 };
 
 export default initDatabase;

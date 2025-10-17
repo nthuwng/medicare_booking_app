@@ -16,6 +16,6 @@ const timeSlotRoutes = (app: Express) => {
 
   router.get("/", getAllTimeSlotsController);
 
-  app.use("/time-slots", authenticateToken, authorizeDoctor, router);
+  app.use("/time-slots", authenticateToken, router);
 };
 export default timeSlotRoutes;

@@ -119,16 +119,19 @@ const getScheduleByDoctorIdController = async (req: Request, res: Response) => {
       res
         .status(400)
         .json({ success: false, message: "date phải dạng YYYY-MM-DD" });
+      return;
     }
     if ((from && !isYMD(from)) || (to && !isYMD(to))) {
       res
         .status(400)
         .json({ success: false, message: "from/to phải dạng YYYY-MM-DD" });
+      return;
     }
     if (from && to && dayjs(from).isAfter(dayjs(to))) {
       res
         .status(400)
         .json({ success: false, message: "from không được lớn hơn to" });
+      return;
     }
 
     const doctorId = await getDoctorIdByUserIdViaRabbitMQ(userId as string);
@@ -170,6 +173,7 @@ const getScheduleByDoctorIdController = async (req: Request, res: Response) => {
         message: "Không tìm thấy lịch theo điều kiện.",
         data: [],
       });
+      return;
     }
 
     res.status(200).json({

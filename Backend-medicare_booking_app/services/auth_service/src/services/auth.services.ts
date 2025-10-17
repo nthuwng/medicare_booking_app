@@ -43,7 +43,9 @@ const handleRegister = async (
     },
   });
 
-  await createUserProfileViaRabbitMQ(user.id, email);
+  if (userType === UserType.PATIENT) {
+    await createUserProfileViaRabbitMQ(user.id, email);
+  }
 
   return { success: true, user };
 };
@@ -387,6 +389,11 @@ const handleGetAllUsers = async () => {
   return users;
 };
 
+const countTotalUser = async () => {
+  const totalItems = await prisma.user.count();
+  return totalItems;
+};
+
 const handleLoginWithGoogleAPI = async (
   credential: string
 ): Promise<LoginServiceResponse> => {
@@ -495,5 +502,6 @@ export {
   handleGetAllUsers,
   handleGetAllUsersAPI,
   countTotalUserPage,
+  countTotalUser,
   handleLoginWithGoogleAPI,
 };

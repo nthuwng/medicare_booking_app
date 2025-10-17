@@ -8,6 +8,7 @@ import {
   getPatientByUserId,
   deletePatientAvatarService,
   updatePatientProfile,
+  countTotalPatient,
 } from "../services/patient.service";
 
 const createPatientController = async (req: Request, res: Response) => {
@@ -51,7 +52,9 @@ const getAllPatientController = async (req: Request, res: Response) => {
       parseInt(pageSize as string)
     );
 
-    const { patients, totalPatients } = await getAllPatientService(
+    const totalItems = await countTotalPatient();
+
+    const { patients } = await getAllPatientService(
       currentPage,
       parseInt(pageSize as string),
       fullName as string,
@@ -66,7 +69,7 @@ const getAllPatientController = async (req: Request, res: Response) => {
             currentPage: currentPage,
             pageSize: parseInt(pageSize as string),
             pages: totalPages,
-            total: totalPatients,
+            total: totalItems,
           },
           result: [],
         },
@@ -76,14 +79,14 @@ const getAllPatientController = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-      length: totalPatients,
+      total: totalItems,
       message: "Lấy danh sách tất cả thông tin patient thành công.",
       data: {
         meta: {
           currentPage: currentPage,
           pageSize: parseInt(pageSize as string),
           pages: totalPages,
-          total: totalPatients,
+          total: totalItems,
         },
         result: patients,
       },

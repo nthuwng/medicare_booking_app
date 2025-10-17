@@ -13,6 +13,7 @@ import {
   handleGetAllUsersAPI,
   countTotalUserPage,
   handleLoginWithGoogleAPI,
+  countTotalUser,
 } from "../services/auth.services";
 import {
   changePasswordSchema,
@@ -387,6 +388,7 @@ const getAllUsersAPI = async (req: Request, res: Response) => {
     currentPage = 1;
   }
   const totalPages = await countTotalUserPage(parseInt(pageSize as string));
+  const totalItems = await countTotalUser();
   const users = await handleGetAllUsersAPI(
     currentPage,
     parseInt(pageSize as string),
@@ -401,7 +403,7 @@ const getAllUsersAPI = async (req: Request, res: Response) => {
           currentPage: currentPage,
           pageSize: parseInt(pageSize as string),
           pages: totalPages,
-          total: users.length,
+          total: totalItems,
         },
         result: [],
       },
@@ -417,7 +419,7 @@ const getAllUsersAPI = async (req: Request, res: Response) => {
         currentPage: currentPage,
         pageSize: parseInt(pageSize as string),
         pages: totalPages,
-        total: users.length,
+        total: totalItems,
       },
       result: users,
     },
