@@ -13,7 +13,7 @@ import type {
   ITimeSlotDetail,
 } from "@/types/schedule";
 import type { IConversationResponseDoctor, IMessage } from "@/types/message";
-import type { IRatingReply, IRatingResponse } from "@/types/rating";
+import type { IRatingResponse } from "@/types/rating";
 
 const getDoctorProfileByUserId = (userId: string) => {
   const urlBackend = `/api/doctor/doctors/profile/${userId}`;
@@ -216,18 +216,9 @@ const fetchRatingByDoctorIdAPI = (doctorId: string) => {
   return axios.get<IBackendRes<IRatingResponse>>(urlBackend);
 };
 
-const replyRatingAPI = (ratingId: string, content: string) => {
-  const urlBackend = `/api/rating/reply`;
-  return axios.post<IBackendRes<IRatingReply>>(urlBackend, {
-    ratingId,
-    content,
-  });
-};
-
 export {
   getDoctorProfileByUserId,
   fetchRatingByDoctorIdAPI,
-  replyRatingAPI,
   getAllSpecialtiesDoctorProFile,
   getAllClinics,
   markAsReadNotification,

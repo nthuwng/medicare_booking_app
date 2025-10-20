@@ -15,7 +15,6 @@ export interface IRating {
   isAnonymous: boolean;
   createdAt: string;
   updatedAt: string;
-  replies: IRatingReply[];
   userProfile: IPatientProfile;
   doctorProfile: IDoctorProfile;
 }
@@ -26,13 +25,4 @@ export interface IRatingStats {
   totalReviews: number;
   lastReviewAt: string;
   updatedAt: string;
-}
-
-export interface IRatingReply {
-  id: string;
-  ratingId: string;
-  replierType: "DOCTOR";
-  replierId: string;
-  content: string;
-  createdAt: string;
 }

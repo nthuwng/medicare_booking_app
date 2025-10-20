@@ -19,9 +19,8 @@ import { useCurrentApp } from "@/components/contexts/app.context";
 import {
   fetchRatingByDoctorIdAPI,
   getDoctorProfileByUserId,
-  replyRatingAPI,
 } from "../../doctor/services/doctor.api";
-import type { IRating, IRatingReply } from "@/types/rating";
+import type { IRating } from "@/types/rating";
 import type { IDoctorProfile } from "@/types";
 import { Typography } from "antd";
 
@@ -31,8 +30,6 @@ const DoctorRatingPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [doctor, setDoctor] = useState<IDoctorProfile | null>(null);
   const [ratings, setRatings] = useState<IRating[]>([]);
-  const [replyingId, setReplyingId] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState<string>("");
   const [dateRange, setDateRange] = useState<
     [dayjs.Dayjs | null, dayjs.Dayjs | null]
   >([null, null]);
@@ -100,37 +97,6 @@ const DoctorRatingPage = () => {
     return Math.round((sum / filteredRatings.length) * 10) / 10;
   }, [filteredRatings]);
 
-  const handleStartReply = (ratingId: string) => {
-    setReplyingId(ratingId);
-    setReplyContent("");
-  };
-
-  const handleCancelReply = () => {
-    setReplyingId(null);
-    setReplyContent("");
-  };
-
-  const handleSubmitReply = async (ratingId: string) => {
-    if (!replyContent.trim()) return message.warning("Vui lòng nhập nội dung");
-    try {
-      const res = await replyRatingAPI(ratingId, replyContent.trim());
-      if (res.data) {
-        const newReply: IRatingReply = res.data;
-        setRatings((prev) =>
-          prev.map((r) =>
-            r.id === ratingId
-              ? { ...r, replies: [...(r.replies || []), newReply] }
-              : r
-          )
-        );
-        message.success("Đã trả lời đánh giá");
-        handleCancelReply();
-      }
-    } catch (e) {
-      message.error("Trả lời thất bại");
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
@@ -183,17 +149,7 @@ const DoctorRatingPage = () => {
             itemLayout="horizontal"
             dataSource={filteredRatings}
             renderItem={(item) => (
-              <List.Item
-                actions={[
-                  <Button
-                    key="reply"
-                    type="link"
-                    onClick={() => handleStartReply(item.id)}
-                  >
-                    Trả lời
-                  </Button>,
-                ]}
-              >
+              <List.Item>
                 <List.Item.Meta
                   avatar={
                     <Avatar>
@@ -224,71 +180,6 @@ const DoctorRatingPage = () => {
                       {item.content && (
                         <div className="mt-1 text-[14px] text-gray-700">
                           {item.content}
-                        </div>
-                      )}
-
-                      {/* Existing replies */}
-                      {Array.isArray(item.replies) &&
-                        item.replies.length > 0 && (
-                          <div className="mt-3 space-y-2">
-                            {item.replies.map((reply) => (
-                              <div
-                                key={reply.id}
-                                className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2"
-                              >
-                                <div className="flex items-start gap-2">
-                                  <Avatar
-                                    size={24}
-                                    src={doctor?.avatarUrl || undefined}
-                                  >
-                                    {!doctor?.avatarUrl &&
-                                      (doctor?.fullName
-                                        ?.charAt(0)
-                                        .toUpperCase() ||
-                                        "B")}
-                                  </Avatar>
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-sm font-medium text-gray-800">
-                                        {doctor?.title} {doctor?.fullName}
-                                        <span className="ml-2 rounded bg-blue-100 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700">
-                                          Phản hồi bác sĩ
-                                        </span>
-                                      </span>
-                                      <span className="text-[11px] text-gray-500">
-                                        {formatDate(reply.createdAt)}
-                                      </span>
-                                    </div>
-                                    <div className="mt-1 text-[14px] text-gray-700">
-                                      {reply.content}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                      {/* Reply box */}
-                      {replyingId === item.id && (
-                        <div className="mt-3">
-                          <Space.Compact className="w-full">
-                            <Input.TextArea
-                              autoSize
-                              value={replyContent}
-                              onChange={(e) => setReplyContent(e.target.value)}
-                              placeholder="Nhập phản hồi của bạn..."
-                            />
-                          </Space.Compact>
-                          <div className="mt-2 flex items-center gap-2">
-                            <Button
-                              type="primary"
-                              onClick={() => handleSubmitReply(item.id)}
-                            >
-                              Gửi phản hồi
-                            </Button>
-                            <Button onClick={handleCancelReply}>Hủy</Button>
-                          </div>
                         </div>
                       )}
                     </div>
