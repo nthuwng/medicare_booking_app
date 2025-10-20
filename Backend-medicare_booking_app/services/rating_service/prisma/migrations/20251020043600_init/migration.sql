@@ -28,20 +28,3 @@ CREATE TABLE `DoctorRatingStat` (
     INDEX `DoctorRatingStat_totalReviews_idx`(`totalReviews`),
     PRIMARY KEY (`doctorId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `RatingReply` (
-    `id` VARCHAR(191) NOT NULL,
-    `ratingId` VARCHAR(191) NOT NULL,
-    `replierType` ENUM('DOCTOR') NOT NULL DEFAULT 'DOCTOR',
-    `replierId` VARCHAR(191) NOT NULL,
-    `content` TEXT NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-
-    INDEX `RatingReply_ratingId_idx`(`ratingId`),
-    INDEX `RatingReply_replierId_idx`(`replierId`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- AddForeignKey
-ALTER TABLE `RatingReply` ADD CONSTRAINT `RatingReply_ratingId_fkey` FOREIGN KEY (`ratingId`) REFERENCES `Rating`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

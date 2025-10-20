@@ -25,8 +25,6 @@ model Rating {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  replies RatingReply[]
-
   @@index([doctorId, createdAt])
   @@index([userId])
 }
@@ -40,22 +38,4 @@ model DoctorRatingStat {
 
   @@index([avgScore])
   @@index([totalReviews])
-}
-
-enum ReplierType {
-  DOCTOR
-}
-
-model RatingReply {
-  id          String      @id @default(uuid())
-  ratingId    String
-  replierType ReplierType @default(DOCTOR)
-  replierId   String      @db.VarChar(191) // = doctorId (bác sĩ sở hữu)
-  content     String      @db.Text
-  createdAt   DateTime    @default(now())
-
-  rating Rating @relation(fields: [ratingId], references: [id], onDelete: Cascade)
-
-  @@index([ratingId])
-  @@index([replierId])
 }

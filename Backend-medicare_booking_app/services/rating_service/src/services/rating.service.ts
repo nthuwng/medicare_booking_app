@@ -1,4 +1,4 @@
-import { Prisma, ReplierType } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "src/config/client";
 import {
   checkFullDetailDoctorViaRabbitMQ,
@@ -68,9 +68,6 @@ const handleGetRatingByDoctorId = async (doctorId: string) => {
   const ratingList = await prisma.rating.findMany({
     where: { doctorId },
     orderBy: { createdAt: "desc" },
-    include: {
-      replies: true,
-    },
   });
 
   const ratings = await Promise.all(
@@ -88,29 +85,9 @@ const handleGetRatingByDoctorId = async (doctorId: string) => {
   return { ratings, ratingStats };
 };
 
-const handleCreateRatingReply = async (
-  ratingId: string,
-  content: string,
-  userId: string
-) => {
-  const doctorId = await getDoctorIdByUserIdViaRabbitMQ(userId);
-  if (!doctorId) {
-    throw new Error("Doctor not found");
-  }
-  const newRatingReply = await prisma.ratingReply.create({
-    data: {
-      ratingId,
-      content,
-      replierId: doctorId,
-      replierType: ReplierType.DOCTOR,
-    },
-  });
-  return newRatingReply;
-};
 
 export {
   handleCreateRating,
   handleGetRatingById,
   handleGetRatingByDoctorId,
-  handleCreateRatingReply,
 };

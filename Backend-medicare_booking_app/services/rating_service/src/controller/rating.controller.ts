@@ -3,7 +3,6 @@ import {
   handleCreateRating,
   handleGetRatingById,
   handleGetRatingByDoctorId,
-  handleCreateRatingReply,
 } from "../services/rating.service";
 
 const getRatingByIdController = async (req: Request, res: Response) => {
@@ -40,22 +39,10 @@ const getRatingByDoctorIdController = async (req: Request, res: Response) => {
     message: "Rating fetched successfully",
     data: rating,
   });
-};
-
-const createRatingReplyController = async (req: Request, res: Response) => {
-  const { ratingId, content} = req.body;
-  const userId = req.user?.userId || "";
-  const newRatingReply = await handleCreateRatingReply(ratingId, content, userId);
-  res.status(201).json({
-    success: true,
-    message: "Rating reply created successfully",
-    data: newRatingReply,
-  });
-};
+};  
 
 export {
   getRatingByIdController,
   createRatingController,
   getRatingByDoctorIdController,
-  createRatingReplyController,
 };
