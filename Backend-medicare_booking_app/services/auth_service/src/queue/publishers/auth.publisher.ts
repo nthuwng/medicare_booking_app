@@ -1,3 +1,4 @@
+import { publishAuthEvent } from "./AuthEvent";
 import { rpcRequest } from "./rpcRequest";
 
 const createUserProfileViaRabbitMQ = async (userId: string, email: string) => {
@@ -8,4 +9,12 @@ const createAdminProfileViaRabbitMQ = async (userId: string, email: string) => {
   return rpcRequest("user.create_admin_profile", { userId, email });
 };
 
-export { createUserProfileViaRabbitMQ, createAdminProfileViaRabbitMQ };
+const importDoctorProfilesViaRabbitMQ = async (doctors: any[]) => {
+  return publishAuthEvent("auth.import_doctor_profile", { doctors });
+};
+
+export {
+  createUserProfileViaRabbitMQ,
+  createAdminProfileViaRabbitMQ,
+  importDoctorProfilesViaRabbitMQ,
+};

@@ -9,6 +9,7 @@ dayjs.locale("vi");
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);
 import {
+  CloudUploadOutlined,
   DeleteTwoTone,
   EditTwoTone,
   ExportOutlined,
@@ -18,8 +19,11 @@ import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { getAllUsers } from "../../services/admin.api";
 import type { IManageUser } from "@/types";
+import ImportUser from "../Import/ImportUser";
 
 const AccountTable = () => {
+  const [openModalImport, setOpenModalImport] = useState<boolean>(false);
+
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     current: 1,
@@ -121,6 +125,10 @@ const AccountTable = () => {
     },
   ];
 
+  const refreshTable = () => {
+    actionRef.current?.reload();
+  };
+
   return (
     <>
       <ProTable<IManageUser>
@@ -172,6 +180,13 @@ const AccountTable = () => {
             Export
           </Button>,
           <Button
+            icon={<CloudUploadOutlined />}
+            type="primary"
+            onClick={() => setOpenModalImport(true)}
+          >
+            Import
+          </Button>,
+          <Button
             key="button"
             icon={<PlusOutlined />}
             onClick={() => {
@@ -184,11 +199,11 @@ const AccountTable = () => {
         ]}
       />
 
-      {/* <SpecialitesCreate
-        openModalCreate={openModalCreate}
-        setOpenModalCreate={setOpenModalCreate}
+      <ImportUser
+        openModalImport={openModalImport}
+        setOpenModalImport={setOpenModalImport}
         refreshTable={refreshTable}
-      /> */}
+      />
     </>
   );
 };

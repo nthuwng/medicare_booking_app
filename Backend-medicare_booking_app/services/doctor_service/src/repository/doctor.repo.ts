@@ -129,6 +129,46 @@ const handleSpecialtyDoctorCheckViaRepository = async (
 
   return doctor;
 };
+
+const importDoctorProfiles = async (doctors: any[]) => {
+  // Safety check to ensure doctors is an array
+  if (!doctors || !Array.isArray(doctors)) {
+    console.error("Invalid doctors data:", doctors);
+    throw new Error("doctors parameter must be a valid array");
+  }
+
+  for (const doctor of doctors) {
+    const existingDoctor = await prisma.doctor.findUnique({
+      where: { userId: doctor.userId },
+    });
+    if (!existingDoctor) {
+      await prisma.doctor.create({
+        data: {
+          userId: doctor.userId,
+          fullName: doctor.fullName,
+          phone: doctor.phone,
+          bio: doctor.bio,
+          experienceYears: Number(doctor.experienceYears),
+          gender: doctor.gender as Gender,
+          title: doctor.title as Title,
+          specialtyId: Number(doctor.specialtyId),
+          clinicId: Number(doctor.clinicId),
+          bookingFee: Number(doctor.bookingFee),
+          approvalStatus: doctor.approvalStatus as ApprovalStatus,
+        },
+        include: {
+          specialty: true,
+          clinic: true,
+        },
+      });
+    }
+  }
+
+  return {
+    success: true,
+    message: "Import doctor profiles successfully",
+  };
+};
 export {
   findDoctorByUserId,
   createDoctor,
@@ -138,4 +178,5 @@ export {
   getDoctorProfileFullDetail,
   doctorIdMessage,
   handleSpecialtyDoctorCheckViaRepository,
+  importDoctorProfiles,
 };

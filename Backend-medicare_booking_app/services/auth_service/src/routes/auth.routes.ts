@@ -9,8 +9,12 @@ import {
   postRevokeRefreshTokenApi,
   getAllUsersAPI,
   postLoginWithGoogleAPI,
+  bulkCreateUsersAPI,
 } from "../controllers/auth.controller";
-import { authenticateToken, authorizeAdmin } from "src/middleware/jwt.middleware";
+import {
+  authenticateToken,
+  authorizeAdmin,
+} from "src/middleware/jwt.middleware";
 
 const router = express.Router();
 
@@ -24,6 +28,7 @@ const authRoutes = (app: Express) => {
   router.post("/refresh-token", postRefreshTokenApi);
   router.post("/revoke-token", postRevokeRefreshTokenApi);
   router.put("/users/:id/password", authenticateToken, putUpdatePasswordApi);
+  router.post("/bulk-create-users", bulkCreateUsersAPI);
 
   app.use("/", router);
 };

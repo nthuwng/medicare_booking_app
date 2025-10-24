@@ -14,6 +14,7 @@ import {
   countTotalUserPage,
   handleLoginWithGoogleAPI,
   countTotalUser,
+  handleBulkCreateUsersAPI,
 } from "../services/auth.services";
 import {
   changePasswordSchema,
@@ -470,6 +471,49 @@ const postLoginWithGoogleAPI = async (req: Request, res: Response) => {
     res.status(500).json(response);
   }
 };
+
+const bulkCreateUsersAPI = async (req: Request, res: Response) => {
+  try {
+    const users = req.body;
+    const result = await handleBulkCreateUsersAPI(users);
+
+    if (result.success) {
+      // Trường hợp thành công
+      res.status(200).json({
+        success: true,
+        message: result.message,
+        data: {
+          countSuccess: result.countSuccess,
+          countError: result.countError,
+          detail: result.detail,
+        },
+      });
+    } else {
+      // Trường hợp thất bại
+      res.status(400).json({
+        success: false,
+        message: result.message,
+        data: {
+          countSuccess: result.countSuccess || 0,
+          countError: result.countError || 0,
+          detail: result.detail,
+          existingEmails: result.existingEmails || null,
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Bulk create users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống khi tạo người dùng",
+      data: {
+        countSuccess: 0,
+        countError: req.body?.length || 0,
+        detail: error instanceof Error ? error.message : "Lỗi không xác định",
+      },
+    });
+  }
+};
 export {
   postRegisterAPI,
   postLoginAPI,
@@ -481,4 +525,5 @@ export {
   getAllUsersAPI,
   getRefreshTokenApi,
   postLoginWithGoogleAPI,
+  bulkCreateUsersAPI,
 };

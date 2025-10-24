@@ -12,7 +12,10 @@ import jwt from "jsonwebtoken";
 import "dotenv/config";
 import { config } from "../config/config.index";
 import dayjs from "dayjs";
-import { createUserProfileViaRabbitMQ } from "src/queue/publishers/auth.publisher";
+import {
+  createUserProfileViaRabbitMQ,
+  importDoctorProfilesViaRabbitMQ,
+} from "src/queue/publishers/auth.publisher";
 const hashPassword = async (password: string) => {
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   return hashedPassword;
@@ -486,6 +489,90 @@ const handleLoginWithGoogleAPI = async (
     return { success: false, message: "Error in handleLoginApi:" };
   }
 };
+
+const handleBulkCreateUsersAPI = async (users: any[]) => {
+  try {
+    // 1️⃣ Kiểm tra email trùng
+    const existingUsers = await prisma.user.findMany({
+      where: {
+        email: {
+          in: users.map((u) => u.email.trim().toLowerCase()),
+        },
+      },
+      select: { id: true, email: true },
+    });
+
+    const existingEmails = existingUsers.map((u) => u.email);
+    const newUsers = users.filter(
+      (u) => !existingEmails.includes(u.email.trim().toLowerCase())
+    );
+
+    // 2️⃣ Nếu tất cả đều trùng
+    if (newUsers.length === 0) {
+      return {
+        success: false,
+        message: "Tất cả người dùng đã tồn tại",
+        detail: `Email đã tồn tại: ${existingEmails.join(", ")}`,
+        countSuccess: 0,
+        countError: existingEmails.length,
+        existingEmails,
+      };
+    }
+
+    // 3️⃣ Hash password + tạo user tuần tự để lấy id
+    const createdUsers: { email: string; id: string }[] = [];
+
+    for (const user of newUsers) {
+      const hashed = await hashPassword(user.password);
+      const created = await prisma.user.create({
+        data: {
+          email: user.email.trim().toLowerCase(),
+          password: hashed,
+          userType: user.userType,
+        },
+        select: { id: true, email: true },
+      });
+      createdUsers.push(created);
+    }
+
+    // 4️⃣ Gộp userId vào từng dòng (bao gồm cả user đã tồn tại)
+    const mergedData = users.map((u) => {
+      const foundNew = createdUsers.find(
+        (c) => c.email === u.email.trim().toLowerCase()
+      );
+      const foundOld = existingUsers.find(
+        (e) => e.email === u.email.trim().toLowerCase()
+      );
+
+      return {
+        ...u,
+        userId: foundNew?.id || foundOld?.id || null,
+      };
+    });
+    // 5️⃣ Gửi qua RabbitMQ cho doctor_service xử lý
+    await importDoctorProfilesViaRabbitMQ(mergedData);
+
+    // 6️⃣ Trả về kết quả chi tiết
+    return {
+      success: true,
+      message: "Tạo người dùng và gửi dữ liệu bác sĩ thành công",
+      detail: `Tạo mới ${createdUsers.length} người dùng, ${existingEmails.length} đã tồn tại.`,
+      countSuccess: createdUsers.length,
+      countError: existingEmails.length,
+      existingEmails,
+    };
+  } catch (error: any) {
+    console.error("Error in handleBulkCreateUsersAPI:", error);
+    return {
+      success: false,
+      message: "Lỗi khi tạo người dùng",
+      detail: error.message || "Lỗi không xác định",
+      countSuccess: 0,
+      countError: users.length,
+      existingEmails: [],
+    };
+  }
+};
 export {
   hashPassword,
   handleRegister,
@@ -504,4 +591,5 @@ export {
   countTotalUserPage,
   countTotalUser,
   handleLoginWithGoogleAPI,
+  handleBulkCreateUsersAPI,
 };

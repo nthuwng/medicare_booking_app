@@ -57,4 +57,11 @@ declare global {
   interface IFetchAccount {
     user: IUser;
   }
+
+  interface IBackendBulkCreateUsersResponse {
+    countSuccess: number;
+    countError: number;
+    detail: any;
+    existingEmails: string[];
+  }
 }

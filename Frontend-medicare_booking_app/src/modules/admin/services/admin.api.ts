@@ -170,3 +170,11 @@ export const getAllTimeSlotsAdmin = () => {
   const urlBackend = `/api/schedule/time-slots`;
   return axios.get<IBackendRes<ITimeSlotDetail[]>>(urlBackend);
 };
+
+export const bulkCreateUsersAPI = (users: any[]) => {
+  const urlBackend = `/api/auth/bulk-create-users`;
+  return axios.post<IBackendRes<IBackendBulkCreateUsersResponse>>(
+    urlBackend,
+    users
+  );
+};
