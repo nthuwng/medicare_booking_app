@@ -177,12 +177,24 @@ const MyAppointmentsPage = () => {
 
                 <Flex justify="space-between" align="center" className="mt-4">
                   <div className="text-gray-500 text-sm">
-                    Phí khám:{" "}
-                    <span className="text-gray-800 font-medium">
-                      {new Intl.NumberFormat("vi-VN").format(
-                        parseInt(a.totalFee)
-                      ) + " VNĐ"}
-                    </span>
+                    <div className="!text-[16px]">
+                      Phí khám:{" "}
+                      <span className="text-gray-800 font-medium">
+                        {new Intl.NumberFormat("vi-VN").format(
+                          parseInt(a.totalFee)
+                        ) + " VNĐ"}
+                      </span>
+                    </div>
+                    <div className="!mt-1">
+                      <Tag
+                        color={a.paymentStatus === "Paid" ? "green" : "orange"}
+                        className="!text-sm"
+                      >
+                        {a.paymentStatus === "Paid"
+                          ? "Đã thanh toán"
+                          : "Chưa thanh toán"}
+                      </Tag>
+                    </div>
                   </div>
                   <div className="ml-auto grid grid-cols-2 gap-2">
                     <Button
@@ -215,7 +227,7 @@ const MyAppointmentsPage = () => {
                     </Tooltip>
                     <Button
                       type="primary"
-                      className="!w-full"
+                      className="!w-full !bg-orange-400 hover:!bg-orange-500"
                       onClick={() => navigate(`/appointment-detail/${a.id}`)}
                     >
                       Xem chi tiết lịch hẹn

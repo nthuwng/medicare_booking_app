@@ -160,13 +160,22 @@ const LoginPage = () => {
             >
               Đăng nhập
             </Button>
-            <GoogleLogin
-              onSuccess={handleLoginWithGoogle}
-              onError={() => {
-                console.log("Login Failed");
-              }}
-              size="large"
-            />
+            <div style={{ width: 400, margin: "0 auto" }}>
+              <GoogleLogin
+                onSuccess={handleLoginWithGoogle}
+                onError={() =>
+                  notification.error({ message: "Đăng nhập Google thất bại!" })
+                }
+                locale="vi"
+                theme="filled_blue"
+                size="large"
+                text="signin_with"
+                shape="pill"
+                logo_alignment="left"
+                width="370" // tối đa theo Google
+                useOneTap={false}
+              />
+            </div>
           </Space>
 
           <Divider plain>Hoặc</Divider>

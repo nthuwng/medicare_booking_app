@@ -17,7 +17,6 @@ import {
   CalendarOutlined,
   StarOutlined,
   TrophyOutlined,
-  BookOutlined,
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { useCurrentApp } from "@/components/contexts/app.context";
@@ -26,6 +25,7 @@ import { Award, MapPin, Building2 } from "lucide-react";
 import { getDoctorProfileByUserId } from "../../services/doctor.api";
 import type { IDoctorProfile } from "@/types";
 import DoctorProFileCreate from "./DoctorProFileCreate";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -36,7 +36,7 @@ const DoctorProFile = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useCurrentApp();
   const [openCreate, setOpenCreate] = useState(false);
-
+  const navigate = useNavigate();
   const fetchDoctorProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -54,7 +54,9 @@ const DoctorProFile = () => {
   }, [user?.id, fetchDoctorProfile]);
 
   useEffect(() => {
-    const handler = () => { fetchDoctorProfile(); };
+    const handler = () => {
+      fetchDoctorProfile();
+    };
     window.addEventListener("doctor:profile-refresh", handler);
     return () => window.removeEventListener("doctor:profile-refresh", handler);
   }, [fetchDoctorProfile]);
@@ -404,7 +406,7 @@ const DoctorProFile = () => {
                     bodyStyle={{ padding: "24px" }}
                   >
                     <Row gutter={[16, 16]}>
-                      <Col xs={24} sm={12} md={6}>
+                      <Col xs={24} sm={12} md={12}>
                         <Button
                           block
                           icon={<CalendarOutlined />}
@@ -413,11 +415,12 @@ const DoctorProFile = () => {
                             border: "2px solid #10b981",
                             color: "#10b981",
                           }}
+                          onClick={() => navigate("/doctor/schedule")}
                         >
                           Xem lịch làm việc
                         </Button>
                       </Col>
-                      <Col xs={24} sm={12} md={6}>
+                      <Col xs={24} sm={12} md={12}>
                         <Button
                           block
                           icon={<StarOutlined />}
@@ -426,21 +429,9 @@ const DoctorProFile = () => {
                             border: "2px solid #f59e0b",
                             color: "#f59e0b",
                           }}
+                          onClick={() => navigate("/doctor/ratings")}
                         >
                           Xem đánh giá
-                        </Button>
-                      </Col>
-                      <Col xs={24} sm={12} md={6}>
-                        <Button
-                          block
-                          icon={<BookOutlined />}
-                          className="h-12 text-base font-medium shadow-md hover:shadow-lg transition-shadow"
-                          style={{
-                            border: "2px solid #8b5cf6",
-                            color: "#8b5cf6",
-                          }}
-                        >
-                          Xem chứng chỉ
                         </Button>
                       </Col>
                     </Row>

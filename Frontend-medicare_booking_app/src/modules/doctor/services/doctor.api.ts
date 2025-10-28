@@ -136,7 +136,7 @@ const updateExpiredTimeSlots = () => {
   return axios.patch<IBackendRes<any>>(urlBackend);
 };
 
-const getAllAppointmentsByDoctorId = (query: string) => {
+const getAllAppointmentsByUserIdDoctor = (query: string) => {
   const urlBackend = `/api/appointment/appointments/doctor-appointments/${query}`;
   return axios.get<IBackendRes<IModelPaginate<IAppointment>>>(urlBackend);
 };
@@ -216,6 +216,28 @@ const fetchRatingByDoctorIdAPI = (doctorId: string) => {
   return axios.get<IBackendRes<IRatingResponse>>(urlBackend);
 };
 
+const updatePasswordDoctorAPI = (
+  userId: string,
+  oldPassword: string,
+  newPassword: string,
+  confirmPassword: string
+) => {
+  const urlBackend = `/api/auth/users/${userId}/password`;
+  return axios.put<IBackendRes<any>>(urlBackend, {
+    oldPassword,
+    newPassword,
+    confirmPassword,
+  });
+};
+
+const updateDoctorAvatarAPI = (userId: string, avatar_url: string, avatar_public_id: string) => {
+  const urlBackend = `/api/doctor/doctors/update-avatar/${userId}`;
+  return axios.put<IBackendRes<IDoctorProfile>>(urlBackend, {
+    avatar_url,
+    avatar_public_id,
+  });
+};
+
 export {
   getDoctorProfileByUserId,
   fetchRatingByDoctorIdAPI,
@@ -230,7 +252,7 @@ export {
   getScheduleByDoctorId,
   getAllTimeSlots,
   updateExpiredTimeSlots,
-  getAllAppointmentsByDoctorId,
+  getAllAppointmentsByUserIdDoctor,
   getAllConversationsDoctorAPI,
   getPatientDetailBookingById,
   getMessagesByConversationIdAPI,
@@ -240,4 +262,6 @@ export {
   updateAppointmentStatus,
   deleteScheduleByScheduleIdAPI,
   deleteTimeSlotFromScheduleAPI,
+  updatePasswordDoctorAPI,
+  updateDoctorAvatarAPI,
 };

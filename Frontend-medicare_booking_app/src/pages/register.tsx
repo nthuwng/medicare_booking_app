@@ -147,14 +147,6 @@ const RegisterPage = () => {
             >
               Đăng ký
             </Button>
-            <Button
-              icon={<GoogleOutlined />}
-              size="large"
-              onClick={handleSignupWithGoogle}
-              block
-            >
-              Đăng ký với Google
-            </Button>
           </Space>
 
           <Divider plain>Hoặc</Divider>

@@ -139,6 +139,10 @@ const MakeAppointmentPage = () => {
     // Lưu form data vào state với appointmentDate
     setFormData({
       ...values,
+      // DatePicker trả về Dayjs; chuẩn hoá sang chuỗi ngày để tránh render object
+      dateOfBirth: (values as any)?.dateOfBirth?.format
+        ? (values as any).dateOfBirth.format("YYYY-MM-DD")
+        : (values as any)?.dateOfBirth || "",
       appointmentDate: currentSelectedDate,
     });
     // Chuyển sang step xác nhận
@@ -178,7 +182,9 @@ const MakeAppointmentPage = () => {
         patientPhone: values.phone,
         patientEmail: values.email,
         patientGender: values.gender === "male" ? "Male" : "Female",
-        patientDateOfBirth: values.dateOfBirth,
+        patientDateOfBirth: (values as any)?.dateOfBirth?.format
+          ? (values as any).dateOfBirth.format("YYYY-MM-DD")
+          : (values as any)?.dateOfBirth || "",
         patientCity: values.province,
         patientDistrict: values.district,
         patientAddress: values.address,
@@ -190,8 +196,11 @@ const MakeAppointmentPage = () => {
         }),
       };
 
+      console.log("bookingData bookingData", bookingData.patientDateOfBirth);
+
       // Call API to create booking
       const response = await createBooking(bookingData);
+      console.log("têst response", response);
 
       if (response.data) {
         message.success("Đặt lịch thành công!");
@@ -605,6 +614,17 @@ const MakeAppointmentPage = () => {
                           </div>
                         </div>
                       )}
+                      {/* Show validation error for timeSlotId */}
+                      <Form.Item shouldUpdate noStyle>
+                        {() => {
+                          const errs = form.getFieldError("timeSlotId");
+                          return errs && errs.length ? (
+                            <div style={{ color: "#ff4d4f", marginTop: 8 }}>
+                              {errs[0] || "Vui lòng chọn khung giờ khám!"}
+                            </div>
+                          ) : null;
+                        }}
+                      </Form.Item>
                     </Card>
                   </div>
 

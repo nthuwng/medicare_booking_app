@@ -7,17 +7,57 @@ import DoctorSchedulePage from "@/modules/doctor/pages/DoctorSchedulePage";
 import DoctorAppointmentPage from "@/modules/doctor/pages/DoctorAppointmentPage";
 import DoctorMessagePage from "@/modules/doctor/pages/DoctorMessagePage";
 import DoctorRatingPage from "@/modules/doctor/pages/DoctorRatingPage";
+import DoctorWaitingApproval from "@/modules/doctor/auth/DoctorWaitingApproval";
+import DoctorChangePasswordPage from "@/modules/doctor/pages/DoctorChangePasswordPage";
 
 const DoctorRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<LayoutDoctor />}>
-        <Route index element={<DoctorDashboardPage />} />
+        <Route
+          index
+          element={
+            <DoctorWaitingApproval>
+              <DoctorDashboardPage />
+            </DoctorWaitingApproval>
+          }
+        />
+
+        <Route
+          path="schedule"
+          element={
+            <DoctorWaitingApproval>
+              <DoctorSchedulePage />
+            </DoctorWaitingApproval>
+          }
+        />
+        <Route
+          path="appointments"
+          element={
+            <DoctorWaitingApproval>
+              <DoctorAppointmentPage />
+            </DoctorWaitingApproval>
+          }
+        />
+        <Route
+          path="messages"
+          element={
+            <DoctorWaitingApproval>
+              <DoctorMessagePage />
+            </DoctorWaitingApproval>
+          }
+        />
+        <Route
+          path="ratings"
+          element={
+            <DoctorWaitingApproval>
+              <DoctorRatingPage />
+            </DoctorWaitingApproval>
+          }
+        />
+
         <Route path="profile-settings" element={<DoctorProFileManagePage />} />
-        <Route path="schedule" element={<DoctorSchedulePage />} />
-        <Route path="appointments" element={<DoctorAppointmentPage />} />
-        <Route path="messages" element={<DoctorMessagePage />} />
-        <Route path="ratings" element={<DoctorRatingPage />} />
+        <Route path="change-password" element={<DoctorChangePasswordPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

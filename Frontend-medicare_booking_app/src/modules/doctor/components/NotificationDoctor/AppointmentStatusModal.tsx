@@ -19,11 +19,6 @@ const AppointmentStatusModal = (props: IProps) => {
     dataNotificationAppointmentStatus,
   } = props;
 
-  console.log(
-    "dataNotificationAppointmentStatus @@@",
-    dataNotificationAppointmentStatus
-  );
-
   const patientName = (dataNotificationAppointmentStatus as any)?.data?.data
     ?.patientName;
   const patientPhone = (dataNotificationAppointmentStatus as any)?.data?.data

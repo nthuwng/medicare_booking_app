@@ -8,6 +8,7 @@ import {
   Typography,
   Tag,
   Badge,
+  Tooltip,
 } from "antd";
 import {
   StarFilled,
@@ -17,6 +18,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import type { IDoctorProfile } from "@/types";
+import { useCurrentApp } from "@/components/contexts/app.context";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -41,6 +43,7 @@ const DoctorCard = (props: DoctorCardProps) => {
     // Navigate to doctor detail page
     navigate(`/booking-options/doctor/${doctorId}`);
   };
+  const { user } = useCurrentApp();
 
   return (
     <>
@@ -107,16 +110,21 @@ const DoctorCard = (props: DoctorCardProps) => {
                         <div className="flex items-center gap-1 mb-1 md:justify-end">
                           <Rate
                             disabled
-                            defaultValue={4.5}
+                            defaultValue={Number(
+                              doctor.ratingStatsByDoctorId?.avgScore || 4.5
+                            )}
                             className="text-sm"
                             character={<StarFilled />}
                           />
                           <Text className="text-sm font-medium text-gray-700">
-                            4.5
+                            {Number(
+                              doctor.ratingStatsByDoctorId?.avgScore || 4.5
+                            ).toFixed(1)}
                           </Text>
                         </div>
                         <Text className="text-xs text-gray-500">
-                          (127 đánh giá)
+                          ({doctor.ratingStatsByDoctorId?.totalReviews || 0}{" "}
+                          đánh giá)
                         </Text>
                       </div>
                     </div>
@@ -171,19 +179,34 @@ const DoctorCard = (props: DoctorCardProps) => {
                         >
                           Xem chi tiết
                         </Button>
-                        <Button
-                          type="primary"
-                          size="middle"
-                          onClick={() =>
-                            navigate(
-                              `/booking-options/doctor/${doctor.id}/appointment`
-                            )
-                          }
-                          className="bg-blue-600 hover:bg-blue-700 border-blue-600 w-full md:w-auto"
-                          icon={<CalendarOutlined />}
-                        >
-                          Đặt lịch
-                        </Button>
+
+                        {user?.userType === "PATIENT" ? (
+                          <Button
+                            type="primary"
+                            size="middle"
+                            onClick={() =>
+                              navigate(
+                                `/booking-options/doctor/${doctor.id}/appointment`
+                              )
+                            }
+                            className="bg-blue-600 hover:bg-blue-700 border-blue-600 w-full md:w-auto"
+                            icon={<CalendarOutlined />}
+                          >
+                            Đặt lịch
+                          </Button>
+                        ) : (
+                          <Tooltip title="Chỉ có bệnh nhân mới được đặt lịch">
+                            <Button
+                              type="primary"
+                              size="middle"
+                              disabled
+                              className="bg-blue-600 hover:bg-blue-700 border-blue-600 w-full md:w-auto"
+                              icon={<CalendarOutlined />}
+                            >
+                              Đặt lịch
+                            </Button>
+                          </Tooltip>
+                        )}
                       </div>
                     </div>
                   </div>

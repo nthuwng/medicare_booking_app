@@ -32,6 +32,7 @@ import { FiPaperclip } from "react-icons/fi";
 import IntentRenderer from "../components/AI/IntentRender";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "@/assets/Logo/LOGO_MEDICARE.png";
+import { useCurrentApp } from "@/components/contexts/app.context";
 
 const { Content } = Layout;
 const { TextArea } = Input;
@@ -58,6 +59,19 @@ const AIPage = () => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { user } = useCurrentApp();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setIsSidebarCollapsed(true);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const handleNewChat = () => {
     setIsLoading(false);
     setMessages([]);
@@ -211,19 +225,65 @@ const AIPage = () => {
     <>
       {/* Page-scoped styles */}
       <style>{`
-        .ai-chat-page .composer textarea::placeholder {
-          color: #6b7280 !important;
-          opacity: 1;
-        }
-      `}</style>
+         .ai-chat-page .composer textarea::placeholder {
+           color: #6b7280 !important;
+           opacity: 1;
+         }
+         .ai-chat-page {
+           overflow: hidden;
+         }
+         .ai-chat-page .ant-layout {
+           overflow: hidden;
+         }
+         .ai-chat-page .ant-layout-content {
+           overflow: hidden;
+         }
+         /* Hide scrollbars on desktop */
+         @media (min-width: 768px) {
+           .ai-chat-page ::-webkit-scrollbar {
+             width: 0px;
+             background: transparent;
+           }
+         }
+       `}</style>
       <Layout
         style={{
           minHeight: "100vh",
           background: "#F5F7FA",
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
         }}
-        className="!flex  !flex-row ai-chat-page"
+        className="ai-chat-page"
       >
-        <div style={{ width: isSidebarCollapsed ? 100 : "15%" }}>
+        {/* Mobile backdrop overlay */}
+        {isMobile && !isSidebarCollapsed && (
+          <div
+            onClick={() => setIsSidebarCollapsed(true)}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0,0,0,0.5)",
+              zIndex: 999,
+            }}
+          />
+        )}
+        <div
+          style={{
+            width: isMobile ? "80%" : isSidebarCollapsed ? 100 : "15%",
+            display: isMobile && isSidebarCollapsed ? "none" : "block",
+            position: isMobile ? "fixed" : "relative",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 1000,
+            background: "#F5F7FA",
+            height: "100vh",
+            overflowY: isMobile ? "auto" : "hidden",
+          }}
+        >
           <div className="cursor-pointer text-center" style={{ padding: 12 }}>
             <Link to="/" style={{ display: "inline-block" }}>
               {isSidebarCollapsed ? (
@@ -253,16 +313,33 @@ const AIPage = () => {
               )}
             </Link>
           </div>
+          {/* Mobile close button */}
+          {isMobile && !isSidebarCollapsed && (
+            <div
+              style={{
+                padding: "12px",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button
+                icon={<CloseOutlined />}
+                onClick={() => setIsSidebarCollapsed(true)}
+                type="text"
+              />
+            </div>
+          )}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               gap: 12,
               padding: 12,
-              height: "calc(100vh - 70px)",
-              position: "sticky",
-              top: 70,
+              height: isMobile ? "calc(100vh - 60px)" : "calc(100vh - 70px)",
+              position: isMobile ? "static" : "sticky",
+              top: isMobile ? 0 : 70,
               alignItems: isSidebarCollapsed ? "center" : "stretch",
+              overflowY: "auto",
             }}
           >
             <Button
@@ -303,23 +380,39 @@ const AIPage = () => {
             >
               {!isSidebarCollapsed && "Trang chủ"}
             </Button>
-            <Button
-              style={{ width: isSidebarCollapsed ? 80 : "100%" }}
-              icon={<UserOutlined />}
-              onClick={() => navigate("/my-account")}
-            >
-              {!isSidebarCollapsed && "Quản lí tài khoản"}
-            </Button>
+            {user?.userType === "PATIENT" && (
+              <Button
+                style={{ width: isSidebarCollapsed ? 80 : "100%" }}
+                icon={<UserOutlined />}
+                onClick={() => navigate("/my-account")}
+              >
+                {!isSidebarCollapsed && "Quản lí tài khoản"}
+              </Button>
+            )}
           </div>
         </div>
-        <div style={{ flex: "1 1 auto" }}>
+        <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+          {/* Mobile menu button */}
+          {isMobile && (
+            <div style={{ padding: "12px", background: "#F5F7FA" }}>
+              <Button
+                onClick={() => setIsSidebarCollapsed((v) => !v)}
+                icon={<MenuUnfoldOutlined />}
+                style={{ width: "100%" }}
+              >
+                Menu
+              </Button>
+            </div>
+          )}
           <Content
             style={{
-              padding: "24px",
+              padding: isMobile ? "12px" : "24px",
               position: "relative",
-              marginTop: "70px",
+              marginTop: isMobile ? "0px" : "70px",
               zIndex: 1,
               margin: "0 auto",
+              height: "100vh",
+              overflowY: "auto",
             }}
           >
             {/* Landing hero (pre-chat) */}
@@ -329,30 +422,38 @@ const AIPage = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  height: "95vh",
+                  height: isMobile ? "85vh" : "95vh",
                   flexDirection: "column",
-                  gap: 24,
+                  gap: isMobile ? 16 : 24,
                 }}
               >
                 <Title
                   level={2}
-                  className="!text-4xl md:!text-4xl !leading-[1.2] !text-blue-700"
+                  className={
+                    isMobile
+                      ? "!text-2xl !leading-tight !text-blue-700"
+                      : "!text-4xl md:!text-4xl !leading-[1.2] !text-blue-700"
+                  }
                 >
                   <span className="inline-block pb-[2px]">
                     Trợ lí tìm thông tin về sức khỏe
                   </span>
                 </Title>
-                <Paragraph className="!text-stone-600 !text-base md:!text-lg !text-center !max-w-3xl">
+                <Paragraph
+                  className={`${
+                    isMobile ? "!text-sm" : "!text-base md:!text-lg"
+                  } !text-stone-600 !text-center !max-w-3xl !px-4`}
+                >
                   Hỏi đáp y tế, gợi ý chuyên khoa, đặt lịch khám và hơn thế nữa.
                   Bạn có thể mô tả triệu chứng hoặc tải ảnh để nhận tư vấn chính
                   xác hơn.
                 </Paragraph>
                 <div
                   style={{
-                    width: "min(900px, 95%)",
+                    width: isMobile ? "100%" : "min(900px, 95%)",
                     background: "#ffffff",
                     borderRadius: 24,
-                    padding: 12,
+                    padding: isMobile ? 12 : 12,
                     border: "1px solid #e7e5e4",
                     boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
                   }}
@@ -376,8 +477,8 @@ const AIPage = () => {
                             src={imagePreview}
                             alt="preview"
                             style={{
-                              width: 120,
-                              height: 120,
+                              width: isMobile ? 100 : 120,
+                              height: isMobile ? 100 : 120,
                               objectFit: "cover",
                             }}
                           />
@@ -428,7 +529,7 @@ const AIPage = () => {
                         border: "none",
                         color: "#111827",
                         paddingTop: 4,
-                        fontSize: "20px",
+                        fontSize: isMobile ? "16px" : "20px",
                         outline: "none",
                         boxShadow: "none",
                       }}
@@ -472,7 +573,11 @@ const AIPage = () => {
               <>
                 <Title
                   level={2}
-                  className="!text-4xl md:!text-4xl !leading-[1.2] text-center !text-blue-700"
+                  className={
+                    isMobile
+                      ? "!text-2xl !leading-tight text-center !text-blue-700"
+                      : "!text-4xl md:!text-4xl !leading-[1.2] text-center !text-blue-700"
+                  }
                 >
                   <span className="inline-block pb-[2px]">
                     Trợ lí tìm thông tin về sức khỏe
@@ -482,11 +587,14 @@ const AIPage = () => {
                   className="!mt-[20px]"
                   style={{ display: "flex", justifyContent: "center" }}
                 >
-                  <Row gutter={[0, 0]} style={{ width: "90%" }}>
+                  <Row
+                    gutter={[0, 0]}
+                    style={{ width: isMobile ? "100%" : "90%" }}
+                  >
                     <Col span={24}>
                       <Card
                         style={{
-                          height: "70vh",
+                          height: isMobile ? "60vh" : "70vh",
                           // background: "rgba(250, 250, 249, 0.95)",
                           // backdropFilter: "blur(10px)",
                           border: "none",
@@ -506,7 +614,7 @@ const AIPage = () => {
                           style={{
                             flex: 1,
                             overflowY: "auto",
-                            padding: "20px",
+                            padding: isMobile ? "12px" : "20px",
                             // background: "#EEEEEE",
                           }}
                         >
@@ -528,14 +636,16 @@ const AIPage = () => {
                               >
                                 <div
                                   style={{
-                                    maxWidth: "75%",
+                                    maxWidth: isMobile ? "85%" : "75%",
                                     background:
                                       msg.type === "user"
                                         ? "#eff6ff" /* subtle blue-50 for user bubble */
                                         : "#ffffff",
                                     color:
                                       msg.type === "user" ? "black" : "#000000",
-                                    padding: "12px 16px",
+                                    padding: isMobile
+                                      ? "10px 12px"
+                                      : "12px 16px",
                                     borderRadius:
                                       msg.type === "user"
                                         ? "18px 18px 4px 18px"
@@ -567,8 +677,8 @@ const AIPage = () => {
                                             src={msg.imageUrl}
                                             alt="uploaded"
                                             style={{
-                                              maxWidth: 200,
-                                              maxHeight: 200,
+                                              maxWidth: isMobile ? 150 : 200,
+                                              maxHeight: isMobile ? 150 : 200,
                                               borderRadius: 8,
                                               objectFit: "cover",
                                               border:
@@ -593,7 +703,9 @@ const AIPage = () => {
                                               msg.type === "user"
                                                 ? "#000000"
                                                 : "#000000",
-                                            fontSize: "15px",
+                                            fontSize: isMobile
+                                              ? "14px"
+                                              : "15px",
                                           }}
                                         >
                                           {msg.content}
@@ -631,7 +743,7 @@ const AIPage = () => {
                     <div
                       style={{
                         marginBottom: 8,
-                        width: "90%",
+                        width: isMobile ? "100%" : "90%",
                         margin: "0 auto",
                       }}
                     >
@@ -649,8 +761,8 @@ const AIPage = () => {
                           src={imagePreview}
                           alt="preview"
                           style={{
-                            width: 120,
-                            height: 120,
+                            width: isMobile ? 100 : 120,
+                            height: isMobile ? 100 : 120,
                             objectFit: "cover",
                             borderRadius: 16,
                           }}
@@ -682,10 +794,10 @@ const AIPage = () => {
                     style={{
                       background: "#ffffff",
                       borderRadius: 24,
-                      padding: 15,
+                      padding: isMobile ? 12 : 15,
                       boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
                       border: "1px solid #e5e7eb",
-                      width: "90%",
+                      width: isMobile ? "100%" : "90%",
                       margin: "0 auto",
                     }}
                     className="composer"
@@ -734,7 +846,7 @@ const AIPage = () => {
                           border: "none",
                           color: "#111827",
                           paddingTop: 4,
-                          fontSize: "20px",
+                          fontSize: isMobile ? "16px" : "20px",
                           outline: "none",
                           boxShadow: "none",
                         }}

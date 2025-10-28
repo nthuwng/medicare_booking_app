@@ -75,7 +75,7 @@ const BookingPage: React.FC = () => {
         <Text className="text-gray-500 !text-[17px]">
           Chưa biết bắt đầu từ đâu? Hãy thử{" "}
           <button
-            onClick={() => navigate("/booking/specialty")}
+            onClick={() => navigate("/booking-options/specialty")}
             className="underline decoration-dashed underline-offset-4 hover:text-gray-700 transition-colors"
           >
             Chuyên khoa

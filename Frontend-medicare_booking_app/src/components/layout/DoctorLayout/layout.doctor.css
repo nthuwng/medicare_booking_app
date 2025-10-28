@@ -1,3 +1,10 @@
+/* Layout container */
+.layout-admin {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* Sidebar styles */
 .layout-admin .ant-layout-sider {
   background: #f8fafc;
@@ -6,6 +13,11 @@
   min-width: 220px !important;
   max-width: 260px;
   transition: all 0.3s cubic-bezier(0.4, 2, 0.6, 1);
+  position: sticky !important;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .layout-admin .ant-layout-sider-collapsed {
@@ -108,13 +120,20 @@
   box-shadow: 0 2px 8px rgba(24, 144, 255, 0.12);
 }
 
+/* Main layout section - scrollable */
+.layout-admin > .ant-layout {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* Content area */
-.ant-layout-content {
+.layout-admin .ant-layout-content {
   background: #f8fafc;
   border-radius: 18px;
   margin: 18px;
   padding: 24px 32px;
-  min-height: 80vh;
+  min-height: calc(100vh - 120px);
   box-shadow: 0 2px 12px rgba(24, 144, 255, 0.04);
 }
 
@@ -146,7 +165,7 @@
   transform: scale(1.04);
 }
 
-.doctor-user-dropdown .ant-dropdown-menu-item:last-child {
+.doctor-user-dropdown .ant-dropdown-menu-it em:last-child {
   color: red !important;
 }
 
@@ -158,6 +177,20 @@
   transform: scale(1.04);
 }
 
+/* Make image mask follow circular avatar and be transparent */
+.doctor-avatar-wrap .ant-image-mask {
+  background: transparent !important;
+  border-radius: 50% !important;
+}
+.doctor-avatar-wrap .ant-image-mask-info {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+}
 
 /* Responsive */
 @media (max-width: 900px) {

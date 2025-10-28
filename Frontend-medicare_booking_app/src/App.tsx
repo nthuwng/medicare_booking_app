@@ -37,7 +37,7 @@ function App() {
       <Route path="/ai" element={<AIPage />} />
 
       {/* coding */}
-      {/* <Route path="code/*" element={<AIPage />} /> */}
+      {/* <Route path="code/*" element={<DoctorWaitingApproval />} /> */}
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

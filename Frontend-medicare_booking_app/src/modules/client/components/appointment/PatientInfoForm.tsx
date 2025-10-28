@@ -1,4 +1,14 @@
-import { Card, Typography, Row, Col, Form, Input, Select, Radio } from "antd";
+import {
+  Card,
+  Typography,
+  Row,
+  Col,
+  Form,
+  Input,
+  Select,
+  Radio,
+  DatePicker,
+} from "antd";
 import {
   UserOutlined,
   PhoneOutlined,
@@ -55,7 +65,7 @@ const PatientInfoForm = (props: IProps) => {
     if (form) form.setFieldsValue({ province: value, district: undefined });
   };
 
-  const currentYear = new Date().getFullYear();
+  // keep for future logic if needed
   return (
     <>
       <Card
@@ -194,34 +204,22 @@ const PatientInfoForm = (props: IProps) => {
         </Row>
 
         <Form.Item
-          label={<Text strong>Năm sinh</Text>}
+          label={<Text strong>Ngày sinh</Text>}
           name="dateOfBirth"
-          rules={[
-            { required: true, message: "Vui lòng nhập năm sinh!" },
-            {
-              pattern: /^\d{4}$/,
-              message: "Năm sinh phải gồm 4 chữ số (ví dụ: 1990)",
-            },
-            () => ({
-              validator(_, value) {
-                if (!value) return Promise.resolve();
-                const yearNum = Number(String(value).trim());
-                if (Number.isNaN(yearNum))
-                  return Promise.reject("Năm sinh không hợp lệ!");
-                if (yearNum < 1900 || yearNum > currentYear) {
-                  return Promise.reject(
-                    `Năm sinh phải trong khoảng 1900-${currentYear}`
-                  );
-                }
-                return Promise.resolve();
-              },
-            }),
-          ]}
+          rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
         >
-          <Input
+          <DatePicker
+            format="DD/MM/YYYY"
+            style={{ width: "100%" }}
             size="large"
-            placeholder="Nhập năm sinh (ví dụ: 1990)"
-            prefix={<CalendarOutlined style={{ color: "#bfbfbf" }} />}
+            placeholder="Chọn ngày sinh"
+            suffixIcon={<CalendarOutlined style={{ color: "#bfbfbf" }} />}
+            disabledDate={(current) => {
+              if (!current) return false;
+              const tooEarly = current.year() < 1900;
+              const inFuture = current.endOf("day").isAfter(new Date());
+              return tooEarly || inFuture;
+            }}
           />
         </Form.Item>
 

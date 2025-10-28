@@ -158,7 +158,7 @@ const DoctorRatingPage = () => {
                   title={
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-gray-800">
-                        {item.userProfile.full_name}
+                        {item.userProfile?.full_name || "Người dùng"}
                       </span>
                       <span className="text-xs text-gray-500">
                         {formatDate(item.createdAt)}

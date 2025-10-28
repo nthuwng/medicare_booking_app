@@ -122,7 +122,7 @@ const Banner = () => {
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div className="text-center text-white px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Chăm sóc sức khỏe
+              Đặt lịch khám bệnh
               <span className="block text-blue-200 mt-2">tại nhà</span>
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl mb-10 max-w-3xl mx-auto leading-relaxed opacity-95">
@@ -134,10 +134,6 @@ const Banner = () => {
                   Đặt lịch ngay
                 </button>
               </Link>
-
-              <button className="cursor-pointer border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 min-w-[200px]">
-                Tìm hiểu thêm
-              </button>
             </div>
           </div>
         </div>

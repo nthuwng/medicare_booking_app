@@ -13,22 +13,19 @@ import {
 const ClientFooter = () => {
   const currentYear = new Date().getFullYear();
   return (
-    <footer 
-    // className="mt-auto bg-gray-900 text-white"
-    style={{
-      background: "#000000",
-      backgroundImage: `
+    <footer
+      // className="mt-auto bg-gray-900 text-white"
+      style={{
+        background: "#000000",
+        backgroundImage: `
         radial-gradient(circle at 1px 1px, rgba(139, 92, 246, 0.2) 1px, transparent 0),
         radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.18) 1px, transparent 0),
         radial-gradient(circle at 1px 1px, rgba(236, 72, 153, 0.15) 1px, transparent 0)
       `,
-      backgroundSize: "20px 20px, 30px 30px, 25px 25px",
-      backgroundPosition: "0 0, 10px 10px, 15px 5px",
-      marginTop: "auto",
-    }}
-
-
- 
+        backgroundSize: "20px 20px, 30px 30px, 25px 25px",
+        backgroundPosition: "0 0, 10px 10px, 15px 5px",
+        marginTop: "auto",
+      }}
     >
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -101,7 +98,7 @@ const ClientFooter = () => {
               </li>
               <li>
                 <Link
-                  to="/booking"
+                  to="/booking-options"
                   className="text-gray-300 hover:text-blue-400 transition-colors duration-300"
                 >
                   Đặt lịch khám

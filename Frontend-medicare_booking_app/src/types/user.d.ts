@@ -1,3 +1,5 @@
+import type { IRatingStats } from "./rating";
+
 export interface IManageUser {
   id: string;
   email: string;
@@ -53,6 +55,7 @@ export interface IDoctorProfile {
   specialty: ISpecialtyDoctor;
   scheduleByDoctorId: IScheduleByDoctorId[];
   userInfo: IManageUser;
+  ratingStatsByDoctorId: IRatingStats;
 }
 
 export interface IClinicDoctor {

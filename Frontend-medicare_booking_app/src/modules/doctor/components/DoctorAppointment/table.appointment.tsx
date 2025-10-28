@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Popconfirm,
-  Button,
-  Tag,
-  Space,
-  Avatar,
-  Typography,
-  Tooltip,
-} from "antd";
+import { Button, Tag, Space, Avatar, Typography, Tooltip } from "antd";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -17,8 +9,6 @@ dayjs.locale("vi");
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);
 import {
-  DeleteTwoTone,
-  EditTwoTone,
   ExportOutlined,
   EyeOutlined,
   CalendarOutlined,
@@ -30,18 +20,19 @@ import {
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
-import { getAllAppointmentsByDoctorId } from "../../services/doctor.api";
+import { getAllAppointmentsByUserIdDoctor } from "../../services/doctor.api";
 import type { IAppointment } from "@/types";
 import { useCurrentApp } from "@/components/contexts/app.context";
+import AppointmentDetail from "./detail.appointment";
 
 const { Text } = Typography;
 
 const TableAppointment = () => {
   const actionRef = useRef<ActionType>(null);
-  // const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
-  // const [dataViewDetail, setDataViewDetail] = useState<IAppointment | null>(
-  //   null
-  // );
+  const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
+  const [dataViewDetail, setDataViewDetail] = useState<IAppointment | null>(
+    null
+  );
   const [meta, setMeta] = useState({
     current: 1,
     pageSize: 10,
@@ -159,6 +150,36 @@ const TableAppointment = () => {
         const patient = entity.patient;
         if (!patient) return <Text type="secondary">Không có thông tin</Text>;
 
+        // Tính tuổi đơn giản dựa trên NĂM sinh (đúng theo yêu cầu)
+        const extractBirthYear = (dob?: string): number | undefined => {
+          if (!dob) return undefined;
+          // ISO
+          if (dob.includes("T")) {
+            const d = new Date(dob);
+            const y = d.getUTCFullYear();
+            return Number.isNaN(y) ? undefined : y;
+          }
+          // YYYY-MM-DD
+          const ymd = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/;
+          const dmy = /^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/; // DD/MM/YYYY
+          let m: RegExpMatchArray | null = null;
+          if ((m = dob.match(ymd))) {
+            return parseInt(m[1], 10);
+          }
+          if ((m = dob.match(dmy))) {
+            return parseInt(m[3], 10);
+          }
+          const fallback = new Date(dob).getUTCFullYear();
+          return Number.isNaN(fallback) ? undefined : fallback;
+        };
+        const birthYear = extractBirthYear(patient.patientDateOfBirth);
+        console.log("birthYear", birthYear);
+        let ageYears: number | undefined = undefined;
+        if (typeof birthYear === "number") {
+          const currentYear = new Date().getFullYear();
+          ageYears = Math.max(0, currentYear - birthYear);
+        }
+
         return (
           <div style={{ padding: "8px 0" }}>
             <Space direction="vertical" size={4}>
@@ -174,9 +195,8 @@ const TableAppointment = () => {
                   </Text>
                   <br />
                   <Text type="secondary" style={{ fontSize: "12px" }}>
-                    {patient.patientGender === "MALE" ? "Nam" : "Nữ"} •
-                    {dayjs().diff(dayjs(patient.patientDateOfBirth), "year")}{" "}
-                    tuổi
+                    {patient.patientGender === "MALE" ? "Nam" : "Nữ"} •{" "}
+                    {typeof ageYears === "number" ? ageYears : "-"} tuổi
                   </Text>
                 </div>
               </div>
@@ -207,25 +227,34 @@ const TableAppointment = () => {
       },
     },
     {
-      title: "Tìm kiếm bệnh nhân",
-      dataIndex: "patientName",
-      hideInTable: true,
-      fieldProps: {
-        placeholder: "Nhập tên bệnh nhân để tìm kiếm",
-        style: {
-          width: "250px",
-        },
-      },
-    },
-    {
       title: "Ngày & Giờ hẹn",
       dataIndex: "appointmentDateTime",
       width: 180,
       hideInSearch: true,
       render(_, entity) {
-        const appointmentDate = dayjs(entity.appointmentDateTime);
-        const isToday = appointmentDate.isSame(dayjs(), "day");
-        const isPast = appointmentDate.isBefore(dayjs());
+        const d = new Date(entity.appointmentDateTime);
+        // Vietnam timezone-safe formatting
+        const dateText = new Intl.DateTimeFormat("vi-VN", {
+          timeZone: "UTC",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(d);
+        const timeText = new Intl.DateTimeFormat("vi-VN", {
+          timeZone: "UTC",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }).format(d);
+        const todayVN = new Date();
+        const todayDateText = new Intl.DateTimeFormat("vi-VN", {
+          timeZone: "UTC",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(todayVN);
+        const isToday = dateText === todayDateText;
+        const isPast = d.getTime() < Date.now();
 
         return (
           <div style={{ padding: "8px 0" }}>
@@ -241,7 +270,7 @@ const TableAppointment = () => {
                     fontSize: "15px",
                   }}
                 >
-                  {appointmentDate.format("DD/MM/YYYY")}
+                  {dateText}
                 </Text>
               </div>
               <div
@@ -255,9 +284,7 @@ const TableAppointment = () => {
                 <ClockCircleOutlined
                   style={{ fontSize: "15px", color: "#666" }}
                 />
-                <Text style={{ fontSize: "15px" }}>
-                  {appointmentDate.format("HH:mm")}
-                </Text>
+                <Text style={{ fontSize: "15px" }}>{timeText}</Text>
               </div>
               {isToday && (
                 <Tag color="green" style={{ fontSize: "10px", margin: 0 }}>
@@ -307,7 +334,6 @@ const TableAppointment = () => {
     {
       title: "Phí khám",
       dataIndex: "totalFee",
-      width: 100,
       hideInSearch: true,
       render(_, entity) {
         return (
@@ -323,7 +349,6 @@ const TableAppointment = () => {
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
-      width: 130,
       hideInSearch: true,
       render(_, entity) {
         return (
@@ -354,55 +379,22 @@ const TableAppointment = () => {
     },
     {
       title: "Thao tác",
-      width: 120,
-      fixed: "right",
       hideInSearch: true,
-      render(_) {
+      render(_, entity) {
         return (
           <Space>
             <Tooltip title="Xem chi tiết">
               <Button
                 type="text"
                 size="small"
-                icon={<EyeOutlined />}
+                icon={<EyeOutlined style={{ fontSize: "18px" }} />}
                 onClick={() => {
-                  // setDataViewDetail(entity);
-                  // setOpenViewDetail(true);
+                  setDataViewDetail(entity);
+                  setOpenViewDetail(true);
                 }}
                 style={{ color: "#1890ff" }}
               />
             </Tooltip>
-
-            <Tooltip title="Chỉnh sửa">
-              <Button
-                type="text"
-                size="small"
-                icon={<EditTwoTone twoToneColor="#f57800" />}
-                onClick={() => {
-                  // Handle edit action
-                }}
-              />
-            </Tooltip>
-
-            <Popconfirm
-              placement="leftTop"
-              title="Xác nhận hủy cuộc hẹn"
-              description="Bạn có chắc chắn muốn hủy cuộc hẹn này không?"
-              onConfirm={() => {
-                // Handle cancel appointment
-              }}
-              okText="Xác nhận"
-              cancelText="Hủy"
-            >
-              <Tooltip title="Hủy cuộc hẹn">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<DeleteTwoTone twoToneColor="#ff4d4f" />}
-                  danger
-                />
-              </Tooltip>
-            </Popconfirm>
           </Space>
         );
       },
@@ -446,7 +438,7 @@ const TableAppointment = () => {
               query += `&patientName=${encodeURIComponent(params.patientName)}`;
             }
           }
-          const res = await getAllAppointmentsByDoctorId(query);
+          const res = await getAllAppointmentsByUserIdDoctor(query);
           if (res.data) {
             setMeta(res.data.meta);
           }
@@ -542,6 +534,12 @@ const TableAppointment = () => {
           borderRadius: "8px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         }}
+      />
+      <AppointmentDetail
+        openViewDetail={openViewDetail}
+        setOpenViewDetail={setOpenViewDetail}
+        dataViewDetail={dataViewDetail}
+        setDataViewDetail={setDataViewDetail}
       />
     </>
   );

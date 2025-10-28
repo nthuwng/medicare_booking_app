@@ -16,7 +16,7 @@ export default function IntentRenderer({ intent, text, data }: Props) {
   if (!intent) return null;
 
   // Render đơn giản cho medical_qa: chỉ hiển thị text, giữ xuống dòng
-  if (intent === "medical_qa" || intent === "smalltalk") {
+  if (intent === "medical_qa" || intent === "smalltalk" || intent === "other") {
     return (
       <div
         style={{

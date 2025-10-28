@@ -9,10 +9,10 @@ import {
   Col,
   Breadcrumb,
   Spin,
-  message,
   Divider,
   List,
   Empty,
+  App,
 } from "antd";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -24,6 +24,7 @@ import {
   ShareAltOutlined,
   UserOutlined,
   MessageOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { IDoctorProfile } from "@/types";
@@ -42,6 +43,7 @@ const DoctorDetailPage = () => {
   const [doctor, setDoctor] = useState<IDoctorProfile | null>(null);
   const [rating, setRating] = useState<IRating[]>([]);
   const [ratingStats, setRatingStats] = useState<IRatingStats | null>(null);
+  const { message } = App.useApp();
 
   const fetchDoctorDetail = async () => {
     if (!doctorId) return;
@@ -213,6 +215,17 @@ const DoctorDetailPage = () => {
                       type="primary"
                       icon={<ShareAltOutlined />}
                       className="bg-blue-600 hover:bg-blue-700 border-blue-600"
+                      onClick={() => {
+                        const currentUrl = window.location.href;
+                        navigator.clipboard
+                          .writeText(currentUrl)
+                          .then(() => {
+                            message.success("Đã copy đường dẫn vào clipboard!");
+                          })
+                          .catch(() => {
+                            message.error("Không thể copy đường dẫn");
+                          });
+                      }}
                     >
                       Chia sẻ
                     </Button>
@@ -225,6 +238,18 @@ const DoctorDetailPage = () => {
                       }
                     >
                       Tin nhắn
+                    </Button>
+                    <Button
+                      type="primary"
+                      icon={<CalendarOutlined />}
+                      className="bg-blue-600 hover:bg-blue-700 border-blue-600"
+                      onClick={() =>
+                        navigate(
+                          `/booking-options/doctor/${doctor.id}/appointment`
+                        )
+                      }
+                    >
+                      Đặt lịch
                     </Button>
                   </div>
                 </div>
