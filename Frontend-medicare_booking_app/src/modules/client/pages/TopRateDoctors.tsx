@@ -37,7 +37,7 @@ const TopRateDoctors = () => {
   const navigate = useNavigate();
   const [meta, setMeta] = useState({
     current: 1,
-    pageSize: 3,
+    pageSize: 6,
     pages: 0,
     total: 0,
   });
@@ -263,7 +263,7 @@ const TopRateDoctors = () => {
                   onChange={(p, ps) => {
                     setMeta({ ...meta, current: p, pageSize: ps });
                   }}
-                  pageSizeOptions={[3, 5, 10, 20, 50, 100]}
+                  pageSizeOptions={[6, 12, 24, 48, 96]}
                 />
               </div>
             </>

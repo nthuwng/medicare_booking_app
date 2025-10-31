@@ -21,6 +21,7 @@ import PatientProtectedRoute from "@/components/auth/PatientProtectedRoute";
 import AboutPage from "@/modules/client/pages/AboutPage";
 import LayoutAccount from "@/modules/client/components/LayoutAccount/LayoutAccount";
 import TopRateDoctors from "@/modules/client/pages/TopRateDoctors";
+import ContactPartnerPage from "@/modules/client/pages/ContactPartnerPage";
 
 const ClientRoutes = () => {
   return (
@@ -105,6 +106,9 @@ const ClientRoutes = () => {
 
         {/* Trang about */}
         <Route path="/about" element={<AboutPage />} />
+
+        {/* Liên hệ hợp tác */}
+        <Route path="/contact" element={<ContactPartnerPage />} />
 
         {/* Bác sĩ được đánh giá cao */}
         <Route path="/top-rate-doctors" element={<TopRateDoctors />} />

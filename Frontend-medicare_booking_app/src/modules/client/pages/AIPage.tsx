@@ -95,6 +95,12 @@ const AIPage = () => {
     setImagePreview(null);
   };
 
+  // Quick helper for suggestion clicks
+  const handleQuickAsk = (text: string) => {
+    setInputValue(text);
+    handleSendMessage(text);
+  };
+
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
     if (container) {
@@ -207,7 +213,6 @@ const AIPage = () => {
 
   useEffect(() => {
     if (isNearBottom()) scrollToBottom();
-    console.log("messages <><><>>", messages);
   }, [messages]);
 
   useEffect(() => {
@@ -388,6 +393,66 @@ const AIPage = () => {
               >
                 {!isSidebarCollapsed && "Quản lí tài khoản"}
               </Button>
+            )}
+
+            {/* Suggestions */}
+            {!isSidebarCollapsed && (
+              <div style={{ marginTop: 8 }}>
+                <div
+                  style={{
+                    fontWeight: 600,
+                    color: "#374151",
+                    marginBottom: 8,
+                  }}
+                >
+                  Gợi ý câu hỏi
+                </div>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                >
+                  <Button
+                    onClick={() =>
+                      handleQuickAsk(
+                        "Xin chào!"
+                      )
+                    }
+                  >
+                    💬 Tư vấn nhanh
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      handleQuickAsk(
+                        "Tôi bị đau đầu và sốt nhẹ, nên khám chuyên khoa nào?"
+                      )
+                    }
+                  >
+                    🩺 Gợi ý chuyên khoa theo triệu chứng
+                  </Button>
+                  <Upload
+                    beforeUpload={onPickImage}
+                    showUploadList={false}
+                    accept="image/*"
+                  >
+                    <Button>🖼️ Gợi ý chuyên khoa từ ảnh (tải ảnh)</Button>
+                  </Upload>
+                  <Button
+                    onClick={() =>
+                      handleQuickAsk(
+                        "Bệnh tiểu đường type 2 có triệu chứng gì và điều trị thế nào?"
+                      )
+                    }
+                  >
+                    ❓ Hỏi đáp y khoa
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      handleQuickAsk("Tìm bác sĩ chuyên khoa Tim mạch giúp tôi")
+                    }
+                  >
+                    👨‍⚕️ Tìm bác sĩ theo chuyên khoa
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>

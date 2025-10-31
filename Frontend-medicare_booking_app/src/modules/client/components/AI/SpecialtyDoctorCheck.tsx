@@ -6,8 +6,7 @@ import {
   DollarOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
-
-// const { Text, Paragraph, Title } = Typography;
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   text: string | null;
@@ -17,7 +16,7 @@ interface Props {
 
 const SpecialtyDoctorCheck = (props: Props) => {
   const { data } = props;
-
+  const navigate = useNavigate();
   if (!data || !data.data || data.data.length === 0) {
     return (
       <div className="p-6 bg-gray-50 rounded-lg">
@@ -145,7 +144,7 @@ const SpecialtyDoctorCheck = (props: Props) => {
 
               {/* Action Button */}
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200">
+                <button onClick={() => navigate(`/booking-options/doctor/${doctor.id}/appointment`)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200">
                   Đặt lịch khám
                 </button>
               </div>

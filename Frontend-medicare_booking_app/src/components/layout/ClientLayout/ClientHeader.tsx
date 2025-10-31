@@ -106,26 +106,6 @@ const ClientHeader = () => {
             </Link>
 
             <Link
-              to="/top-rate-doctors"
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 flex items-center group"
-            >
-              <span>Bác sĩ</span>
-              <svg
-                className="w-4 h-4 ml-1 group-hover:translate-y-0.5 transition-transform duration-200"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </Link>
-
-            <Link
               to="/booking-options"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 flex items-center group"
             >
@@ -164,7 +144,26 @@ const ClientHeader = () => {
                 />
               </svg>
             </Link>
-            
+
+            <Link
+              to="/contact"
+              className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 flex items-center group"
+            >
+              <span>Liên hệ hợp tác</span>
+              <svg
+                className="w-4 h-4 ml-1 group-hover:translate-y-0.5 transition-transform duration-200"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </Link>
           </nav>
 
           {/* Auth Section */}

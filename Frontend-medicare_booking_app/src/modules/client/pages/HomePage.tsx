@@ -2,8 +2,10 @@ import Banner from "../components/Banner/Banner";
 import { Users, Clock, Award, Shield } from "lucide-react";
 import BookingOptions from "../components/BookingOptions/BookingOptions";
 import DoctorCarousel from "../components/Banner/DoctorCarousel";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const stats = [
     {
       icon: <Users className="h-10 w-10 text-blue-600" />,
@@ -57,6 +59,22 @@ const HomePage = () => {
 
       {/*Top rate doctor */}
       <DoctorCarousel />
+
+      {/* For You Section */}
+      <section className="bg-gray-50 py-12 font-sans w-full">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="mb-8 md:mb-12 text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
+              Dành cho bạn
+            </h2>
+            <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">
+              Khám phá các dịch vụ chăm sóc sức khỏe nổi bật và phù hợp với nhu
+              cầu của bạn.
+            </p>
+          </div>
+          <BookingOptions />
+        </div>
+      </section>
 
       {/* Statistics Section */}
       <section
@@ -131,22 +149,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* For You Section */}
-      <section className="bg-gray-50 py-12 font-sans w-full">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="mb-8 md:mb-12 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
-              Dành cho bạn
-            </h2>
-            <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">
-              Khám phá các dịch vụ chăm sóc sức khỏe nổi bật và phù hợp với nhu
-              cầu của bạn.
-            </p>
-          </div>
-          <BookingOptions />
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 relative overflow-hidden">
         {/* Background Pattern */}
@@ -168,10 +170,13 @@ const HomePage = () => {
             chăm sóc sức khỏe tốt nhất
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <button className="bg-white text-blue-600 hover:bg-gray-100 px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-w-[250px]">
-              Đăng ký miễn phí
+            <button
+              onClick={() => navigate("/booking-options")}
+              className="cursor-pointer bg-white text-blue-600 hover:bg-gray-100 px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-w-[250px]"
+            >
+              Đặt lịch miễn phí
             </button>
-            <button className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 min-w-[250px]">
+            <button className="cursor-pointer border-2 border-white text-white hover:bg-white hover:text-blue-600 px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 min-w-[250px]">
               Liên hệ tư vấn
             </button>
           </div>

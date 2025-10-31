@@ -77,8 +77,14 @@ const DoctorCarousel = () => {
   };
 
   return (
-    <section className="w-full my-10 px-2 md:px-10 lg:px-40 !mt-20">
-      <div className="relative bg-gradient-to-r from-blue-100 via-blue-50 to-sky-100 rounded-2xl border border-blue-200 shadow-lg p-4 md:py-10 md:px-4 min-h-[300px] select-none">
+    <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] mt-20 mb-0 !px-0 ">
+      <div
+        className="relative p-2 md:py-8 md:px-2 select-none"
+        style={{
+          background: "#e8f4fd",
+          boxShadow: "30px 0px 30px  0px rgba(59, 130, 246, 0.12)",
+        }}
+      >
         <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-4 text-center tracking-wide">
           Bác sĩ nổi bật
         </h2>
@@ -87,62 +93,77 @@ const DoctorCarousel = () => {
             Không có dữ liệu bác sĩ nổi bật để hiển thị
           </div>
         ) : (
-          <div className="flex items-center justify-center gap-4 md:gap-8">
-            <button
-              aria-label="Prev"
-              onClick={handlePrev}
-              className="rounded-full bg-white border border-blue-200 shadow p-2 hover:bg-blue-100 hover:scale-105 transition disabled:bg-gray-50 disabled:text-gray-300"
-              disabled={doctors.length <= doctorsPerView}
-            >
-              <ChevronLeft className="w-8 h-8 text-blue-600" />
-            </button>
-            <div className="flex flex-1 justify-center gap-5 md:gap-8 cursor-pointer">
-              {getVisibleDoctors().map((doc) => (
-                <div
-                  key={doc.doctorId}
-                  onClick={() =>
-                    navigate(`/booking-options/doctor/${doc.doctorId}`)
-                  }
-                  className={`group bg-white rounded-xl shadow-md p-5 border border-blue-50 flex flex-col items-center hover:shadow-lg transition-all duration-300 animate-fadeIn ${getItemWidth()}`}
-                >
+          <div className="relative">
+            <div className="relative w-full max-w-6xl mx-auto flex items-center justify-center">
+              {/* Prev button - close to content */}
+              <button
+                aria-label="Prev"
+                onClick={handlePrev}
+                className="absolute -left-3 md:-left-5 top-1/2 -translate-y-1/2 rounded-full bg-white border border-blue-200 shadow p-2 hover:bg-blue-100 transition disabled:bg-gray-50 disabled:text-gray-300"
+                disabled={doctors.length <= doctorsPerView}
+              >
+                <ChevronLeft className="w-7 h-7 text-blue-600" />
+              </button>
+              <div className="flex flex-1 justify-center gap-4 md:gap-6 cursor-pointer px-6 md:px-10">
+                {getVisibleDoctors().map((doc) => (
                   <div
-                    className={`mb-3 rounded-full overflow-hidden border-4 border-blue-300 group-hover:scale-105 group-hover:border-blue-400 transition-all ${getSizeClass()}`}
+                    key={doc.doctorId}
+                    onClick={() =>
+                      navigate(`/booking-options/doctor/${doc.doctorId}`)
+                    }
+                    className={`group bg-white rounded-xl shadow-md p-5 border border-blue-50 flex flex-col items-center hover:shadow-lg transition-all duration-300 animate-fadeIn ${getItemWidth()}`}
                   >
-                    <img
-                      src={
-                        doc.doctorProfile.avatarUrl || "/Logo/LOGO_MEDICARE.png"
-                      }
-                      alt={doc.doctorProfile.fullName}
-                      className="object-cover w-full h-full"
-                      loading="lazy"
-                    />
+                    <div
+                      className={`mb-3 rounded-full overflow-hidden border-4 border-blue-300 group-hover:scale-105 group-hover:border-blue-400 transition-all ${getSizeClass()}`}
+                    >
+                      <img
+                        src={
+                          doc.doctorProfile.avatarUrl ||
+                          "/Logo/LOGO_MEDICARE.png"
+                        }
+                        alt={doc.doctorProfile.fullName}
+                        className="object-cover w-full h-full"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="font-semibold text-sm md:text-lg line-clamp-1 text-center mb-1">
+                      {doc.doctorProfile.title} {doc.doctorProfile.fullName}
+                    </div>
+                    <div className="text-xs md:text-base text-blue-700 opacity-70 line-clamp-1 mb-0.5 text-center">
+                      {doc.doctorProfile.specialty?.specialtyName ||
+                        "Không rõ chuyên khoa"}
+                    </div>
+                    <div className="mt-1 text-yellow-500 font-bold flex items-center gap-1 justify-center text-sm">
+                      ★ {Number(doc.avgScore).toFixed(1)}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {doc.totalReviews} đánh giá
+                    </div>
                   </div>
-                  <div className="font-semibold text-sm md:text-lg line-clamp-1 text-center mb-1">
-                    {doc.doctorProfile.title} {doc.doctorProfile.fullName}
-                  </div>
-                  <div className="text-xs md:text-base text-blue-700 opacity-70 line-clamp-1 mb-0.5 text-center">
-                    {doc.doctorProfile.specialty?.specialtyName ||
-                      "Không rõ chuyên khoa"}
-                  </div>
-                  <div className="mt-1 text-yellow-500 font-bold flex items-center gap-1 justify-center text-sm">
-                    ★ {Number(doc.avgScore).toFixed(1)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {doc.totalReviews} đánh giá
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              {/* Next button - close to content */}
+              <button
+                aria-label="Next"
+                onClick={handleNext}
+                className="absolute -right-3 md:-right-5 top-1/2 -translate-y-1/2 rounded-full bg-white border border-blue-200 shadow p-2 hover:bg-blue-100 transition disabled:bg-gray-50 disabled:text-gray-300"
+                disabled={doctors.length <= doctorsPerView}
+              >
+                <ChevronRight className="w-7 h-7 text-blue-600" />
+              </button>
             </div>
-            <button
-              aria-label="Next"
-              onClick={handleNext}
-              className="rounded-full bg-white border border-blue-200 shadow p-2 hover:bg-blue-100 hover:scale-105 transition disabled:bg-gray-50 disabled:text-gray-300"
-              disabled={doctors.length <= doctorsPerView}
-            >
-              <ChevronRight className="w-8 h-8 text-blue-600" />
-            </button>
           </div>
         )}
+        <div className="w-full text-center mt-6">
+          <button
+            onClick={() => navigate("/top-rate-doctors")}
+            className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 font-medium cursor-pointer !text-[18px]"
+            aria-label="Xem tất cả bác sĩ nổi bật"
+
+          >
+            Xem tất cả <span aria-hidden="true">»</span>
+          </button>
+        </div>
       </div>
     </section>
   );
