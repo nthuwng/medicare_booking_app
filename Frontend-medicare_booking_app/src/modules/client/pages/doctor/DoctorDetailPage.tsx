@@ -501,7 +501,7 @@ const DoctorDetailPage = () => {
                       <Text
                         className={cls(
                           "font-semibold text-lg",
-                          isDark ? "text-blue-400" : "text-blue-600"
+                          isDark ? "!text-green-400" : "text-blue-600"
                         )}
                       >
                         {formatCurrency(Number(doctor.bookingFee))}

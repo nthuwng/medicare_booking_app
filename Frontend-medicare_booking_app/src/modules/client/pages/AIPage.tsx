@@ -21,33 +21,63 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   HomeOutlined,
-  // UserOutlined,
-  // SettingOutlined,
   PlusOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { chatWithAIAPI } from "../services/client.api";
-// import ClientHeader from "@/components/layout/ClientLayout/ClientHeader";
 import { FiPaperclip } from "react-icons/fi";
 import IntentRenderer from "../components/AI/IntentRender";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "@/assets/Logo/LOGO_MEDICARE.png";
 import { useCurrentApp } from "@/components/contexts/app.context";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 const { Content } = Layout;
 const { TextArea } = Input;
 const { Title, Text, Paragraph } = Typography;
 
+/* ====================== PALETTE ====================== */
+// 1) SỬA PALETTE: bỏ hết !important
+const palette = {
+  dark: {
+    pageBg: "#0D1224",
+    surface: "#0f1b2d",
+    surface2: "#152238",
+    border: "rgba(255,255,255,0.10)",
+    text: "#ffffff",
+    textMuted: "#cbd5e1",
+    textSoft: "#94a3b8",
+    primary: "#60a5fa",
+    shadow: "0 8px 24px rgba(0,0,0,0.35)",
+    bubbleAI: "#0f1b2d",
+    bubbleUser: "#1b2b44",
+  },
+  light: {
+    pageBg: "#F5F7FA",
+    surface: "#ffffff",
+    surface2: "#ffffff",
+    border: "#e5e7eb",
+    text: "#0f172a",
+    textMuted: "#475569",
+    textSoft: "#6b7280",
+    primary: "#1677ff",
+    shadow: "0 8px 24px rgba(0,0,0,0.06)",
+    bubbleAI: "#ffffff",
+    bubbleUser: "#eff6ff",
+  },
+};
+
 interface Message {
   id: string;
   type: "user" | "ai";
-  content: string;
+  content: React.ReactNode;
   timestamp: Date;
   isLoading?: boolean;
   imageUrl?: string;
 }
 
 const AIPage = () => {
+  // ====== giữ nguyên logic ======
   const [hasStarted, setHasStarted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -60,18 +90,20 @@ const AIPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const { user } = useCurrentApp();
+  const { user, theme } = useCurrentApp();
+  // ====== thêm đọc theme để đổi màu ======
+  const isDark = theme === "dark";
+  const C = isDark ? palette.dark : palette.light;
 
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
-        setIsSidebarCollapsed(true);
-      }
+      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
   const handleNewChat = () => {
     setIsLoading(false);
     setMessages([]);
@@ -95,7 +127,6 @@ const AIPage = () => {
     setImagePreview(null);
   };
 
-  // Quick helper for suggestion clicks
   const handleQuickAsk = (text: string) => {
     setInputValue(text);
     handleSendMessage(text);
@@ -113,15 +144,14 @@ const AIPage = () => {
     }
   };
 
-  // Cuộn tới 1 message cụ thể (khi bạn vừa gửi)
   const scrollToMessage = (id: string) => {
     const c = messagesContainerRef.current;
     const el = document.getElementById(`msg-${id}`);
     if (c && el) {
-      const top = el.offsetTop - c.offsetTop; // vị trí của message trong container
+      const top = el.offsetTop - c.offsetTop;
       c.scrollTo({ top, behavior: "smooth" });
     } else {
-      el?.scrollIntoView({ behavior: "smooth", block: "end" }); // fallback
+      el?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   };
 
@@ -137,7 +167,6 @@ const AIPage = () => {
 
     if (!hasStarted) setHasStarted(true);
 
-    // Hiển thị message của user (kèm ảnh preview nếu có)
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
@@ -155,14 +184,13 @@ const AIPage = () => {
     setMessages((prev) => [...prev, userMessage, aiMessage]);
     setInputValue("");
     setIsLoading(true);
-    // cuộn tới bubble user vừa thêm
     setTimeout(() => {
       scrollToMessage(userMessage.id);
     }, 0);
 
     try {
       let aiText = "";
-      let displayContent: string | React.ReactNode = ""; // Biến mới để chứa nội dung hiển thị
+      let displayContent: string | React.ReactNode = "";
 
       const res = await chatWithAIAPI(imageFile || new File([], ""), trimmed);
 
@@ -175,16 +203,14 @@ const AIPage = () => {
           />
         );
       } else {
-        // Nếu không phải intent đặc biệt, vẫn hiển thị text thông thường
         aiText = res?.text ?? "Tôi không thể xử lí yêu cầu này.";
         displayContent = aiText;
       }
 
-      // *** Cập nhật content của aiMessage bằng displayContent (string hoặc JSX) ***
       setMessages((prev) =>
         prev.map((m) =>
           m.id === aiMessage.id
-            ? { ...m, content: displayContent as string, isLoading: false }
+            ? { ...m, content: displayContent, isLoading: false }
             : m
         )
       );
@@ -219,42 +245,84 @@ const AIPage = () => {
     if (hasStarted) setTimeout(scrollToBottom, 0);
   }, [hasStarted]);
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = (date: Date) =>
+    date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 
   return (
     <>
-      {/* Page-scoped styles */}
+      {/* CSS phạm vi trang */}
       <style>{`
          .ai-chat-page .composer textarea::placeholder {
-           color: #6b7280 !important;
+           color: ${isDark ? C.textSoft : "#6b7280"} !important;
            opacity: 1;
-         }
-         .ai-chat-page {
-           overflow: hidden;
-         }
-         .ai-chat-page .ant-layout {
-           overflow: hidden;
-         }
-         .ai-chat-page .ant-layout-content {
-           overflow: hidden;
-         }
+      }
+
          /* Hide scrollbars on desktop */
          @media (min-width: 768px) {
-           .ai-chat-page ::-webkit-scrollbar {
-             width: 0px;
-             background: transparent;
-           }
+           .ai-chat-page ::-webkit-scrollbar { width: 0px; background: transparent; }
          }
+
+         ${
+           isDark
+             ? `
+           .ai-chat-page .ant-tooltip-inner { background: ${C.surface2}; color: ${C.text}; }
+           .ai-chat-page .ant-tooltip-arrow:before { background: ${C.surface2}; }
+         `
+             : ``
+         }
+         /* màu placeholder mặc định */
+.ai-chat-page .composer-textarea::placeholder {
+  color: #6b7280; /* light */
+  opacity: 1;
+}
+
+/* dark mode */
+.ai-chat-page .composer-textarea.is-dark::placeholder {
+  color: #cbd5e1;
+}
+  /* ====== FIX SUGGESTIONS WIDTH & ALIGN ====== */
+.ai-suggestions,
+.ai-suggestions * { box-sizing: border-box; }
+
+.ai-suggestions .ant-upload-wrapper,
+.ai-suggestions .ant-upload-wrapper .ant-upload,
+.ai-suggestions .ant-upload-select,
+.ai-suggestions .ant-upload,
+.ai-suggestions .ant-upload-list {
+  display: block !important;
+  width: 100% !important;
+}
+
+.ai-suggestions .ant-btn {
+  width: 100% !important;          /* tất cả nút full width */
+  display: flex !important;        /* căn trái nội dung giống nhau */
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  padding-left: 12px !important;   /* đồng bộ padding trái */
+  padding-right: 12px !important;  /* đồng bộ padding phải */
+}
+
+/* chữ không tràn xấu khi sidebar hẹp */
+.ai-suggestions .ant-btn > span {
+  white-space: normal !important;
+  line-height: 1.4 !important;
+}
+
+/* giữ biên dạng khi dark/light để không “giật” kích thước */
+.ai-suggestions .ant-btn,
+.ai-suggestions .ant-upload-wrapper .ant-btn {
+  min-height: 32px; /* cùng chiều cao */
+  border-radius: 8px;
+}
+  
+
        `}</style>
+
       <Layout
         style={{
           minHeight: "100vh",
-          background: "#F5F7FA",
+          background: C.pageBg,
           display: "flex",
           flexDirection: isMobile ? "column" : "row",
         }}
@@ -275,6 +343,8 @@ const AIPage = () => {
             }}
           />
         )}
+
+        {/* SIDEBAR */}
         <div
           style={{
             width: isMobile ? "80%" : isSidebarCollapsed ? 100 : "15%",
@@ -284,45 +354,73 @@ const AIPage = () => {
             top: 0,
             bottom: 0,
             zIndex: 1000,
-            background: "#F5F7FA",
+            background: C.pageBg,
             height: "100vh",
-            overflowY: isMobile ? "auto" : "hidden",
+            overflowY: isMobile ? "auto" : "visible",
+            borderRight: `1px solid ${C.border}`,
+            boxShadow: isDark ? "" : palette.light.shadow,
           }}
         >
-          <div className="cursor-pointer text-center" style={{ padding: 12 }}>
+          {/* Header (logo + theme) */}
+          <div
+            className="cursor-pointer"
+            style={{
+              padding: 12,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isSidebarCollapsed ? "center" : "space-between",
+              gap: 8,
+            }}
+          >
             <Link to="/" style={{ display: "inline-block" }}>
               {isSidebarCollapsed ? (
                 <div
-                  className="
-                  group mx-auto my-3 size-20 shrink-0
-                  rounded-2xl bg-white/80 backdrop-blur
-                  ring-1 ring-black/5 shadow-sm
-                  transition-all duration-300 hover:shadow-md
-                "
+                  className="group mx-auto my-3 size-20 shrink-0 rounded-2xl backdrop-blur ring-1 ring-black/5 shadow-sm transition-all duration-300 hover:shadow-md"
+                  style={{ background: isDark ? C.surface : "#ffffff" }}
                 >
                   <img
                     src={Logo}
                     alt="Medicare Logo"
-                    className="
-                    block w-full h-full
-                    object-contain
-                    transition-transform duration-300 group-hover:scale-110
-                    select-none pointer-events-none
-                  "
+                    className="block w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 select-none pointer-events-none"
                   />
                 </div>
               ) : (
-                <div className="text-2xl font-bold text-blue-600">
-                  <span className="text-blue-800">Medi</span>Care
+                <div
+                  className="text-2xl font-bold"
+                  style={{ color: isDark ? C.text : "#1f2937" }}
+                >
+                  <span style={{ color: isDark ? C.text : "#1d4ed8" }}>
+                    Medi
+                  </span>
+                  <span style={{ color: isDark ? C.primary : "#2563eb" }}>
+                    Care
+                  </span>
                 </div>
               )}
             </Link>
+
+            {/* 👉 Khi mở rộng: đặt nút bên phải */}
+            {!isSidebarCollapsed && <ThemeToggle />}
           </div>
+
+          {/* 👉 Khi THU GỌN: chèn 1 hàng riêng để luôn có nút */}
+          {isSidebarCollapsed && (
+            <div
+              style={{
+                padding: "0 12px 12px",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <ThemeToggle />
+            </div>
+          )}
+
           {/* Mobile close button */}
           {isMobile && !isSidebarCollapsed && (
             <div
               style={{
-                padding: "12px",
+                padding: 12,
                 display: "flex",
                 justifyContent: "flex-end",
               }}
@@ -334,6 +432,7 @@ const AIPage = () => {
               />
             </div>
           )}
+
           <div
             style={{
               display: "flex",
@@ -356,13 +455,21 @@ const AIPage = () => {
                   <MenuFoldOutlined />
                 )
               }
-              style={{ width: isSidebarCollapsed ? 80 : "100%" }}
+              style={{
+                width: isSidebarCollapsed ? 80 : "100%",
+                background: isDark ? C.surface : "#fff",
+                color: isDark ? C.text : palette.light.text,
+                borderColor: C.border,
+              }}
             >
               {!isSidebarCollapsed && "Thu gọn"}
             </Button>
             <Button
               type="primary"
-              style={{ width: isSidebarCollapsed ? 80 : "100%" }}
+              style={{
+                width: isSidebarCollapsed ? 80 : "100%",
+                boxShadow: isDark ? "" : palette.light.shadow,
+              }}
               icon={<PlusOutlined />}
               onClick={handleNewChat}
             >
@@ -371,7 +478,7 @@ const AIPage = () => {
             <div
               style={{
                 fontWeight: 600,
-                color: "#374151",
+                color: isDark ? C.text : "#374151",
                 marginTop: 8,
                 display: isSidebarCollapsed ? "none" : "block",
               }}
@@ -379,7 +486,12 @@ const AIPage = () => {
               Menu
             </div>
             <Button
-              style={{ width: isSidebarCollapsed ? 80 : "100%" }}
+              style={{
+                width: isSidebarCollapsed ? 80 : "100%",
+                background: isDark ? C.surface : "#fff",
+                color: isDark ? C.text : palette.light.text,
+                borderColor: C.border,
+              }}
               icon={<HomeOutlined />}
               onClick={() => navigate("/")}
             >
@@ -387,7 +499,12 @@ const AIPage = () => {
             </Button>
             {user?.userType === "PATIENT" && (
               <Button
-                style={{ width: isSidebarCollapsed ? 80 : "100%" }}
+                style={{
+                  width: isSidebarCollapsed ? 80 : "100%",
+                  background: isDark ? C.surface : "#fff",
+                  color: isDark ? C.text : palette.light.text,
+                  borderColor: C.border,
+                }}
                 icon={<UserOutlined />}
                 onClick={() => navigate("/my-account")}
               >
@@ -401,25 +518,39 @@ const AIPage = () => {
                 <div
                   style={{
                     fontWeight: 600,
-                    color: "#374151",
+                    color: isDark ? C.text : "#374151",
                     marginBottom: 8,
                   }}
                 >
                   Gợi ý câu hỏi
                 </div>
+
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
                 >
+                  {/* 1. Xin chào */}
                   <Button
-                    onClick={() =>
-                      handleQuickAsk(
-                        "Xin chào!"
-                      )
-                    }
+                    block
+                    style={{
+                      background: isDark ? C.surface : "#fff",
+                      color: isDark ? C.text : "",
+                    }}
+                    onClick={() => handleQuickAsk("Xin chào!")}
                   >
-                    💬 Tư vấn nhanh
+                    💬 Xin chào!
                   </Button>
+
+                  {/* 2. Gợi ý theo triệu chứng */}
                   <Button
+                    block
+                    style={{
+                      background: isDark ? C.surface : "#fff",
+                      color: isDark ? C.text : "",
+                    }}
                     onClick={() =>
                       handleQuickAsk(
                         "Tôi bị đau đầu và sốt nhẹ, nên khám chuyên khoa nào?"
@@ -428,14 +559,35 @@ const AIPage = () => {
                   >
                     🩺 Gợi ý chuyên khoa theo triệu chứng
                   </Button>
-                  <Upload
-                    beforeUpload={onPickImage}
-                    showUploadList={false}
-                    accept="image/*"
-                  >
-                    <Button>🖼️ Gợi ý chuyên khoa từ ảnh (tải ảnh)</Button>
-                  </Upload>
+
+                  {/* 3. Gợi ý từ ảnh (Upload cần width:100%) */}
+                  <div style={{ width: "100%" }}>
+                    <Upload
+                      beforeUpload={onPickImage}
+                      showUploadList={false}
+                      accept="image/*"
+                      style={{ width: "100%" }} // <-- quan trọng
+                    >
+                      <Button
+                        block // <-- quan trọng
+                        style={{
+                          background: isDark ? C.surface : "#fff",
+                          color: isDark ? C.text : "",
+                          width: "100%", // <-- dự phòng
+                        }}
+                      >
+                        🖼️Gợi ý chuyên khoa từ ảnh (tải ảnh)
+                      </Button>
+                    </Upload>
+                  </div>
+
+                  {/* 4. Hỏi đáp y khoa */}
                   <Button
+                    block
+                    style={{
+                      background: isDark ? C.surface : "#fff",
+                      color: isDark ? C.text : "",
+                    }}
                     onClick={() =>
                       handleQuickAsk(
                         "Bệnh tiểu đường type 2 có triệu chứng gì và điều trị thế nào?"
@@ -444,7 +596,14 @@ const AIPage = () => {
                   >
                     ❓ Hỏi đáp y khoa
                   </Button>
+
+                  {/* 5. Tìm bác sĩ theo chuyên khoa */}
                   <Button
+                    block
+                    style={{
+                      background: isDark ? C.surface : "#fff",
+                      color: isDark ? C.text : "",
+                    }}
                     onClick={() =>
                       handleQuickAsk("Tìm bác sĩ chuyên khoa Tim mạch giúp tôi")
                     }
@@ -456,19 +615,36 @@ const AIPage = () => {
             )}
           </div>
         </div>
+
+        {/* CONTENT */}
         <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-          {/* Mobile menu button */}
+          {/* Mobile menu + theme toggle */}
           {isMobile && (
-            <div style={{ padding: "12px", background: "#F5F7FA" }}>
+            <div
+              style={{
+                padding: 12,
+                background: C.pageBg,
+                borderBottom: `1px solid ${C.border}`,
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+              }}
+            >
               <Button
                 onClick={() => setIsSidebarCollapsed((v) => !v)}
                 icon={<MenuUnfoldOutlined />}
-                style={{ width: "100%" }}
+                style={{
+                  flex: 1,
+                  background: C.surface,
+                  color: isDark ? C.text : C.text,
+                  borderColor: C.border,
+                }}
               >
                 Menu
               </Button>
             </div>
           )}
+
           <Content
             style={{
               padding: isMobile ? "12px" : "24px",
@@ -478,6 +654,7 @@ const AIPage = () => {
               margin: "0 auto",
               height: "100vh",
               overflowY: "auto",
+              background: C.pageBg,
             }}
           >
             {/* Landing hero (pre-chat) */}
@@ -496,9 +673,10 @@ const AIPage = () => {
                   level={2}
                   className={
                     isMobile
-                      ? "!text-2xl !leading-tight !text-blue-700"
-                      : "!text-4xl md:!text-4xl !leading-[1.2] !text-blue-700"
+                      ? "!text-2xl !leading-tight"
+                      : "!text-4xl md:!text-4xl !leading-[1.2]"
                   }
+                  style={{ color: isDark ? C.text : "#1d4ed8" }}
                 >
                   <span className="inline-block pb-[2px]">
                     Trợ lí tìm thông tin về sức khỏe
@@ -507,7 +685,8 @@ const AIPage = () => {
                 <Paragraph
                   className={`${
                     isMobile ? "!text-sm" : "!text-base md:!text-lg"
-                  } !text-stone-600 !text-center !max-w-3xl !px-4`}
+                  } !text-center !max-w-3xl !px-4`}
+                  style={{ color: isDark ? C.textMuted : "#475569" }}
                 >
                   Hỏi đáp y tế, gợi ý chuyên khoa, đặt lịch khám và hơn thế nữa.
                   Bạn có thể mô tả triệu chứng hoặc tải ảnh để nhận tư vấn chính
@@ -516,11 +695,11 @@ const AIPage = () => {
                 <div
                   style={{
                     width: isMobile ? "100%" : "min(900px, 95%)",
-                    background: "#ffffff",
+                    background: C.surface,
                     borderRadius: 24,
                     padding: isMobile ? 12 : 12,
-                    border: "1px solid #e7e5e4",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+                    border: `1px solid ${C.border}`,
+                    boxShadow: C.shadow,
                   }}
                 >
                   <div
@@ -534,8 +713,10 @@ const AIPage = () => {
                             display: "inline-block",
                             borderRadius: 16,
                             overflow: "hidden",
-                            border: "1px solid #e7e5e4",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                            border: `1px solid ${C.border}`,
+                            boxShadow: isDark
+                              ? ""
+                              : "0 4px 12px rgba(0,0,0,0.06)",
                           }}
                         >
                           <Image
@@ -571,6 +752,9 @@ const AIPage = () => {
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       placeholder="Hãy hỏi tôi về sức khỏe, chuyên khoa, đặt lịch, y tế..."
+                      className={`composer-textarea !no-scrollbar !mb-2 focus:!outline-none focus:!shadow-none ${
+                        isDark ? "is-dark" : "is-light"
+                      }`}
                       autoSize={{ minRows: 1, maxRows: 10 }}
                       onPressEnter={(e) => {
                         if (!e.shiftKey) {
@@ -592,13 +776,12 @@ const AIPage = () => {
                       style={{
                         background: "transparent",
                         border: "none",
-                        color: "#111827",
+                        color: isDark ? C.text : "#111827",
                         paddingTop: 4,
                         fontSize: isMobile ? "16px" : "20px",
                         outline: "none",
                         boxShadow: "none",
                       }}
-                      className="!no-scrollbar !mb-2 focus:!outline-none focus:!shadow-none"
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -610,8 +793,12 @@ const AIPage = () => {
                           <Button
                             shape="circle"
                             icon={<FiPaperclip size={18} />}
-                            className="!size-10 hover:!bg-gray-100"
+                            className="!size-10 hover:!brightness-110"
                             title="Tải ảnh lên"
+                            style={{
+                              background: isDark ? C.surface2 : "#fff",
+                              color: isDark ? C.text : "",
+                            }}
                           />
                         </Upload>
                       </div>
@@ -620,13 +807,17 @@ const AIPage = () => {
                           <Button
                             type="primary"
                             shape="circle"
-                            icon={<ArrowUpOutlined />}
+                            icon={
+                              <ArrowUpOutlined
+                                className={isDark ? "!text-white" : ""}
+                              />
+                            }
                             onClick={() => handleSendMessage(inputValue)}
                             loading={isLoading}
                             disabled={
                               isLoading || (!inputValue.trim() && !imageFile)
                             }
-                            className="!size-10"
+                            className="!size-10 "
                           />
                         </Tooltip>
                       </div>
@@ -640,14 +831,16 @@ const AIPage = () => {
                   level={2}
                   className={
                     isMobile
-                      ? "!text-2xl !leading-tight text-center !text-blue-700"
-                      : "!text-4xl md:!text-4xl !leading-[1.2] text-center !text-blue-700"
+                      ? "!text-2xl !leading-tight text-center"
+                      : "!text-4xl md:!text-4xl !leading-[1.2] text-center"
                   }
+                  style={{ color: isDark ? C.text : "#1d4ed8" }}
                 >
                   <span className="inline-block pb-[2px]">
                     Trợ lí tìm thông tin về sức khỏe
                   </span>
                 </Title>
+
                 <div
                   className="!mt-[20px]"
                   style={{ display: "flex", justifyContent: "center" }}
@@ -660,10 +853,9 @@ const AIPage = () => {
                       <Card
                         style={{
                           height: isMobile ? "60vh" : "70vh",
-                          // background: "rgba(250, 250, 249, 0.95)",
-                          // backdropFilter: "blur(10px)",
-                          border: "none",
-                          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                          background: C.pageBg,
+                          border: `1px solid ${C.border}`,
+                          boxShadow: C.shadow,
                         }}
                         bodyStyle={{
                           padding: 0,
@@ -680,121 +872,118 @@ const AIPage = () => {
                             flex: 1,
                             overflowY: "auto",
                             padding: isMobile ? "12px" : "20px",
-                            // background: "#EEEEEE",
+                            background: C.pageBg,
                           }}
                         >
                           {messages.map((msg) => (
-                            <>
+                            <div
+                              id={`msg-${msg.id}`}
+                              key={msg.id}
+                              style={{
+                                display: "flex",
+                                justifyContent:
+                                  msg.type === "user"
+                                    ? "flex-end"
+                                    : "flex-start",
+                                marginBottom: "16px",
+                                alignItems: "flex-start",
+                                gap: "12px",
+                              }}
+                            >
                               <div
-                                id={`msg-${msg.id}`}
-                                key={msg.id}
                                 style={{
-                                  display: "flex",
-                                  justifyContent:
+                                  maxWidth: isMobile ? "85%" : "75%",
+                                  background:
+                                    typeof msg.content === "string"
+                                      ? msg.type === "user"
+                                        ? C.bubbleUser
+                                        : C.bubbleAI
+                                      : "transparent", // 👈 component thì để trong suốt
+                                  color: isDark ? C.text : "#000000",
+                                  padding:
+                                    typeof msg.content === "string"
+                                      ? isMobile
+                                        ? "10px 12px"
+                                        : "12px 16px"
+                                      : 0, // 👈 component thì bỏ padding bubble
+                                  borderRadius:
                                     msg.type === "user"
-                                      ? "flex-end"
-                                      : "flex-start",
-                                  marginBottom: "16px",
-                                  alignItems: "flex-start",
-                                  gap: "12px",
+                                      ? "18px 18px 4px 18px"
+                                      : "18px 18px 18px 8px",
+                                  boxShadow: isDark
+                                    ? ""
+                                    : "0 2px 8px rgba(0,0,0,0.1)",
+                                  border:
+                                    typeof msg.content === "string"
+                                      ? `1px solid ${C.border}`
+                                      : "none", // 👈 component thì bỏ border bubble
                                 }}
                               >
-                                <div
-                                  style={{
-                                    maxWidth: isMobile ? "85%" : "75%",
-                                    background:
-                                      msg.type === "user"
-                                        ? "#eff6ff" /* subtle blue-50 for user bubble */
-                                        : "#ffffff",
-                                    color:
-                                      msg.type === "user" ? "black" : "#000000",
-                                    padding: isMobile
-                                      ? "10px 12px"
-                                      : "12px 16px",
-                                    borderRadius:
-                                      msg.type === "user"
-                                        ? "18px 18px 4px 18px"
-                                        : "18px 18px 18px 8px",
-                                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-
-                                    border: "1px solid #e7e5e4",
-                                  }}
-                                >
-                                  {msg.isLoading ? (
-                                    <Space>
-                                      <Spin size="small" />
-                                      <Text
-                                        style={{
-                                          color:
-                                            msg.type === "user"
-                                              ? "white"
-                                              : "#6b7280",
-                                        }}
-                                      >
-                                        AI đang suy nghĩ...
-                                      </Text>
-                                    </Space>
-                                  ) : (
-                                    <div>
-                                      {msg.imageUrl && (
-                                        <div style={{ marginBottom: 8 }}>
-                                          <Image
-                                            src={msg.imageUrl}
-                                            alt="uploaded"
-                                            style={{
-                                              maxWidth: isMobile ? 150 : 200,
-                                              maxHeight: isMobile ? 150 : 200,
-                                              borderRadius: 8,
-                                              objectFit: "cover",
-                                              border:
-                                                "1px solid rgba(255,255,255,0.2)",
-                                            }}
-                                            preview={{
-                                              mask: (
-                                                <div style={{ color: "white" }}>
-                                                  Xem ảnh
-                                                </div>
-                                              ),
-                                            }}
-                                          />
-                                        </div>
-                                      )}
-                                      {msg.content && (
-                                        <Paragraph
+                                {msg.isLoading ? (
+                                  <Space>
+                                    <Spin size="small" />
+                                    <Text
+                                      style={{
+                                        color: isDark ? C.textSoft : "#6b7280",
+                                      }}
+                                    >
+                                      AI đang suy nghĩ...
+                                    </Text>
+                                  </Space>
+                                ) : (
+                                  <div>
+                                    {msg.imageUrl && (
+                                      <div style={{ marginBottom: 8 }}>
+                                        <Image
+                                          src={msg.imageUrl}
+                                          alt="uploaded"
                                           style={{
-                                            margin: 0,
-                                            whiteSpace: "pre-wrap",
-                                            color:
-                                              msg.type === "user"
-                                                ? "#000000"
-                                                : "#000000",
-                                            fontSize: isMobile
-                                              ? "14px"
-                                              : "15px",
+                                            maxWidth: isMobile ? 150 : 200,
+                                            maxHeight: isMobile ? 150 : 200,
+                                            borderRadius: 8,
+                                            objectFit: "cover",
+                                            border: `1px solid ${C.border}`,
                                           }}
-                                        >
-                                          {msg.content}
-                                        </Paragraph>
-                                      )}
-                                      <Text
+                                          preview={{
+                                            mask: (
+                                              <div style={{ color: "white" }}>
+                                                Xem ảnh
+                                              </div>
+                                            ),
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                    {typeof msg.content === "string" ? (
+                                      <Paragraph
                                         style={{
-                                          fontSize: "13px",
-                                          opacity: 0.7,
-                                          color:
-                                            msg.type === "user"
-                                              ? "#000000"
-                                              : "#000000",
-                                          display: "block",
-                                          marginTop: 4,
+                                          margin: 0,
+                                          whiteSpace: "pre-wrap",
+                                          color: isDark ? C.text : "#000000",
+                                          fontSize: isMobile ? "14px" : "15px",
                                         }}
                                       >
-                                        {formatTime(msg.timestamp)}
-                                      </Text>
-                                    </div>
-                                  )}
-                                </div>
+                                        {msg.content}
+                                      </Paragraph>
+                                    ) : (
+                                      msg.content
+                                    )}
+
+                                    <Text
+                                      style={{
+                                        fontSize: 13,
+                                        opacity: 0.7,
+                                        color: isDark ? C.textSoft : "#000",
+                                        display: "block",
+                                        marginTop: 4,
+                                      }}
+                                    >
+                                      {formatTime(msg.timestamp)}
+                                    </Text>
+                                  </div>
+                                )}
                               </div>
-                            </>
+                            </div>
                           ))}
                           <div ref={messagesEndRef} />
                         </div>
@@ -802,6 +991,7 @@ const AIPage = () => {
                     </Col>
                   </Row>
                 </div>
+
                 {/* Sticky bottom composer */}
                 <div style={{ position: "sticky", bottom: 16, marginTop: 20 }}>
                   {imagePreview && !isLoading && (
@@ -818,8 +1008,10 @@ const AIPage = () => {
                           display: "inline-block",
                           borderRadius: 16,
                           overflow: "hidden",
-                          border: "1px solid #e7e5e4",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                          border: `1px solid ${C.border}`,
+                          boxShadow: isDark
+                            ? ""
+                            : "0 4px 12px rgba(0,0,0,0.06)",
                         }}
                       >
                         <Image
@@ -857,11 +1049,11 @@ const AIPage = () => {
                   )}
                   <div
                     style={{
-                      background: "#ffffff",
+                      background: C.surface,
                       borderRadius: 24,
                       padding: isMobile ? 12 : 15,
-                      boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
-                      border: "1px solid #e5e7eb",
+                      boxShadow: C.shadow,
+                      border: `1px solid ${C.border}`,
                       width: isMobile ? "100%" : "90%",
                       margin: "0 auto",
                     }}
@@ -909,7 +1101,7 @@ const AIPage = () => {
                         style={{
                           background: "transparent",
                           border: "none",
-                          color: "#111827",
+                          color: isDark ? C.text : "#111827",
                           paddingTop: 4,
                           fontSize: isMobile ? "16px" : "20px",
                           outline: "none",
@@ -929,6 +1121,10 @@ const AIPage = () => {
                               className="!size-10"
                               icon={<FiPaperclip size={18} />}
                               title="Tải ảnh lên"
+                              style={{
+                                background: isDark ? C.surface2 : "#fff",
+                                color: isDark ? C.text : "",
+                              }}
                             />
                           </Upload>
                         </div>
@@ -937,7 +1133,11 @@ const AIPage = () => {
                             <Button
                               type="primary"
                               shape="circle"
-                              icon={<ArrowUpOutlined />}
+                              icon={
+                                <ArrowUpOutlined
+                                  className={isDark ? "!text-white" : ""}
+                                />
+                              }
                               onClick={() => handleSendMessage(inputValue)}
                               loading={isLoading}
                               disabled={

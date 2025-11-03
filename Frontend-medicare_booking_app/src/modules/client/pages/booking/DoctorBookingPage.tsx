@@ -402,7 +402,10 @@ const DoctorBookingPage = () => {
                   size="large"
                   onClick={handleClearFilters}
                   icon={<ClearOutlined />}
-                  className={cls("rounded-lg", isDark ? "!text-gray-500" : "")}
+                  className={cls(
+                    "rounded-lg",
+                    isDark ? "!text-black  !bg-gray-100 hover:!bg-gray-300" : ""
+                  )}
                 >
                   Xóa lọc
                 </Button>

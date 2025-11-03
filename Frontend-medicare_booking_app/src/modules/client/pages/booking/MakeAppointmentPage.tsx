@@ -23,16 +23,19 @@ import {
 import {
   CalendarOutlined,
   ClockCircleOutlined,
-  CheckCircleOutlined,
-  HomeOutlined,
   RightOutlined,
 } from "@ant-design/icons";
+
 import DoctorInfoCard from "../../components/appointment/DoctorInfoCard";
 import PatientInfoForm from "../../components/appointment/PatientInfoForm";
 import BookerInfoForm from "../../components/appointment/BookerInfoForm";
 import ConfirmCard from "../../components/appointment/ConfirmCard";
 
-const { Title, Text, Paragraph } = Typography;
+import { useCurrentApp } from "@/components/contexts/app.context";
+
+const { Title, Text } = Typography;
+const cls = (...x: (string | false | undefined)[]) =>
+  x.filter(Boolean).join(" ");
 
 type TimeSlot = {
   id: number;
@@ -55,7 +58,6 @@ type BookingFormData = {
   bookingFor: string;
   appointmentDate: string;
   timeSlotId: number;
-  // Thông tin người đặt lịch (khi đặt cho người thân)
   bookerName?: string;
   bookerPhone?: string;
   bookerEmail?: string;
@@ -66,65 +68,62 @@ const MakeAppointmentPage = () => {
   const { doctorId } = useParams();
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  const { theme } = useCurrentApp();
+  const isDark = theme === "dark";
 
   const [doctor, setDoctor] = useState<IDoctorProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [bookingFor, setBookingFor] = useState<string>("self");
+  const [bookingFor, setBookingFor] = useState("self");
   const [selectedDate, setSelectedDate] = useState<string[]>([]);
-  const [currentSelectedDate, setCurrentSelectedDate] = useState<string>("");
+  const [currentSelectedDate, setCurrentSelectedDate] = useState("");
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<number | null>(
     null
   );
   const [formData, setFormData] = useState<BookingFormData | null>(null);
+
   const { message, notification } = App.useApp();
 
+  // ✅ Fetch doctor detail
   const fetchDoctorDetail = async () => {
     if (!doctorId) return;
-
     setLoading(true);
+
     try {
       const response = await getDoctorDetailBookingById(doctorId);
 
       if (response.data) {
         setDoctor(response.data);
+
         const dates = response.data.scheduleByDoctorId.map(
           (item: any) => item.date
         );
         setSelectedDate(dates);
 
-        // Tự động load khung giờ cho ngày đầu tiên
         if (dates.length > 0) {
           const firstDate = dates[0];
           setCurrentSelectedDate(firstDate);
 
-          const selectedSchedule = response.data.scheduleByDoctorId.find(
-            (schedule: any) => schedule.date === firstDate
+          const schedule = response.data.scheduleByDoctorId.find(
+            (s: any) => s.date === firstDate
           );
 
-          if (selectedSchedule) {
-            const timeSlots = selectedSchedule.timeSlots.map(
-              (timeSlot: any) => ({
-                id: timeSlot.timeSlotId,
-                startTime: timeSlot.timeSlot.startTime,
-                endTime: timeSlot.timeSlot.endTime,
-                status: timeSlot.status,
-                scheduleId: selectedSchedule.id,
-              })
-            );
-            setAvailableTimeSlots(timeSlots);
-
-            // Set form value cho ngày đầu tiên
-            form.setFieldsValue({
-              appointmentDate: firstDate,
-            });
+          if (schedule) {
+            const slots = schedule.timeSlots.map((t: any) => ({
+              id: t.timeSlotId,
+              startTime: t.timeSlot.startTime,
+              endTime: t.timeSlot.endTime,
+              status: t.status,
+              scheduleId: schedule.id,
+            }));
+            setAvailableTimeSlots(slots);
+            form.setFieldsValue({ appointmentDate: firstDate });
           }
         }
       }
-    } catch (error) {
-      console.error("Error fetching doctor detail:", error);
+    } catch (e) {
       message.error("Không thể tải thông tin bác sĩ");
     } finally {
       setLoading(false);
@@ -133,128 +132,99 @@ const MakeAppointmentPage = () => {
 
   useEffect(() => {
     fetchDoctorDetail();
-  }, [doctorId, form]);
+  }, [doctorId]);
 
+  const pageBg = isDark
+    ? "!bg-[#0b1220]"
+    : "bg-gradient-to-b from-blue-50 to-white";
+  const cardBg = isDark
+    ? "!bg-[#0e1625] !border !border-[#1e293b66]"
+    : "!bg-white !border";
+  const titleTx = isDark ? "!text-slate-100" : "!text-gray-800";
+  const mutedTx = isDark ? "!text-slate-400" : "!text-gray-600";
+
+  // ✅ Submit form step 1
   const handleFormSubmit = (values: BookingFormData) => {
-    // Lưu form data vào state với appointmentDate
     setFormData({
       ...values,
-      // DatePicker trả về Dayjs; chuẩn hoá sang chuỗi ngày để tránh render object
       dateOfBirth: (values as any)?.dateOfBirth?.format
         ? (values as any).dateOfBirth.format("YYYY-MM-DD")
-        : (values as any)?.dateOfBirth || "",
+        : values.dateOfBirth,
       appointmentDate: currentSelectedDate,
     });
-    // Chuyển sang step xác nhận
     setCurrentStep(1);
   };
 
   const handleConfirmBooking = async () => {
+    if (!formData) return;
     setSubmitting(true);
+
     try {
-      // Sử dụng saved form data thay vì getFieldsValue
-      const values = formData;
-
-      if (!values) {
-        message.error("Dữ liệu form bị mất, vui lòng thử lại!");
-        setCurrentStep(0);
-        setSubmitting(false);
-        return;
-      }
-
-      // Find the selected schedule
       const selectedTimeSlot = availableTimeSlots.find(
-        (slot) => slot.id === values.timeSlotId
+        (s) => s.id === formData.timeSlotId
       );
 
       if (!selectedTimeSlot) {
-        message.error("Vui lòng chọn khung giờ khám!");
+        message.error("Vui lòng chọn khung giờ khám");
         setSubmitting(false);
         return;
       }
 
-      // Prepare data for API
       const bookingData = {
         scheduleId: selectedTimeSlot.scheduleId,
-        timeSlotId: values.timeSlotId,
-        reason: values.reason || "",
-        patientName: values.patientName,
-        patientPhone: values.phone,
-        patientEmail: values.email,
-        patientGender: values.gender === "male" ? "Male" : "Female",
-        patientDateOfBirth: (values as any)?.dateOfBirth?.format
-          ? (values as any).dateOfBirth.format("YYYY-MM-DD")
-          : (values as any)?.dateOfBirth || "",
-        patientCity: values.province,
-        patientDistrict: values.district,
-        patientAddress: values.address,
-        // Thông tin người đặt lịch (nếu đặt cho người thân)
+        timeSlotId: formData.timeSlotId,
+        patientName: formData.patientName,
+        patientPhone: formData.phone,
+        patientEmail: formData.email,
+        patientGender: formData.gender === "male" ? "Male" : "Female",
+        patientDateOfBirth: formData.dateOfBirth,
+        patientCity: formData.province,
+        patientDistrict: formData.district,
+        patientAddress: formData.address,
+        reason: formData.reason,
         ...(bookingFor === "other" && {
-          bookerName: values.bookerName,
-          bookerPhone: values.bookerPhone,
-          bookerEmail: values.bookerEmail,
+          bookerName: formData.bookerName,
+          bookerPhone: formData.bookerPhone,
+          bookerEmail: formData.bookerEmail,
         }),
       };
 
-      console.log("bookingData bookingData", bookingData.patientDateOfBirth);
-
-      // Call API to create booking
       const response = await createBooking(bookingData);
-      console.log("têst response", response);
 
       if (response.data) {
         message.success("Đặt lịch thành công!");
-
-        // Chuyển đến trang chọn phương thức thanh toán
         navigate("/payment-selection", {
-          state: {
-            appointmentData: response.data,
-          },
+          state: { appointmentData: response.data },
         });
       } else {
         notification.error({
-          message: "Có lỗi xảy ra khi đặt lịch!",
+          message: "Lỗi",
           description: response.message,
         });
       }
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message || "Có lỗi xảy ra khi đặt lịch!";
-      message.error(errorMessage);
+    } catch (e: any) {
+      message.error(e.response?.data?.message || "Có lỗi xảy ra");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const steps = [
-    {
-      title: "Thông tin cá nhân",
-      description: "Nhập thông tin bệnh nhân",
-    },
-    {
-      title: "Xác nhận",
-      description: "Kiểm tra và xác nhận",
-    },
-    {
-      title: "Hoàn thành",
-      description: "Đặt lịch thành công",
-    },
-  ];
-
-  if (loading) {
+  // ✅ UI When Loading / Not Found
+  if (loading)
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div
+        className={cls("min-h-screen flex items-center justify-center", pageBg)}
+      >
         <Spin size="large" />
       </div>
     );
-  }
 
-  if (!doctor) {
+  if (!doctor)
     return (
       <Result
         status="404"
         title="Không tìm thấy bác sĩ"
-        subTitle="Thông tin bác sĩ không tồn tại hoặc đã bị xóa."
+        subTitle="Thông tin không tồn tại."
         extra={
           <Button type="primary" onClick={() => navigate("/")}>
             Về trang chủ
@@ -262,56 +232,143 @@ const MakeAppointmentPage = () => {
         }
       />
     );
-  }
-
-  const handleDateSelect = (selectedDateValue: string) => {
-    setSelectedTimeSlotId(null);
-    setCurrentSelectedDate(selectedDateValue);
-
-    form.setFieldsValue({
-      timeSlotId: undefined,
-      appointmentDate: selectedDateValue,
-    });
-
-    if (selectedDateValue && doctor) {
-      const selectedSchedule = doctor.scheduleByDoctorId.find(
-        (schedule: any) => schedule.date === selectedDateValue
-      );
-
-      if (selectedSchedule) {
-        // Cập nhật time slots cho ngày được chọn
-        const timeSlots = selectedSchedule.timeSlots.map((timeSlot: any) => ({
-          id: timeSlot.timeSlotId,
-          startTime: timeSlot.timeSlot.startTime,
-          endTime: timeSlot.timeSlot.endTime,
-          status: timeSlot.status,
-          scheduleId: selectedSchedule.id,
-        }));
-        setAvailableTimeSlots(timeSlots);
-      } else {
-        setAvailableTimeSlots([]);
-      }
-    } else {
-      setAvailableTimeSlots([]);
-    }
-  };
 
   return (
-    <div style={{ backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
-      {/* Breadcrumb */}
-      <div className="bg-white border-b">
+    <div className={cls("min-h-screen", pageBg)}>
+      {/* ✅ Style Override for dark mode UI */}
+      {isDark && (
+        <style>{`
+          .ant-steps-item-title,
+          .ant-steps-item-description {
+            color:#e5e7eb !important;
+          }
+
+          .select-dark .ant-select-selector{
+      background:#0b1220 !important;
+      border-color:#243244 !important;
+      color:#e5e7eb !important;
+    }
+    .select-dark .ant-select-selection-item,
+    .select-dark .ant-select-selection-placeholder{
+      color:#e5e7eb !important;
+      opacity:1 !important;
+    }
+    .select-dark .ant-select-arrow{
+      color:#94a3b8 !important;
+    }
+    .select-dark.ant-select-open .ant-select-selector{
+      background:#0b1220 !important; /* giữ nguyên, không tối thêm */
+      box-shadow:0 0 0 2px rgba(59,130,246,.25) !important;
+      border-color:#3b82f6 !important;
+    }
+
+    /* Dropdown */
+    .select-dark-dropdown.ant-select-dropdown{
+      background:#0e1625 !important;
+      border:1px solid #1e293b66 !important;
+      box-shadow:0 12px 28px rgba(0,0,0,.45) !important;
+    }
+    .select-dark-dropdown .ant-select-item{
+      color:#cbd5e1 !important;
+      background:transparent !important; /* bỏ nền tối toàn bộ item */
+    }
+    .select-dark-dropdown .ant-select-item-option-active{
+      background:#122033 !important;
+    }
+    .select-dark-dropdown .ant-select-item-option-selected{
+      background:#1b2b44 !important;
+      color:#60a5fa !important;
+    }
+    .select-dark-dropdown .ant-empty-description{
+      color:#94a3b8 !important;
+    }
+
+       .steps-dark .ant-steps-item-title,
+    .steps-dark .ant-steps-item-description {
+      color:#e5e7eb !important;
+    }
+    /* vòng tròn chung */
+    .steps-dark .ant-steps-item-icon{
+      background:#0b1220 !important;
+      border-color:#334155 !important;
+    }
+    /* số trong vòng tròn */
+    .steps-dark .ant-steps-item-icon .ant-steps-icon{
+      color:#e5e7eb !important;         /* <- số màu trắng */
+      font-weight:600;
+    }
+    /* trạng thái đang thực hiện (process) */
+    .steps-dark .ant-steps-item-process .ant-steps-item-icon{
+      background:#1e293b !important;
+      border-color:#60a5fa !important;
+    }
+    .steps-dark .ant-steps-item-process .ant-steps-item-icon .ant-steps-icon{
+      color:#ffffff !important;          /* số trắng rõ */
+    }
+    /* đã hoàn thành (finish) */
+    .steps-dark .ant-steps-item-finish .ant-steps-item-icon{
+      background:#0b1220 !important;
+      border-color:#60a5fa !important;
+    }
+    .steps-dark .ant-steps-item-finish .ant-steps-item-icon .ant-steps-finish-icon{
+      color:#60a5fa !important;          /* màu check */
+    }
+    /* chưa tới (wait) */
+    .steps-dark .ant-steps-item-wait .ant-steps-item-icon{
+      background:#0b1220 !important;
+      border-color:#334155 !important;
+    }
+    .steps-dark .ant-steps-item-wait .ant-steps-item-icon .ant-steps-icon{
+      color:#cbd5e1 !important;
+    }
+    /* màu đường nối giữa các step */
+    .steps-dark .ant-steps-item-tail::after{
+      background-color:#334155 !important;
+    }
+    .steps-dark .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after{
+      background-color:#60a5fa !important;
+    }
+
+    .select-dark-dropdown .ant-empty-description{
+  color:#e5e7eb !important;   /* trắng */
+  opacity:1 !important;
+}
+
+/* (tuỳ chọn) nếu build của bạn render thêm lớp bọc */
+.select-dark-dropdown .ant-select-item-empty{
+  color:#e5e7eb !important;
+  opacity:1 !important;
+}
+
+/* (tuỳ chọn) làm icon Empty sáng hơn một chút */
+.select-dark-dropdown .ant-empty-image svg{
+  filter: brightness(1.1) contrast(1.05);
+}
+
+        `}</style>
+      )}
+
+      {/* ✅ Breadcrumb */}
+      <div
+        className={cls(
+          "border-b",
+          isDark ? "bg-[#0e1625] border-[#1e293b66]" : "bg-white"
+        )}
+      >
         <div className="max-w-7xl mx-auto px-4 py-3">
           <Breadcrumb
-            separator={<RightOutlined className="text-gray-400" />}
-            className="text-sm"
+            separator={
+              <RightOutlined
+                className={isDark ? "!text-slate-300" : "!text-gray-400"}
+              />
+            }
           >
             <Breadcrumb.Item>
               <Button
                 type="link"
                 size="small"
                 onClick={() => navigate("/")}
-                className="!p-0 !h-auto !text-gray-600 hover:!text-blue-600"
-                icon={<HomeOutlined />}
+                className={cls(isDark ? "!text-slate-300" : "!text-gray-600")}
               >
                 Trang chủ
               </Button>
@@ -321,339 +378,156 @@ const MakeAppointmentPage = () => {
                 type="link"
                 size="small"
                 onClick={() => navigate("/booking-options")}
-                className="!p-0 !h-auto !text-gray-600 hover:!text-blue-600"
+                className={cls(isDark ? "!text-slate-300" : "!text-gray-600")}
               >
                 Hình thức đặt lịch
               </Button>
             </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Button
-                type="link"
-                size="small"
-                onClick={() => navigate("/booking-options/doctor")}
-                className="!p-0 !h-auto !text-gray-600 hover:!text-blue-600"
-              >
-                Tìm bác sĩ
-              </Button>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item className="text-blue-600 font-medium">
+            <Breadcrumb.Item
+              className={cls(
+                isDark ? "text-blue-300" : "text-blue-600",
+                "font-semibold"
+              )}
+            >
               Đặt lịch khám
             </Breadcrumb.Item>
           </Breadcrumb>
         </div>
       </div>
 
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px" }}>
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
-            {/* Left Column - Doctor Info */}
             <DoctorInfoCard doctor={doctor} />
           </Col>
 
-          {/* Right Column - Booking Form */}
           <Col xs={24} lg={16}>
             <Card
-              style={{
-                borderRadius: "12px",
-                border: "1px solid #e8f4f8",
-              }}
-              bodyStyle={{ padding: "32px" }}
+              className={cls("rounded-xl", cardBg)}
+              bodyStyle={{ padding: 32 }}
             >
-              {/* Steps */}
               <Steps
                 current={currentStep}
-                style={{ marginBottom: "32px" }}
-                items={steps}
+                className={cls(isDark && "steps-dark")}
+                style={{ marginBottom: 32 }}
+                items={[
+                  { title: "Thông tin cá nhân" },
+                  { title: "Xác nhận" },
+                  { title: "Hoàn thành" },
+                ]}
               />
 
+              {/* STEP 1 */}
               {currentStep === 0 && (
-                <Form
-                  form={form}
-                  layout="vertical"
-                  onFinish={handleFormSubmit}
-                  requiredMark={false}
-                >
-                  {/* Hidden field for timeSlotId validation */}
+                <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
+                  {/* Hidden field */}
                   <Form.Item
                     name="timeSlotId"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Vui lòng chọn khung giờ khám!",
-                      },
-                    ]}
                     style={{ display: "none" }}
+                    rules={[
+                      { required: true, message: "Chọn khung giờ khám!" },
+                    ]}
                   >
                     <input type="hidden" />
                   </Form.Item>
-                  <div>
-                    <Title
-                      level={4}
-                      style={{ marginBottom: "24px", color: "#1890ff" }}
-                    >
-                      📅 Thông tin đặt lịch
-                    </Title>
 
-                    {/* Date Selection Card */}
-                    <Card
-                      className="mb-6"
-                      style={{
-                        borderRadius: "16px",
-                        border: "2px solid #e6f7ff",
-                        backgroundColor: "#fafcff",
-                        boxShadow: "0 4px 12px rgba(24, 144, 255, 0.1)",
-                      }}
-                      bodyStyle={{ padding: "24px" }}
-                    >
-                      <div style={{ marginBottom: "20px" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            marginBottom: "12px",
-                          }}
-                        >
-                          <CalendarOutlined
-                            style={{
-                              fontSize: "20px",
-                              color: "#1890ff",
-                              marginRight: "8px",
-                            }}
-                          />
-                          <Title
-                            level={5}
-                            style={{ margin: 0, color: "#1890ff" }}
-                          >
-                            Chọn ngày khám
-                          </Title>
-                        </div>
-                        <Text type="secondary" style={{ fontSize: "14px" }}>
-                          Vui lòng chọn ngày bạn muốn đặt lịch khám bệnh
-                        </Text>
-                      </div>
+                  <Title level={4} className={cls(titleTx, "!mb-4")}>
+                    📅 Thông tin đặt lịch
+                  </Title>
 
-                      <Select
-                        value={currentSelectedDate || undefined}
-                        onChange={handleDateSelect}
-                        className="w-full"
-                        size="large"
-                        placeholder="-- Chọn ngày khám --"
-                        style={{
-                          borderRadius: "12px",
-                        }}
-                        options={[...selectedDate].map((date) => ({
-                          value: date,
-                          label: (
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                padding: "4px 0",
-                              }}
-                            >
-                              <CalendarOutlined
-                                style={{ marginRight: "8px", color: "#1890ff" }}
-                              />
-                              <span style={{ fontWeight: "500" }}>{date}</span>
-                            </div>
-                          ),
-                        }))}
-                      />
-                    </Card>
+                  {/* DATE PICKER */}
+                  <Card
+                    className={cls("mb-6 rounded-xl", cardBg)}
+                    bodyStyle={{ padding: 24 }}
+                  >
+                    <div className="mb-3 flex items-center">
+                      <CalendarOutlined className="!text-blue-400 mr-2" />
+                      <Text
+                        className={cls(
+                          isDark ? "!text-blue-300 " : "!text-blue-600",
+                          "!font-medium "
+                        )}
+                      >
+                        Chọn ngày khám
+                      </Text>
+                    </div>
 
-                    {/* Time Slots Card */}
-                    <Card
-                      style={{
-                        borderRadius: "16px",
-                        border: "2px solid #f0f9ff",
-                        backgroundColor: "#fafcff",
-                        boxShadow: "0 4px 12px rgba(24, 144, 255, 0.08)",
-                      }}
-                      bodyStyle={{ padding: "24px" }}
-                    >
-                      <div style={{ marginBottom: "20px" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            marginBottom: "12px",
-                          }}
-                        >
-                          <ClockCircleOutlined
-                            style={{
-                              fontSize: "20px",
-                              color: "#52c41a",
-                              marginRight: "8px",
-                            }}
-                          />
-                          <Title
-                            level={5}
-                            style={{ margin: 0, color: "#52c41a" }}
-                          >
-                            Khung giờ khám
-                          </Title>
-                        </div>
-                        <Text type="secondary" style={{ fontSize: "14px" }}>
-                          {availableTimeSlots.length > 0
-                            ? `Có ${availableTimeSlots.length} khung giờ khả dụng`
-                            : "Vui lòng chọn ngày để xem khung giờ khả dụng"}
-                        </Text>
-                      </div>
-
-                      {availableTimeSlots.length > 0 ? (
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns:
-                              "repeat(auto-fit, minmax(200px, 1fr))",
-                            gap: "12px",
-                          }}
-                        >
-                          {availableTimeSlots.map((slot) => {
-                            const isSelected = selectedTimeSlotId === slot.id;
-                            return (
-                              <Button
-                                key={slot.id}
-                                size="large"
-                                type={isSelected ? "primary" : "default"}
-                                style={{
-                                  height: "60px",
-                                  borderRadius: "12px",
-                                  border: isSelected
-                                    ? "2px solid #1890ff"
-                                    : "2px solid #d9f7be",
-                                  backgroundColor: isSelected
-                                    ? "#1890ff"
-                                    : "#f6ffed",
-                                  color: isSelected ? "#ffffff" : "#52c41a",
-                                  fontWeight: "600",
-                                  fontSize: "15px",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  transition: "all 0.3s ease",
-                                  cursor: "pointer",
-                                  boxShadow: isSelected
-                                    ? "0 6px 16px rgba(24, 144, 255, 0.3)"
-                                    : "none",
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (!isSelected) {
-                                    e.currentTarget.style.borderColor =
-                                      "#52c41a";
-                                    e.currentTarget.style.backgroundColor =
-                                      "#e6f7ff";
-                                    e.currentTarget.style.transform =
-                                      "translateY(-2px)";
-                                    e.currentTarget.style.boxShadow =
-                                      "0 6px 16px rgba(82, 196, 26, 0.2)";
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (!isSelected) {
-                                    e.currentTarget.style.borderColor =
-                                      "#d9f7be";
-                                    e.currentTarget.style.backgroundColor =
-                                      "#f6ffed";
-                                    e.currentTarget.style.transform =
-                                      "translateY(0)";
-                                    e.currentTarget.style.boxShadow = "none";
-                                  }
-                                }}
-                                onClick={() => {
-                                  setSelectedTimeSlotId(slot.id);
-                                  form.setFieldsValue({
-                                    timeSlotId: slot.id,
-                                  });
-                                }}
-                              >
-                                <ClockCircleOutlined
-                                  style={{
-                                    fontSize: "16px",
-                                    marginBottom: "4px",
-                                    color: isSelected ? "#ffffff" : "#52c41a",
-                                  }}
-                                />
-                                <span>
-                                  {slot.startTime} - {slot.endTime}
-                                </span>
-                              </Button>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            textAlign: "center",
-                            padding: "40px 20px",
-                            backgroundColor: "#fafafa",
-                            borderRadius: "12px",
-                            border: "2px dashed #d9d9d9",
-                          }}
-                        >
-                          <ClockCircleOutlined
-                            style={{
-                              fontSize: "48px",
-                              color: "#bfbfbf",
-                              marginBottom: "16px",
-                            }}
-                          />
-                          <div>
-                            <Text
-                              strong
-                              style={{ color: "#8c8c8c", fontSize: "16px" }}
-                            >
-                              Chưa có khung giờ khả dụng
-                            </Text>
-                            <br />
-                            <Text type="secondary" style={{ fontSize: "14px" }}>
-                              Vui lòng chọn ngày khác hoặc liên hệ trực tiếp với
-                              phòng khám
-                            </Text>
-                          </div>
-                        </div>
+                    <Select
+                      size="large"
+                      value={currentSelectedDate || undefined}
+                      onChange={(v) => setCurrentSelectedDate(v)}
+                      className={cls(
+                        "w-full rounded-lg",
+                        isDark && "select-dark"
                       )}
-                      {/* Show validation error for timeSlotId */}
-                      <Form.Item shouldUpdate noStyle>
-                        {() => {
-                          const errs = form.getFieldError("timeSlotId");
-                          return errs && errs.length ? (
-                            <div style={{ color: "#ff4d4f", marginTop: 8 }}>
-                              {errs[0] || "Vui lòng chọn khung giờ khám!"}
-                            </div>
-                          ) : null;
-                        }}
-                      </Form.Item>
-                    </Card>
-                  </div>
+                      popupClassName={
+                        isDark ? "select-dark-dropdown" : undefined
+                      }
+                      options={selectedDate.map((d) => ({
+                        value: d,
+                        label: d,
+                      }))}
+                    />
+                  </Card>
 
-                  {/* Booker Information Section */}
+                  {/* TIME SLOTS */}
+                  <Card
+                    className={cls("rounded-xl", cardBg)}
+                    bodyStyle={{ padding: 24 }}
+                  >
+                    <div className="mb-3 flex items-center">
+                      <ClockCircleOutlined
+                        style={{ color: "#52c41a", marginRight: 8 }}
+                      />
+                      <Text
+                        className={cls(
+                          isDark ? "!text-green-300" : "!text-green-600",
+                          "!font-medium"
+                        )}
+                      >
+                        Khung giờ khám
+                      </Text>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {availableTimeSlots.map((slot) => {
+                        const active = selectedTimeSlotId === slot.id;
+                        return (
+                          <Button
+                            key={slot.id}
+                            size="large"
+                            onClick={() => {
+                              setSelectedTimeSlotId(slot.id);
+                              form.setFieldsValue({ timeSlotId: slot.id });
+                            }}
+                            className={cls(
+                              "rounded-lg !font-semibold",
+                              active
+                                ? "!bg-blue-600 !text-white !shadow-lg"
+                                : isDark
+                                ? "!bg-[#0f1625] !text-green-300 !border-green-700 hover:!bg-[#0d1a2b]"
+                                : "!bg-green-50 text-green-700 border-green-200"
+                            )}
+                          >
+                            {slot.startTime} - {slot.endTime}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </Card>
+
                   <BookerInfoForm
                     bookingFor={bookingFor}
                     setBookingFor={setBookingFor}
                   />
-
-                  {/* Patient Information Section */}
                   <PatientInfoForm bookingFor={bookingFor} />
 
-                  <div style={{ textAlign: "center", marginTop: "32px" }}>
+                  <div className="text-center mt-6">
                     <Button
                       type="primary"
                       size="large"
                       htmlType="submit"
-                      loading={submitting}
-                      style={{
-                        width: "200px",
-                        height: "48px",
-                        borderRadius: "8px",
-                        fontSize: "16px",
-                        fontWeight: "500",
-                        background:
-                          "linear-gradient(135deg, #1890ff 0%, #40a9ff 100%)",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(24, 144, 255, 0.3)",
-                      }}
+                      className="rounded-lg w-48 h-12"
                     >
                       Tiếp tục
                     </Button>
@@ -661,94 +535,29 @@ const MakeAppointmentPage = () => {
                 </Form>
               )}
 
+              {/* STEP 2 */}
               {currentStep === 1 && (
-                <div>
-                  <Title
-                    level={4}
-                    style={{
-                      color: "#1890ff",
-                      marginBottom: "24px",
-                      textAlign: "center",
-                    }}
-                  >
-                    Xác nhận thông tin đặt lịch
+                <div className="text-center">
+                  <Title level={4} className={cls(titleTx, "!mb-6")}>
+                    Xác nhận thông tin
                   </Title>
 
-                  {/* Hiển thị thông tin đã nhập */}
                   <ConfirmCard
                     formData={formData as BookingFormData}
-                    availableTimeSlots={availableTimeSlots as TimeSlot[]}
+                    availableTimeSlots={availableTimeSlots}
                   />
 
-                  <div style={{ textAlign: "center" }}>
-                    <Paragraph
-                      style={{ fontSize: "16px", marginBottom: "32px" }}
-                    >
-                      Vui lòng kiểm tra lại thông tin và xác nhận đặt lịch
-                    </Paragraph>
-                    <Space size="large">
-                      <Button
-                        size="large"
-                        onClick={() => setCurrentStep(0)}
-                        style={{ width: "120px" }}
-                      >
-                        Quay lại
-                      </Button>
-                      <Button
-                        type="primary"
-                        size="large"
-                        loading={submitting}
-                        onClick={() => {
-                          handleConfirmBooking();
-                        }}
-                        style={{
-                          width: "180px",
-                          height: "40px",
-                        }}
-                      >
-                        Xác nhận đặt lịch
-                      </Button>
-                    </Space>
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 2 && (
-                <div style={{ textAlign: "center" }}>
-                  <CheckCircleOutlined
-                    style={{
-                      fontSize: "64px",
-                      color: "#52c41a",
-                      marginBottom: "24px",
-                    }}
-                  />
-                  <Title
-                    level={3}
-                    style={{ color: "#52c41a", marginBottom: "16px" }}
-                  >
-                    Đặt lịch thành công!
-                  </Title>
-                  <Paragraph style={{ fontSize: "16px", marginBottom: "32px" }}>
-                    Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác
-                    nhận lịch khám.
-                    <br />
-                    Vui lòng giữ máy và chú ý điện thoại.
-                  </Paragraph>
-                  <Space size="large">
-                    <Button
-                      size="large"
-                      onClick={() => navigate("/")}
-                      style={{ width: "150px" }}
-                    >
-                      Về trang chủ
+                  <Space size="large" style={{ marginTop: 24 }}>
+                    <Button size="large" onClick={() => setCurrentStep(0)}>
+                      Quay lại
                     </Button>
                     <Button
                       type="primary"
                       size="large"
-                      onClick={() => navigate("/profile/appointments")}
-                      style={{ width: "150px" }}
+                      loading={submitting}
+                      onClick={handleConfirmBooking}
                     >
-                      Xem lịch khám
+                      Xác nhận đặt lịch
                     </Button>
                   </Space>
                 </div>
