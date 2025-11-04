@@ -16,7 +16,7 @@ const ClientHeader = () => {
     theme,
   } = useCurrentApp();
   const navigate = useNavigate();
-
+  const isDark = theme === "dark";
   useEffect(() => {
     if (isAuthenticated && !user && !isAppLoading) {
       refreshUserData();
@@ -33,15 +33,52 @@ const ClientHeader = () => {
 
   const itemsDropdown = [
     ...(user?.userType === "ADMIN"
-      ? [{ label: <Link to="/admin">Trang quản trị</Link>, key: "admin" }]
+      ? [
+          {
+            label: (
+              <Link
+                to="/admin"
+                className={`cursor-pointer ${
+                  theme === "dark" ? "!text-white" : "!text-black"
+                }`}
+              >
+                Trang quản trị
+              </Link>
+            ),
+            key: "admin",
+          },
+        ]
       : []),
     ...(user?.userType === "DOCTOR"
-      ? [{ label: <Link to="/doctor">Trang bác sĩ</Link>, key: "doctor" }]
+      ? [
+          {
+            label: (
+              <Link
+                to="/doctor"
+                className={`cursor-pointer ${
+                  theme === "dark" ? "!text-white" : "!text-black"
+                }`}
+              >
+                Trang bác sĩ
+              </Link>
+            ),
+            key: "doctor",
+          },
+        ]
       : []),
     ...(user?.userType === "PATIENT"
       ? [
           {
-            label: <Link to="/my-account">Quản lý tài khoản</Link>,
+            label: (
+              <Link
+                to="/my-account"
+                className={`cursor-pointer ${
+                  theme === "dark" ? "!text-white" : "!text-black"
+                }`}
+              >
+                Quản lý tài khoản
+              </Link>
+            ),
             key: "my-account",
           },
         ]
@@ -246,7 +283,25 @@ const ClientHeader = () => {
                   )}
                 </div>
               </div>
-              <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
+              <Dropdown
+                dropdownRender={(menu) => (
+                  <div
+                    className={`rounded-xl p-1 shadow-lg ${
+                      isDark
+                        ? "!bg-[#1A2F4B] !border !border-[#1f2a3a]"
+                        : "!bg-white !border !border-gray-200"
+                    }`}
+                  >
+                    {menu}
+                  </div>
+                )}
+                menu={{
+                  items: itemsDropdown,
+                  // loại bỏ padding mặc định của antd menu để xài padding của khung ngoài
+                  className: "!bg-transparent !border-0 !shadow-none",
+                }}
+                trigger={["click"]}
+              >
                 <div
                   className={`
                   flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition

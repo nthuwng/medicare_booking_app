@@ -7,7 +7,6 @@ import DoctorBookingPage from "@/modules/client/pages/booking/DoctorBookingPage"
 import HomePage from "@/modules/client/pages/HomePage";
 import SpecialtyBookingPage from "@/modules/client/pages/booking/SpecialtyBookingPage";
 import LoginPage from "@/pages/LoginPage";
-import RegisterPage from "@/pages/register";
 import { Route, Routes } from "react-router-dom";
 import DoctorDetailPage from "@/modules/client/pages/doctor/DoctorDetailPage";
 import MakeAppointmentPage from "@/modules/client/pages/booking/MakeAppointmentPage";
@@ -22,6 +21,7 @@ import AboutPage from "@/modules/client/pages/AboutPage";
 import LayoutAccount from "@/modules/client/components/LayoutAccount/LayoutAccount";
 import TopRateDoctors from "@/modules/client/pages/TopRateDoctors";
 import ContactPartnerPage from "@/modules/client/pages/ContactPartnerPage";
+import RegisterPage from "@/pages/register";
 
 const ClientRoutes = () => {
   return (

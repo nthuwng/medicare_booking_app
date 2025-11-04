@@ -454,7 +454,7 @@ const ClinicCreate = (props: IProps) => {
 
               <Form.Item<FieldType>
                 labelCol={{ span: 24 }}
-                label="Ảnh chuyên khoa"
+                label="Ảnh phòng khám"
                 name="icon"
                 rules={[{ required: true, message: "Vui lòng upload ảnh!" }]}
                 valuePropName="fileList"
