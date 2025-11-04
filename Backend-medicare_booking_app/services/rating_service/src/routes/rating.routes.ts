@@ -11,9 +11,13 @@ const router = express.Router();
 
 const ratingRoutes = (app: Express) => {
   router.get("/:id", authenticateToken, getRatingByIdController);
-  router.get("/by-doctorId/:doctorId", authenticateToken, getRatingByDoctorIdController);
+  router.get(
+    "/by-doctorId/:doctorId",
+    authenticateToken,
+    getRatingByDoctorIdController
+  );
   router.post("/", authenticateToken, createRatingController);
-  router.get("/top-rate/doctors", authenticateToken, getTopRateDoctorsController);
+  router.get("/top-rate/doctors", getTopRateDoctorsController);
   app.use("/", router);
 };
 
