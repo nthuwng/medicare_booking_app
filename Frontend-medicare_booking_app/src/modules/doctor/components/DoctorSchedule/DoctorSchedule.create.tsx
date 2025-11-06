@@ -53,7 +53,6 @@ const DoctorScheduleCreate = (props: IProps) => {
   const [form] = Form.useForm();
 
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
-    console.log("values", values);
     const d = values.date;
 
     const payload = {

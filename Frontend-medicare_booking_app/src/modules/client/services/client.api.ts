@@ -180,7 +180,47 @@ const getTopRateDoctorsAPI = (page: number, pageSize: number) => {
   return axios.get<IBackendRes<IModelPaginate<ITopRateDoctors>>>(urlBackend);
 };
 
+const sendEmailOtpAPI = (email: string) => {
+  const urlBackend = `/api/auth/forgot-password`;
+  return axios.post<IBackendRes<any>>(urlBackend, {
+    email,
+  });
+};
+
+const verifyOtpAPI = (email: string, otp: string) => {
+  const urlBackend = `/api/auth/verify-otp`;
+  return axios.post<IBackendRes<any>>(urlBackend, {
+    email,
+    otp,
+  });
+};
+
+const resendOtpAPI = (email: string) => {
+  const urlBackend = `/api/auth/resend-otp`;
+  return axios.post<IBackendRes<any>>(urlBackend, {
+    email,
+  });
+};
+
+const putUpdatePasswordFromEmailApi = (
+  passwordEmail: string,
+  password: string,
+  confirmPassword: string,
+  email: string
+) => {
+  const urlBackend = `/api/auth/change-password-email/${email}`;
+  return axios.put<IBackendRes<any>>(urlBackend, {
+    passwordEmail,
+    password,
+    confirmPassword,
+  });
+};
+
 export {
+  resendOtpAPI,
+  putUpdatePasswordFromEmailApi,
+  verifyOtpAPI,
+  sendEmailOtpAPI,
   getTopRateDoctorsAPI,
   updatePatientProfileAPI,
   getPatientProfileAPI,

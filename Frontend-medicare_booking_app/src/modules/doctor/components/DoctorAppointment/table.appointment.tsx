@@ -172,8 +172,7 @@ const TableAppointment = () => {
           const fallback = new Date(dob).getUTCFullYear();
           return Number.isNaN(fallback) ? undefined : fallback;
         };
-        const birthYear = extractBirthYear(patient.patientDateOfBirth);
-        console.log("birthYear", birthYear);
+        const birthYear = extractBirthYear(patient.patientDateOfBirth);;
         let ageYears: number | undefined = undefined;
         if (typeof birthYear === "number") {
           const currentYear = new Date().getFullYear();

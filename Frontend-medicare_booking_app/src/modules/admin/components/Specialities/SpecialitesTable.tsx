@@ -184,10 +184,8 @@ const SpecialitesTable = () => {
             if (params.specialtyName)
               query += `&specialtyName=${params.specialtyName}`;
           }
-          console.log("query", query);
           const res = await getAllSpecialties(query);
           if (res?.data?.meta) setMeta(res.data.meta);
-          console.log("meta", meta);
           return {
             data: res.data?.result || [],
             success: true,

@@ -31,7 +31,6 @@ const AppointmentDetail = (props: IProps) => {
     dataViewDetail,
     setDataViewDetail,
   } = props;
-  console.log("têst", dataViewDetail);
   const onClose = () => {
     setOpenViewDetail(false);
     setDataViewDetail(null);

@@ -21,7 +21,8 @@ import AboutPage from "@/modules/client/pages/AboutPage";
 import LayoutAccount from "@/modules/client/components/LayoutAccount/LayoutAccount";
 import TopRateDoctors from "@/modules/client/pages/TopRateDoctors";
 import ContactPartnerPage from "@/modules/client/pages/ContactPartnerPage";
-import RegisterPage from "@/pages/register";
+import ForgotPassword from "@/modules/client/pages/ForgotPassword";
+import RegisterPage from "@/pages/Register";
 
 const ClientRoutes = () => {
   return (
@@ -112,6 +113,8 @@ const ClientRoutes = () => {
 
         {/* Bác sĩ được đánh giá cao */}
         <Route path="/top-rate-doctors" element={<TopRateDoctors />} />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

@@ -260,9 +260,6 @@ const ClinicUpdate = (props: IProps) => {
     }
   };
 
-
-  console.log("fileListIcon", fileListIcon);
-
   return (
     <>
       <Modal

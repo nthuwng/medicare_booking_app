@@ -444,7 +444,6 @@ const DoctorMessagePage = () => {
     const cached = patientCacheRef.current.get(pid);
     if (cached) return cached;
     const res = await getPatientDetailBookingById(pid);
-    console.log("res", res);
     if (res?.data) {
       patientCacheRef.current.set(pid, res.data);
       return res.data as IPatientProfile;
