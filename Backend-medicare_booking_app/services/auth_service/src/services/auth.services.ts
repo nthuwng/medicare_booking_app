@@ -12,10 +12,16 @@ import jwt from "jsonwebtoken";
 import "dotenv/config";
 import { config } from "../config/config.index";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 import {
   createUserProfileViaRabbitMQ,
   importDoctorProfilesViaRabbitMQ,
+  sendEmailForgotPassword,
+  sendEmailResetPassword,
 } from "src/queue/publishers/auth.publisher";
+import { randomUUID } from "crypto";
+
 const hashPassword = async (password: string) => {
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   return hashedPassword;
@@ -43,6 +49,7 @@ const handleRegister = async (
       email,
       password: newPassword,
       userType: userType as UserType,
+      verificationOtp: "",
     },
   });
 
@@ -429,6 +436,7 @@ const handleLoginWithGoogleAPI = async (
           password: hashed,
           userType: UserType.PATIENT,
           authProvider: AuthProvider.GOOGLE,
+          verificationOtp: "",
         },
       });
     }
@@ -529,6 +537,7 @@ const handleBulkCreateUsersAPI = async (users: any[]) => {
           email: user.email.trim().toLowerCase(),
           password: hashed,
           userType: user.userType,
+          verificationOtp: "",
         },
         select: { id: true, email: true },
       });
@@ -573,6 +582,133 @@ const handleBulkCreateUsersAPI = async (users: any[]) => {
     };
   }
 };
+
+const handleForgotPassword = async (email: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (!user) {
+    return {
+      success: false,
+      message: "Email không tồn tại trong hệ thống.",
+    };
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 số
+  const expUtc = dayjs.utc().add(3, "minute").toDate();
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      verificationOtp: otp,
+      verificationOtpExp: expUtc,
+    },
+  });
+
+  await sendEmailForgotPassword(email, otp);
+
+  return null;
+};
+
+const handleVerifyOtp = async (email: string, otp: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (!user) {
+    return {
+      success: false,
+      message: "Email không tồn tại trong hệ thống.",
+    };
+  }
+
+  if (user.verificationOtp !== otp) {
+    return {
+      success: false,
+      message: "Mã OTP không đúng.",
+    };
+  }
+
+  const nowUtc = dayjs.utc();
+  const expUtc = dayjs(user.verificationOtpExp).utc();
+  const expired = nowUtc.valueOf() >= expUtc.valueOf();
+
+  if (expired) {
+    return { success: false, message: "Mã OTP đã hết hạn." };
+  }
+
+  const newPassword = randomUUID().slice(0, 8); // Lấy 8 ký tự đầu
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      password: await hashPassword(newPassword),
+      authProvider: AuthProvider.EMAIL,
+      verificationOtp: null,
+      verificationOtpExp: null,
+    },
+  });
+
+  await sendEmailResetPassword(email, newPassword);
+
+  return {
+    success: true,
+    message: "Xác thực OTP thành công. Mật khẩu mới đã được gửi qua email.",
+  };
+};
+
+const handleUpdatePasswordFromEmail = async (
+  email: string,
+  passwordEmail: string,
+  password: string,
+  confirmPassword: string
+) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (!user) {
+    return {
+      success: false,
+      message: "Email không tồn tại trong hệ thống.",
+    };
+  }
+
+  const checkPassword = await comparePassword(
+    passwordEmail,
+    user?.password || ""
+  );
+
+  if (!checkPassword) {
+    return {
+      success: false,
+      message: "Mật khẩu không chính xác.",
+    };
+  }
+
+  await prisma.user.update({
+    where: { email },
+    data: { password: password },
+  });
+
+  const hashedPassword = await hashPassword(password);
+  await prisma.user.update({
+    where: { email },
+    data: { password: hashedPassword },
+  });
+
+  return {
+    success: true,
+    message: "Đổi mật khẩu thành công.",
+  };
+};
 export {
   hashPassword,
   handleRegister,
@@ -592,4 +728,7 @@ export {
   countTotalUser,
   handleLoginWithGoogleAPI,
   handleBulkCreateUsersAPI,
+  handleForgotPassword,
+  handleVerifyOtp,
+  handleUpdatePasswordFromEmail,
 };

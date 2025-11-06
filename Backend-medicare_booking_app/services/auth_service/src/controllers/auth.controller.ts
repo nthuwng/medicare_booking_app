@@ -15,6 +15,9 @@ import {
   handleLoginWithGoogleAPI,
   countTotalUser,
   handleBulkCreateUsersAPI,
+  handleForgotPassword,
+  handleVerifyOtp,
+  handleUpdatePasswordFromEmail,
 } from "../services/auth.services";
 import {
   changePasswordSchema,
@@ -514,6 +517,95 @@ const bulkCreateUsersAPI = async (req: Request, res: Response) => {
     });
   }
 };
+
+const postForgetPasswordApi = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400).json({
+      success: false,
+      message: "Email là bắt buộc",
+      data: null,
+    });
+    return;
+  }
+
+  const password = await handleForgotPassword(email);
+
+  if (password?.success === false) {
+    res.status(404).json({
+      success: false,
+      message: password.message,
+    });
+    return;
+  }
+
+  res.status(501).json({
+    success: true,
+    message: "OTP đã được gửi đến email của bạn",
+  });
+};
+
+const postVerifyOtpApi = async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    res.status(400).json({
+      success: false,
+      message: "Email và OTP là bắt buộc",
+      data: null,
+    });
+    return;
+  }
+
+  const result = await handleVerifyOtp(email, otp);
+
+  if (result.success === false) {
+    res.status(400).json({
+      success: false,
+      message: result.message,
+    });
+    return;
+  }
+
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+};
+
+const putUpdatePasswordFromEmailApi = async (req: Request, res: Response) => {
+  const { passwordEmail, password, confirmPassword } = req.body;
+  const { email } = req.params;
+
+  if (!passwordEmail || !password || !confirmPassword) {
+    res.status(400).json({
+      success: false,
+      message: "Email, mật khẩu mới và xác nhận mật khẩu là bắt buộc",
+    });
+    return;
+  }
+
+  const result = await handleUpdatePasswordFromEmail(
+    email,
+    passwordEmail,
+    password,
+    confirmPassword
+  );
+
+  if (result.success === false) {
+    res.status(400).json({
+      success: false,
+      message: result.message,
+    });
+    return;
+  }
+
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+};
+
 export {
   postRegisterAPI,
   postLoginAPI,
@@ -526,4 +618,7 @@ export {
   getRefreshTokenApi,
   postLoginWithGoogleAPI,
   bulkCreateUsersAPI,
+  postForgetPasswordApi,
+  postVerifyOtpApi,
+  putUpdatePasswordFromEmailApi,
 };

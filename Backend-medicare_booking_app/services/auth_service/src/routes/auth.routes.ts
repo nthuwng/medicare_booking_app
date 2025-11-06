@@ -10,6 +10,9 @@ import {
   getAllUsersAPI,
   postLoginWithGoogleAPI,
   bulkCreateUsersAPI,
+  postForgetPasswordApi,
+  postVerifyOtpApi,
+  putUpdatePasswordFromEmailApi,
 } from "../controllers/auth.controller";
 import {
   authenticateToken,
@@ -29,6 +32,11 @@ const authRoutes = (app: Express) => {
   router.post("/revoke-token", postRevokeRefreshTokenApi);
   router.put("/users/:id/password", authenticateToken, putUpdatePasswordApi);
   router.post("/bulk-create-users", bulkCreateUsersAPI);
+
+  router.post("/forgot-password", postForgetPasswordApi);
+  router.post("/verify-otp", postVerifyOtpApi);
+  router.post("/resend-otp", postForgetPasswordApi);
+  router.put("/change-password-email/:email", putUpdatePasswordFromEmailApi);
 
   app.use("/", router);
 };
