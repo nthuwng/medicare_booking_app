@@ -8,7 +8,6 @@ import {
   handleGetAllApprovedDoctors,
   handleSpecialtyDoctorCheck,
   getDoctorByUserIdService,
-  countTotalDoctor,
   updateDoctorAvatarService,
 } from "src/services/doctorServices";
 
@@ -66,9 +65,9 @@ const getAllDoctorsController = async (req: Request, res: Response) => {
     if (currentPage <= 0) {
       currentPage = 1;
     }
-    const totalPages = await countTotalDoctorPage(parseInt(pageSize as string));
-    const totalItems = await countTotalDoctor();
-    const { doctors, totalDoctors } = await handleGetAllDoctors(
+
+    const size = Math.max(1, Math.min(100, Number(pageSize) || 10));
+    const { doctors, totalItems } = await handleGetAllDoctors(
       currentPage,
       parseInt(pageSize as string),
       fullName as string,
@@ -76,7 +75,9 @@ const getAllDoctorsController = async (req: Request, res: Response) => {
       title as string
     );
 
-    if (doctors.length === 0) {
+    const pages = Math.max(1, Math.ceil(totalItems / size));
+
+    if (!doctors) {
       res.status(200).json({
         success: true,
         message: "Không có bác sĩ nào được duyệt trong trang này",
@@ -84,7 +85,7 @@ const getAllDoctorsController = async (req: Request, res: Response) => {
           meta: {
             currentPage: currentPage,
             pageSize: parseInt(pageSize as string),
-            pages: totalPages,
+            pages: pages,
             total: totalItems,
           },
           result: [],
@@ -95,13 +96,13 @@ const getAllDoctorsController = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-      total: totalItems,
+      length: totalItems,
       message: "Lấy danh sách tất cả bác sĩ thành công.",
       data: {
         meta: {
           currentPage: currentPage,
           pageSize: parseInt(pageSize as string),
-          pages: totalPages,
+          pages: pages,
           total: totalItems,
         },
         result: doctors,

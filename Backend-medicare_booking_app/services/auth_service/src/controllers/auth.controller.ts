@@ -11,13 +11,12 @@ import {
   handleRefreshToken,
   handleRevokeRefreshToken,
   handleGetAllUsersAPI,
-  countTotalUserPage,
   handleLoginWithGoogleAPI,
-  countTotalUser,
   handleBulkCreateUsersAPI,
   handleForgotPassword,
   handleVerifyOtp,
   handleUpdatePasswordFromEmail,
+  handleUpdateLockUser,
 } from "../services/auth.services";
 import {
   changePasswordSchema,
@@ -30,6 +29,7 @@ import {
   VerifyTokenResponse,
   RefreshTokenResponse,
 } from "@shared/interfaces/auth/IAuth";
+import { UserType } from "@prisma/client";
 
 const postRegisterAPI = async (req: Request, res: Response) => {
   try {
@@ -386,19 +386,22 @@ const getRefreshTokenApi = async (req: Request, res: Response) => {
 };
 
 const getAllUsersAPI = async (req: Request, res: Response) => {
-  const { page, pageSize, email } = req.query;
+  const { page, pageSize, email, userType, isActive } = req.query;
   let currentPage = page ? +page : 1;
   if (currentPage <= 0) {
     currentPage = 1;
   }
-  const totalPages = await countTotalUserPage(parseInt(pageSize as string));
-  const totalItems = await countTotalUser();
-  const users = await handleGetAllUsersAPI(
+  const size = Math.max(1, Math.min(100, Number(pageSize) || 10));
+  const { users, totalItems } = await handleGetAllUsersAPI(
     currentPage,
     parseInt(pageSize as string),
-    email as string
+    email as string,
+    userType as UserType,
+    isActive as string
   );
-  if (users.length === 0) {
+
+  const pages = Math.max(1, Math.ceil(totalItems / size));
+  if (!users.length) {
     res.status(200).json({
       success: true,
       message: "Không có người dùng nào trong trang này",
@@ -406,7 +409,7 @@ const getAllUsersAPI = async (req: Request, res: Response) => {
         meta: {
           currentPage: currentPage,
           pageSize: parseInt(pageSize as string),
-          pages: totalPages,
+          pages: pages,
           total: totalItems,
         },
         result: [],
@@ -416,13 +419,13 @@ const getAllUsersAPI = async (req: Request, res: Response) => {
   }
   res.status(200).json({
     success: true,
-    length: users.length,
+    length: totalItems,
     message: "Lấy danh sách tất cả người dùng thành công.",
     data: {
       meta: {
         currentPage: currentPage,
         pageSize: parseInt(pageSize as string),
-        pages: totalPages,
+        pages: pages,
         total: totalItems,
       },
       result: users,
@@ -606,6 +609,26 @@ const putUpdatePasswordFromEmailApi = async (req: Request, res: Response) => {
   });
 };
 
+const putUpdateLockUserApi = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { lock } = req.body;
+
+  const result = await handleUpdateLockUser(id, lock);
+
+  if (!result) {
+    res.status(400).json({
+      success: false,
+      message: "Không thể cập nhật trạng thái khóa người dùng",
+    });
+    return;
+  }
+
+  res.status(200).json({
+    success: true,
+    message: result.message,
+  });
+};
+
 export {
   postRegisterAPI,
   postLoginAPI,
@@ -620,5 +643,6 @@ export {
   bulkCreateUsersAPI,
   postForgetPasswordApi,
   postVerifyOtpApi,
+  putUpdateLockUserApi,
   putUpdatePasswordFromEmailApi,
 };

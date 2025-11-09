@@ -268,15 +268,21 @@ const handleGetAllDoctors = async (
     });
   }
 
-  const doctors = await prisma.doctor.findMany({
-    include: {
-      clinic: true,
-      specialty: true,
-    },
-    where: whereConditions.length > 0 ? { AND: whereConditions } : {},
-    skip: skip,
-    take: pageSize,
-  });
+  const [doctors, total] = await Promise.all([
+    prisma.doctor.findMany({
+      include: {
+        clinic: true,
+        specialty: true,
+      },
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+      skip: skip,
+      take: pageSize,
+    }),
+    prisma.doctor.count({
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+    }),
+    countTotalDoctor(),
+  ]);
 
   const userAllUsers = await getAllDoctorsViaRabbitMQ();
 
@@ -289,7 +295,7 @@ const handleGetAllDoctors = async (
 
   return {
     doctors: doctorsWithUserInfo,
-    totalDoctors: doctorsWithUserInfo.length,
+    totalItems: total,
   };
 };
 

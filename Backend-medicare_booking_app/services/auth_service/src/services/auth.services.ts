@@ -75,6 +75,13 @@ const handleLoginApi = async (
       return { success: false, message: `Email: ${email} không tồn tại` };
     }
 
+    if (user.isActive === false) {
+      return {
+        success: false,
+        message: `Tài khoản của bạn đã bị khóa . Vui lòng liên hệ ADMIN .`,
+      };
+    }
+
     const isMatch = await comparePassword(password, user.password);
 
     if (!isMatch) {
@@ -361,27 +368,63 @@ const countTotalUserPage = async (pageSize: number) => {
 const handleGetAllUsersAPI = async (
   page: number,
   pageSize: number,
-  email: string
+  email: string,
+  userType: string,
+  isActive: string
 ) => {
   const skip = (page - 1) * pageSize;
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      userType: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-    where: {
-      email: {
-        contains: email || "",
+
+  // Build where conditions
+  const whereConditions: any[] = [];
+
+  if (email && email.trim() !== "") {
+    whereConditions.push({
+      email: { contains: email },
+    });
+  }
+
+  if (userType && userType.trim() !== "") {
+    whereConditions.push({
+      userType: { equals: userType as UserType },
+    });
+  }
+
+  if (isActive && isActive.trim() !== "") {
+    whereConditions.push({
+      isActive: { equals: isActive === "true" },
+    });
+  }
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        userType: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
       },
-    },
-    skip: skip,
-    take: pageSize,
-  });
-  return users;
+      where: {
+        email: {
+          contains: email || "",
+        },
+        userType: userType ? (userType as UserType) : undefined,
+        isActive: isActive ? isActive === "true" : undefined,
+      },
+      skip: skip,
+      take: pageSize,
+    }),
+
+    prisma.user.count({
+      where: whereConditions.length > 0 ? { AND: whereConditions } : {},
+    }),
+    countTotalUser(),
+  ]);
+  return {
+    users: users,
+    totalItems: total,
+  };
 };
 
 const handleGetAllUsers = async () => {
@@ -709,6 +752,30 @@ const handleUpdatePasswordFromEmail = async (
     message: "Đổi mật khẩu thành công.",
   };
 };
+
+const handleUpdateLockUser = async (id: string, isActive: boolean) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id,
+    },
+  });
+  if (!user) {
+    return {
+      success: false,
+      message: "Người dùng không tồn tại trong hệ thống.",
+    };
+  }
+  await prisma.user.update({
+    where: { id },
+    data: { isActive },
+  });
+  return {
+    success: true,
+    message: isActive
+      ? "Mở khóa người dùng thành công."
+      : "Khóa người dùng thành công.",
+  };
+};
 export {
   hashPassword,
   handleRegister,
@@ -731,4 +798,5 @@ export {
   handleForgotPassword,
   handleVerifyOtp,
   handleUpdatePasswordFromEmail,
+  handleUpdateLockUser,
 };
