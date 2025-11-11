@@ -29,3 +29,16 @@
 Đứng tại Medicare_booking_app chạy lệnh
 - npm run build
 ```
+
+### Fix lỗi : Đợi từng terminal chạy xong rồi hãy chạy terminal khác
+
+```
+    Environment variables loaded from .env
+    Prisma schema loaded from prisma\schema.prisma
+    Datasource "db": MySQL database "payment_db" at "localhost:3313"
+    Error: P1001: Can't reach database server at `localhost:3313`
+    Please make sure your database server is running at `localhost:3313`.
+
+```
+
+---> **_ Cách fix đổi DATABASE_URL trong env của services từ localhost thành 127.0.0.1 _**
