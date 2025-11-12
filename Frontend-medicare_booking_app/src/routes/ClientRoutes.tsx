@@ -12,6 +12,7 @@ import DoctorDetailPage from "@/modules/client/pages/doctor/DoctorDetailPage";
 import MakeAppointmentPage from "@/modules/client/pages/booking/MakeAppointmentPage";
 import PaymentSelectionPage from "@/modules/client/pages/booking/PaymentSelectionPage";
 import PaymentReturnPage from "@/modules/client/pages/booking/PaymentReturnPage";
+import CashPaymentSuccessPage from "@/modules/client/pages/booking/CashPaymentSuccessPage";
 import MessagePage from "@/modules/client/pages/MessagePage";
 import MyAppointmentsPage from "@/modules/client/pages/appointments/MyAppointmentsPage";
 import AppointmentDetailPage from "@/modules/client/pages/appointments/AppointmentDetailPage";
@@ -98,6 +99,12 @@ const ClientRoutes = () => {
 
         {/* Trang kết quả thanh toán VNPay */}
         <Route path="/payment-return" element={<PaymentReturnPage />} />
+
+        {/* Trang thành công thanh toán tiền mặt */}
+        <Route
+          path="/cash-payment-success"
+          element={<CashPaymentSuccessPage />}
+        />
 
         {/* Trang chi tiết lịch đã đặt */}
         <Route

@@ -1,4 +1,5 @@
 import type { IClinic, ISchedule, ISpecialty } from "@/types";
+import type { IPayment } from "./payment";
 
 export interface IAppointment {
   id: string;
@@ -71,10 +72,10 @@ export interface IAppointmentFullDetail {
   patient: IPatient;
   schedule: ISchedule;
   doctor: IDoctorProfileFullDetail;
+  payment: IPayment;
 }
 
 export interface IDoctorProfileFullDetail {
-
   id: string;
   userId: string;
   fullName: string;

@@ -13,6 +13,7 @@ import type {
 import type { IAppointment, IAppointmentFullDetail } from "@/types/appointment";
 import type { IConversationResponse, IMessage } from "@/types/message";
 import type { IRating, IRatingResponse, ITopRateDoctors } from "@/types/rating";
+import type { IReturnPaymentCancel } from "@/types/payment";
 
 const getAllApprovedDoctorsBooking = (query: string) => {
   const urlBackend = `/api/doctor/doctors/approved?${query}`;
@@ -47,9 +48,19 @@ const createVNPayPayment = (data: ICreateVNPayPaymentInput) => {
   );
 };
 
+const createCashPayment = (appointmentId: string, amount: string) => {
+  const urlBackend = `/api/payment/cash/create`;
+  return axios.post<IBackendRes<any>>(urlBackend, { appointmentId, amount });
+};
+
 const verifyVNPayReturn = (queryParams: string) => {
   const urlBackend = `/api/payment/vnpay/return?${queryParams}`;
   return axios.get<IBackendRes<any>>(urlBackend);
+};
+
+const cancelAppointmentAPI = (appointmentId: string) => {
+  const urlBackend = `/api/appointment/appointments/cancel-appointment/${appointmentId}`;
+  return axios.put<IBackendRes<IReturnPaymentCancel>>(urlBackend);
 };
 
 const getPatientByUserIdAPI = (userId: string) => {
@@ -90,9 +101,9 @@ const markMessagesAsReadAPI = (conversationId: number, userId: string) => {
 };
 
 // Lấy danh sách lịch đã đặt của bệnh nhân hiện tại
-const getMyAppointmentsAPI = () => {
-  const urlBackend = `/api/appointment/appointments/my-appointments`;
-  return axios.get<IBackendRes<IAppointment[]>>(urlBackend);
+const getMyAppointmentsAPI = (query: string) => {
+  const urlBackend = `/api/appointment/appointments/my-appointments?${query}`;
+  return axios.get<IBackendRes<IModelPaginate<IAppointment[]>>>(urlBackend);
 };
 
 const getMyAppointmentByIdAPI = (id: string) => {
@@ -243,4 +254,6 @@ export {
   createRatingAPI,
   putUpdatePasswordApi,
   deletePatientAvatarAPI,
+  createCashPayment,
+  cancelAppointmentAPI,
 };

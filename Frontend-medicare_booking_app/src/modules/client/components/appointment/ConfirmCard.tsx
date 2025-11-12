@@ -1,4 +1,5 @@
 import { Card, Typography, Row, Col } from "antd";
+import { useCurrentApp } from "@/components/contexts/app.context";
 
 const { Text } = Typography;
 
@@ -34,8 +35,13 @@ interface IProps {
   availableTimeSlots: TimeSlot[];
 }
 
+const cls = (...x: (string | false | undefined)[]) =>
+  x.filter(Boolean).join(" ");
+
 const ConfirmCard = (props: IProps) => {
   const { formData, availableTimeSlots } = props;
+  const { theme } = useCurrentApp();
+  const isDark = theme === "dark";
 
   const provinces = [
     { label: "Hà Nội", value: "hanoi" },
@@ -67,6 +73,16 @@ const ConfirmCard = (props: IProps) => {
     const formatTime = (time: string) => time.substring(0, 5); // Remove seconds
     return `${formatTime(startTime)} - ${formatTime(endTime)}`;
   };
+
+  const cardBg = isDark
+    ? "!bg-[#1a2332] !border-2 !border-[#2d3f5a]"
+    : "!bg-white !border";
+
+  const titleClass = isDark ? "!text-gray-100" : "!text-gray-800";
+  const textStrongClass = isDark ? "!text-gray-300" : "!text-gray-700";
+  const textNormalClass = isDark ? "!text-gray-400" : "!text-gray-600";
+  const highlightClass = isDark ? "!text-blue-400" : "!text-blue-600";
+
   return (
     <>
       <div style={{ marginBottom: "32px" }}>
@@ -77,18 +93,28 @@ const ConfirmCard = (props: IProps) => {
               {/* Thông tin người đặt lịch (nếu đặt cho người thân) */}
               {currentFormData?.bookingFor === "other" && (
                 <Card
-                  title="👤 Thông tin người đặt lịch"
-                  style={{ marginBottom: "16px" }}
+                  title={
+                    <span className={titleClass}>
+                      👤 Thông tin người đặt lịch
+                    </span>
+                  }
+                  className={cls("!rounded-xl !mb-4 !shadow-md", cardBg)}
                   size="small"
                 >
                   <Row gutter={[16, 8]}>
                     <Col xs={24} md={12}>
-                      <Text strong>Họ tên: </Text>
-                      <Text>{formData?.bookerName}</Text>
+                      <Text strong className={textStrongClass}>
+                        Họ tên:{" "}
+                      </Text>
+                      <Text className={textNormalClass}>
+                        {formData?.bookerName}
+                      </Text>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Text strong>Mối quan hệ: </Text>
-                      <Text>
+                      <Text strong className={textStrongClass}>
+                        Mối quan hệ:{" "}
+                      </Text>
+                      <Text className={textNormalClass}>
                         {
                           relationships.find(
                             (rel) =>
@@ -98,12 +124,20 @@ const ConfirmCard = (props: IProps) => {
                       </Text>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Text strong>Số điện thoại: </Text>
-                      <Text>{formData?.bookerPhone}</Text>
+                      <Text strong className={textStrongClass}>
+                        Số điện thoại:{" "}
+                      </Text>
+                      <Text className={textNormalClass}>
+                        {formData?.bookerPhone}
+                      </Text>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Text strong>Email: </Text>
-                      <Text>{formData?.bookerEmail}</Text>
+                      <Text strong className={textStrongClass}>
+                        Email:{" "}
+                      </Text>
+                      <Text className={textNormalClass}>
+                        {formData?.bookerEmail}
+                      </Text>
                     </Col>
                   </Row>
                 </Card>
@@ -112,36 +146,57 @@ const ConfirmCard = (props: IProps) => {
               {/* Thông tin bệnh nhân */}
               <Card
                 title={
-                  formData?.bookingFor === "self"
-                    ? "👤 Thông tin của bạn"
-                    : "🏥 Thông tin bệnh nhân"
+                  <span className={titleClass}>
+                    {formData?.bookingFor === "self"
+                      ? "👤 Thông tin của bạn"
+                      : "🏥 Thông tin bệnh nhân"}
+                  </span>
                 }
+                className={cls("!rounded-xl !shadow-md", cardBg)}
                 size="small"
               >
                 <Row gutter={[16, 8]}>
                   <Col xs={24} md={12}>
-                    <Text strong>Họ tên: </Text>
-                    <Text>{formData?.patientName}</Text>
+                    <Text strong className={textStrongClass}>
+                      Họ tên:{" "}
+                    </Text>
+                    <Text className={textNormalClass}>
+                      {formData?.patientName}
+                    </Text>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Text strong>Giới tính: </Text>
-                    <Text>{formData?.gender === "male" ? "Nam" : "Nữ"}</Text>
+                    <Text strong className={textStrongClass}>
+                      Giới tính:{" "}
+                    </Text>
+                    <Text className={textNormalClass}>
+                      {formData?.gender === "male" ? "Nam" : "Nữ"}
+                    </Text>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Text strong>Số điện thoại: </Text>
-                    <Text>{formData?.phone}</Text>
+                    <Text strong className={textStrongClass}>
+                      Số điện thoại:{" "}
+                    </Text>
+                    <Text className={textNormalClass}>{formData?.phone}</Text>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Text strong>Email: </Text>
-                    <Text>{formData?.email}</Text>
+                    <Text strong className={textStrongClass}>
+                      Email:{" "}
+                    </Text>
+                    <Text className={textNormalClass}>{formData?.email}</Text>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Text strong>Năm sinh: </Text>
-                    <Text>{formData?.dateOfBirth}</Text>
+                    <Text strong className={textStrongClass}>
+                      Năm sinh:{" "}
+                    </Text>
+                    <Text className={textNormalClass}>
+                      {formData?.dateOfBirth}
+                    </Text>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Text strong>Địa chỉ: </Text>
-                    <Text>
+                    <Text strong className={textStrongClass}>
+                      Địa chỉ:{" "}
+                    </Text>
+                    <Text className={textNormalClass}>
                       {formData?.address},{" "}
                       {
                         districts.find((d) => d.value === formData?.district)
@@ -155,24 +210,18 @@ const ConfirmCard = (props: IProps) => {
                     </Text>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Text strong>Ngày khám: </Text>
-                    <Text
-                      style={{
-                        color: "#1890ff",
-                        fontWeight: "600",
-                      }}
-                    >
+                    <Text strong className={textStrongClass}>
+                      Ngày khám:{" "}
+                    </Text>
+                    <Text className={cls(highlightClass, "!font-semibold")}>
                       {formData?.appointmentDate}
                     </Text>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Text strong>Giờ khám: </Text>
-                    <Text
-                      style={{
-                        color: "#1890ff",
-                        fontWeight: "600",
-                      }}
-                    >
+                    <Text strong className={textStrongClass}>
+                      Giờ khám:{" "}
+                    </Text>
+                    <Text className={cls(highlightClass, "!font-semibold")}>
                       {(() => {
                         const selectedSlot = availableTimeSlots.find(
                           (slot) => slot.id === formData?.timeSlotId
@@ -188,8 +237,12 @@ const ConfirmCard = (props: IProps) => {
                   </Col>
                   {formData?.reason && (
                     <Col span={24}>
-                      <Text strong>Lý do khám: </Text>
-                      <Text>{formData?.reason}</Text>
+                      <Text strong className={textStrongClass}>
+                        Lý do khám:{" "}
+                      </Text>
+                      <Text className={textNormalClass}>
+                        {formData?.reason}
+                      </Text>
                     </Col>
                   )}
                 </Row>

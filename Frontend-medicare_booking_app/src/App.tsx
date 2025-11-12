@@ -6,7 +6,6 @@ import DoctorProtectedRoute from "./components/auth/DoctorProtectedRoute";
 import DoctorRoutes from "./routes/DoctorRoutes";
 import ClientRoutes from "./routes/ClientRoutes";
 import AIPage from "./modules/client/pages/AIPage";
-import TopRateDoctors from "./modules/client/pages/TopRateDoctors";
 
 function App() {
   return (
@@ -38,7 +37,7 @@ function App() {
       <Route path="/ai" element={<AIPage />} />
 
       {/* coding */}
-      <Route path="code/*" element={<TopRateDoctors />} />
+      {/* <Route path="code/*" element={<CashPaymentSuccessPage />} /> */}
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

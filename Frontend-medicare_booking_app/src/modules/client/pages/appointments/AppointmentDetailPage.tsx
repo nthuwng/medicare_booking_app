@@ -10,10 +10,12 @@ import {
   Skeleton,
   Empty,
   Avatar,
-  message,
   ConfigProvider,
   theme as antdTheme,
   type ThemeConfig,
+  Alert,
+  Space,
+  App,
 } from "antd";
 import {
   CalendarOutlined,
@@ -22,12 +24,18 @@ import {
   MailOutlined,
   UserOutlined,
   CopyOutlined,
+  ExclamationCircleOutlined,
+  CloseCircleOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import type { IAppointmentFullDetail } from "@/types/appointment";
-import { getMyAppointmentByIdAPI } from "@/modules/client/services/client.api";
+import {
+  getMyAppointmentByIdAPI,
+  cancelAppointmentAPI,
+} from "@/modules/client/services/client.api";
 import { useCurrentApp } from "@/components/contexts/app.context";
 
 dayjs.extend(utc);
@@ -39,9 +47,11 @@ const AppointmentDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(false);
+  const [cancelling, setCancelling] = useState<boolean>(false);
   const [appointment, setAppointment] = useState<IAppointmentFullDetail | null>(
     null
   );
+  const { message, modal } = App.useApp(); // Use App hooks for message and modal
 
   const { theme } = useCurrentApp();
   const isDark = theme === "dark";
@@ -95,6 +105,175 @@ const AppointmentDetailPage = () => {
         .utc(appointment.schedule.timeSlots[0].timeSlot.endTime)
         .format("HH:mm")
     : "";
+
+  // Kiểm tra có thể hủy hay không (12h trước giờ hẹn - theo backend)
+  const canCancel = useMemo(() => {
+    if (!appointment) return false;
+    const status = (appointment.status || "").toLowerCase();
+    // Chỉ cho phép hủy khi status là Pending hoặc Confirmed
+    if (status !== "pending" && status !== "confirmed") return false;
+
+    // Kiểm tra thời gian 12h (backend yêu cầu)
+    const appointmentTime = dayjs.utc(appointment.appointmentDateTime);
+    const now = dayjs();
+    const hoursDiff = appointmentTime.diff(now, "hour");
+
+    return hoursDiff >= 12;
+  }, [appointment]);
+
+  // Hiển thị modal xác nhận hủy lịch
+  const handleCancelAppointment = () => {
+    if (!appointment) return;
+
+    modal.confirm({
+      title: "Xác nhận hủy lịch hẹn",
+      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
+      content: (
+        <div className="space-y-3">
+          <Alert
+            message="Chính sách hủy lịch"
+            description={
+              <div className="space-y-2 text-sm">
+                <div>
+                  • Lịch hẹn chỉ được hủy <strong>trước 12 giờ</strong>
+                </div>
+                <div>• Sau khi hủy, bạn có thể đặt lịch mới với bác sĩ</div>
+                {appointment.paymentStatus === "Paid" &&
+                  appointment.payment?.gateway === "VNPAY" && (
+                    <>
+                      <div>
+                        • Hoàn tiền VNPay sẽ được xử lý tự động trong{" "}
+                        <strong>3-5 ngày làm việc</strong>
+                      </div>
+                      <div>
+                        • Số tiền hoàn:{" "}
+                        <strong>
+                          {new Intl.NumberFormat("vi-VN").format(
+                            parseInt(appointment.totalFee)
+                          )}{" "}
+                          VNĐ
+                        </strong>
+                      </div>
+                    </>
+                  )}
+                {appointment.payment?.gateway === "CASH" && (
+                  <div>
+                    • Thanh toán tiền mặt: Không cần hoàn tiền, lịch hẹn sẽ được
+                    hủy ngay
+                  </div>
+                )}
+              </div>
+            }
+            type="warning"
+            showIcon
+          />
+          <div className="text-center pt-2">
+            <Text strong>Bạn có chắc chắn muốn hủy lịch hẹn này?</Text>
+          </div>
+        </div>
+      ),
+      okText: "Xác nhận hủy",
+      cancelText: "Giữ lại lịch hẹn",
+      okButtonProps: {
+        danger: true,
+        loading: cancelling,
+      },
+      cancelButtonProps: {
+        type: "primary",
+      },
+      onOk: async () => {
+        try {
+          setCancelling(true);
+
+          // Call API hủy lịch hẹn
+          const response = await cancelAppointmentAPI(appointment.id);
+
+          // Hiển thị notification dựa trên gateway và refund status
+          const payment = response.data;
+
+          if (
+            payment?.payment.gateway === "VNPAY" &&
+            payment?.payment.refundProcessed
+          ) {
+            message.success({
+              content: (
+                <div>
+                  <div className="font-semibold">
+                    ✅ Đã hủy lịch hẹn và hoàn tiền thành công!
+                  </div>
+                  <div className="text-sm mt-1">
+                    Tiền sẽ về tài khoản trong 3-5 ngày làm việc
+                  </div>
+                </div>
+              ),
+              duration: 5,
+            });
+          } else if (
+            payment?.payment.gateway === "VNPAY" &&
+            payment?.payment.refundRequired
+          ) {
+            message.info({
+              content: (
+                <div>
+                  <div className="font-semibold">
+                    ⏳ Đã hủy lịch hẹn và đang xử lý hoàn tiền
+                  </div>
+                  <div className="text-sm mt-1">
+                    Vui lòng kiểm tra lại sau ít phút
+                  </div>
+                </div>
+              ),
+              duration: 5,
+            });
+          } else if (payment?.payment.gateway === "CASH") {
+            message.success({
+              content: (
+                <div>
+                  <div className="font-semibold">
+                    ✅ Đã hủy lịch hẹn thành công!
+                  </div>
+                  <div className="text-sm mt-1">
+                    Thanh toán tiền mặt không cần hoàn tiền
+                  </div>
+                </div>
+              ),
+              duration: 4,
+            });
+          } else {
+            message.success({
+              content: "✅ Đã hủy lịch hẹn thành công!",
+              duration: 3,
+            });
+          }
+
+          // Navigate về danh sách appointments sau 2 giây
+          setTimeout(() => {
+            navigate("/my-appointments");
+          }, 2000);
+        } catch (error: any) {
+          console.error("❌ Cancel appointment error:", error);
+
+          // Hiển thị error message từ backend
+          const errorMessage =
+            error?.response?.data?.message ||
+            "Không thể hủy lịch hẹn. Vui lòng thử lại!";
+
+          message.error({
+            content: (
+              <div>
+                <div className="font-semibold">❌ Hủy lịch hẹn thất bại</div>
+                <div className="text-sm mt-1">{errorMessage}</div>
+              </div>
+            ),
+            duration: 5,
+          });
+        } finally {
+          setCancelling(false);
+        }
+      },
+      width: 520,
+    });
+  };
 
   // ✅ Ant Design theme override để đồng bộ dark mode
   const localTheme: ThemeConfig = {
@@ -308,39 +487,207 @@ const AppointmentDetailPage = () => {
                 </Descriptions>
               </Card>
 
-              <Card>
-                <Flex justify="space-between" align="center">
-                  <Text className={isDark ? "!text-gray-300" : ""}>
-                    Phí khám
-                  </Text>
-                  <Text className={isDark ? "!text-gray-100" : ""} strong>
-                    {new Intl.NumberFormat("vi-VN").format(
-                      parseInt(appointment.totalFee)
-                    )}{" "}
-                    VNĐ
-                  </Text>
-                </Flex>
+              <Card title="Thông tin thanh toán" className="shadow-sm">
+                <div className="space-y-3">
+                  {/* Tổng chi phí */}
+                  <Flex justify="space-between" align="center">
+                    <Text className={isDark ? "!text-gray-300" : ""}>
+                      Tổng chi phí
+                    </Text>
+                    <Text
+                      className={isDark ? "!text-gray-100" : ""}
+                      strong
+                      style={{ fontSize: "16px" }}
+                    >
+                      {new Intl.NumberFormat("vi-VN").format(
+                        parseInt(appointment.totalFee)
+                      )}{" "}
+                      VNĐ
+                    </Text>
+                  </Flex>
 
-                <Flex justify="space-between" align="center" className="mt-2">
-                  <Text className={isDark ? "!text-gray-300" : ""}>
-                    Thanh toán
-                  </Text>
-                  <Tag
-                    color={
-                      appointment.paymentStatus === "Paid" ? "green" : "orange"
-                    }
-                  >
-                    {appointment.paymentStatus === "Paid"
-                      ? "Đã thanh toán"
-                      : "Chưa thanh toán"}
-                  </Tag>
-                </Flex>
+                  {/* Trạng thái thanh toán */}
+                  <Flex justify="space-between" align="center">
+                    <Text className={isDark ? "!text-gray-300" : ""}>
+                      Trạng thái
+                    </Text>
+                    <Tag
+                      color={
+                        appointment.paymentStatus === "Paid"
+                          ? "green"
+                          : "orange"
+                      }
+                      style={{ fontSize: "13px", padding: "4px 12px" }}
+                    >
+                      {appointment.paymentStatus === "Paid"
+                        ? "Đã thanh toán"
+                        : "Chưa thanh toán"}
+                    </Tag>
+                  </Flex>
+
+                  {/* Phương thức thanh toán */}
+                  {appointment.payment && (
+                    <>
+                      <Flex justify="space-between" align="center">
+                        <Text className={isDark ? "!text-gray-300" : ""}>
+                          Phương thức
+                        </Text>
+                        <Tag
+                          color={
+                            appointment.payment.gateway === "VNPAY"
+                              ? "blue"
+                              : "green"
+                          }
+                          style={{ fontSize: "13px", padding: "4px 12px" }}
+                        >
+                          {appointment.payment.gateway === "VNPAY"
+                            ? "Thanh toán VNPay"
+                            : "Tiền mặt"}
+                        </Tag>
+                      </Flex>
+
+                      {/* Mã giao dịch */}
+                      <Flex justify="space-between" align="center">
+                        <Text className={isDark ? "!text-gray-300" : ""}>
+                          Mã giao dịch
+                        </Text>
+                        <div className="flex items-center gap-2">
+                          <Text
+                            code
+                            className="!text-xs"
+                            style={{
+                              maxWidth: "200px",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {appointment.payment.txnRef?.slice(0, 20)}...
+                          </Text>
+                          <Button
+                            size="small"
+                            icon={<CopyOutlined />}
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                appointment.payment?.txnRef || ""
+                              );
+                              message.success("Đã copy mã giao dịch!");
+                            }}
+                          />
+                        </div>
+                      </Flex>
+
+                      {/* Ngày tạo */}
+                      <Flex justify="space-between" align="center">
+                        <Text className={isDark ? "!text-gray-300" : ""}>
+                          Ngày tạo
+                        </Text>
+                        <Text className={isDark ? "!text-gray-200" : ""}>
+                          {dayjs(appointment.payment.createdAt).format(
+                            "DD/MM/YYYY HH:mm"
+                          )}
+                        </Text>
+                      </Flex>
+
+                      {/* Ngày thanh toán (nếu có) */}
+                      {appointment.payment.payDate && (
+                        <Flex justify="space-between" align="center">
+                          <Text className={isDark ? "!text-gray-300" : ""}>
+                            Ngày thanh toán
+                          </Text>
+                          <Text className={isDark ? "!text-gray-200" : ""}>
+                            {dayjs(appointment.payment.payDate).format(
+                              "DD/MM/YYYY HH:mm"
+                            )}
+                          </Text>
+                        </Flex>
+                      )}
+
+                      {/* Số giao dịch ngân hàng (nếu có) */}
+                      {appointment.payment.transactionNo && (
+                        <Flex justify="space-between" align="center">
+                          <Text className={isDark ? "!text-gray-300" : ""}>
+                            Số GD ngân hàng
+                          </Text>
+                          <Text code className={isDark ? "!text-gray-200" : ""}>
+                            {appointment.payment.transactionNo}
+                          </Text>
+                        </Flex>
+                      )}
+
+                      {/* Ngân hàng (nếu có) */}
+                      {appointment.payment.bankCode && (
+                        <Flex justify="space-between" align="center">
+                          <Text className={isDark ? "!text-gray-300" : ""}>
+                            Ngân hàng
+                          </Text>
+                          <Tag color="blue">{appointment.payment.bankCode}</Tag>
+                        </Flex>
+                      )}
+
+                      {/* Thông tin đơn hàng */}
+                      {appointment.payment.orderInfo && (
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                          <Text
+                            className={`text-xs ${
+                              isDark ? "!text-gray-400" : "text-gray-500"
+                            }`}
+                          >
+                            {appointment.payment.orderInfo}
+                          </Text>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </Card>
             </div>
           </div>
 
-          <div className="flex justify-end mt-6">
-            <Button onClick={() => navigate(-1)}>Quay lại</Button>
+          {/* Thông báo nếu không thể hủy */}
+          {appointment &&
+            !canCancel &&
+            (appointment.status?.toLowerCase() === "pending" ||
+              appointment.status?.toLowerCase() === "confirmed") && (
+              <Alert
+                message="Không thể hủy lịch hẹn"
+                description="Lịch hẹn chỉ có thể hủy trước 12 giờ. Vui lòng liên hệ phòng khám để được hỗ trợ."
+                type="warning"
+                showIcon
+                className="mt-6"
+              />
+            )}
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+            <Button
+              icon={<HomeOutlined />}
+              onClick={() => navigate("/")}
+              size="large"
+            >
+              Về trang chủ
+            </Button>
+
+            <Space size="middle">
+              <Button onClick={() => navigate(-1)} size="large">
+                Quay lại
+              </Button>
+
+              {canCancel && (
+                <Button
+                  danger
+                  type="primary"
+                  icon={<CloseCircleOutlined />}
+                  onClick={handleCancelAppointment}
+                  loading={cancelling}
+                  size="large"
+                  style={{
+                    minWidth: "180px",
+                  }}
+                >
+                  Hủy lịch hẹn
+                </Button>
+              )}
+            </Space>
           </div>
         </div>
       </div>
