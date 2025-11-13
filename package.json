@@ -9,9 +9,8 @@
     "stop": "docker compose stop",
     "dev": "docker compose --env-file docker-compose.env up",
     "dev:databases": "docker compose --env-file docker-compose.env up --build rabbitmq user_db auth_db doctor_db appointment_db schedule_db notification_db payment_db rating_db message_db",
-    "prod": "docker compose -f docker-compose-production.yml up -d --build",
-    "prod:up": "docker compose -f docker-compose-production.yml up -d",
-    "prod:down": "docker compose -f docker-compose-production.yml down",
-    "prod:logs": "docker compose -f docker-compose-production.yml logs -f"
+    "build:prod": "docker compose --env-file docker-compose.env up --build -d",
+    "down:prod": "docker compose --env-file docker-compose.env down",
+    "stop:prod": "docker compose --env-file docker-compose.env stop"
   }
 }

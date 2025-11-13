@@ -42,3 +42,12 @@
 ```
 
 ---> **_ Cách fix đổi DATABASE_URL trong env của services từ localhost thành 127.0.0.1 _**
+
+
+### Build production
+```
+build : docker compose --env-file docker-compose.env up --build -d
+stop : docker compose --env-file docker-compose.env stop
+down : docker compose --env-file docker-compose.env down
+
+```
