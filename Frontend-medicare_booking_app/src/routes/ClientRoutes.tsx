@@ -23,7 +23,7 @@ import LayoutAccount from "@/modules/client/components/LayoutAccount/LayoutAccou
 import TopRateDoctors from "@/modules/client/pages/TopRateDoctors";
 import ContactPartnerPage from "@/modules/client/pages/ContactPartnerPage";
 import ForgotPassword from "@/modules/client/pages/ForgotPassword";
-import RegisterPage from "@/pages/Register";
+import RegisterPage from "@/pages/Register_TEMP";
 
 const ClientRoutes = () => {
   return (
