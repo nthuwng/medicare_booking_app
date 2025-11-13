@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Popconfirm, Button, Tag } from "antd";
+import {Button, Tag } from "antd";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import utc from "dayjs/plugin/utc";
@@ -8,10 +8,7 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 import {
-  DeleteTwoTone,
-  EditTwoTone,
   ExportOutlined,
-  EyeOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
