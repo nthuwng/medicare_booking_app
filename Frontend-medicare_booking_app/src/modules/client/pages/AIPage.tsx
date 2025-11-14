@@ -37,33 +37,34 @@ const { TextArea } = Input;
 const { Title, Text, Paragraph } = Typography;
 
 /* ====================== PALETTE ====================== */
-// 1) SỬA PALETTE: bỏ hết !important
+// Màu chat tối giản, dễ nhìn
 const palette = {
   dark: {
-    pageBg: "#0D1224",
-    surface: "#0f1b2d",
-    surface2: "#152238",
-    border: "rgba(255,255,255,0.10)",
-    text: "#ffffff",
-    textMuted: "#cbd5e1",
+    pageBg: "#050816", // nền tổng thể
+    surface: "#0b1120", // thẻ / composer
+    surface2: "#020617",
+    border: "rgba(148,163,184,0.45)",
+    text: "#e5e7eb",
+    textMuted: "#9ca3af",
     textSoft: "#94a3b8",
-    primary: "#60a5fa",
-    shadow: "0 8px 24px rgba(0,0,0,0.35)",
-    bubbleAI: "#0f1b2d",
-    bubbleUser: "#1b2b44",
+    primary: "#38bdf8", // xanh nhạt
+    shadow: "0 18px 45px rgba(15,23,42,0.8)",
+    bubbleAI: "rgba(15,23,42,0.95)",
+    bubbleUser: "#0369a1", // bong bóng user rõ hơn
   },
   light: {
-    pageBg: "#F5F7FA",
-    surface: "#ffffff",
-    surface2: "#ffffff",
-    border: "#e5e7eb",
+    pageBg: "#f4f5fb", // nền tổng thể sáng hơn chút
+    surface: "#ffffff", // card chính
+    surface2: "#f9fafb", // composer
+    border: "#e2e8f0",
     text: "#0f172a",
-    textMuted: "#475569",
+    textMuted: "#64748b",
     textSoft: "#6b7280",
-    primary: "#1677ff",
-    shadow: "0 8px 24px rgba(0,0,0,0.06)",
-    bubbleAI: "#ffffff",
-    bubbleUser: "#eff6ff",
+    primary: "#0ea5e9",
+    shadow: "0 18px 45px rgba(15,23,42,0.08)",
+    // bong bóng chat
+    bubbleAI: "#ffffff", // AI: trắng
+    bubbleUser: "#dbeafe", // User: xanh nhạt nhưng không quá chói
   },
 };
 
@@ -253,7 +254,7 @@ const AIPage = () => {
       {/* CSS phạm vi trang */}
       <style>{`
          .ai-chat-page .composer textarea::placeholder {
-           color: ${isDark ? C.textSoft : "#6b7280"} !important;
+         color: ${isDark ? "#64748b" : "#9ca3af"};
            opacity: 1;
       }
 
@@ -805,20 +806,32 @@ const AIPage = () => {
                       <div className="flex items-center gap-3">
                         <Tooltip title="Gửi tin nhắn (Enter hoặc Ctrl+Enter)">
                           <Button
-                            type="primary"
                             shape="circle"
-                            icon={
-                              <ArrowUpOutlined
-                                className={isDark ? "!text-white" : ""}
-                              />
-                            }
-                            onClick={() => handleSendMessage(inputValue)}
                             loading={isLoading}
                             disabled={
                               isLoading || (!inputValue.trim() && !imageFile)
                             }
-                            className="!size-10 "
-                          />
+                            style={{
+                              width: 40,
+                              height: 40,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: 0,
+                              background: isDark ? "#38bdf8" : "#0ea5e9",
+                              border: "none",
+                            }}
+                            onClick={() => handleSendMessage(inputValue)}
+                          >
+                            {!isLoading && (
+                              <ArrowUpOutlined
+                                style={{
+                                  fontSize: 18,
+                                  color: "#ffffff",
+                                }}
+                              />
+                            )}
+                          </Button>
                         </Tooltip>
                       </div>
                     </div>
@@ -898,25 +911,31 @@ const AIPage = () => {
                                       ? msg.type === "user"
                                         ? C.bubbleUser
                                         : C.bubbleAI
-                                      : "transparent", // 👈 component thì để trong suốt
+                                      : "transparent",
                                   color: isDark ? C.text : "#000000",
                                   padding:
                                     typeof msg.content === "string"
                                       ? isMobile
                                         ? "10px 12px"
                                         : "12px 16px"
-                                      : 0, // 👈 component thì bỏ padding bubble
+                                      : 0,
                                   borderRadius:
                                     msg.type === "user"
                                       ? "18px 18px 4px 18px"
                                       : "18px 18px 18px 8px",
-                                  boxShadow: isDark
-                                    ? ""
-                                    : "0 2px 8px rgba(0,0,0,0.1)",
                                   border:
                                     typeof msg.content === "string"
-                                      ? `1px solid ${C.border}`
-                                      : "none", // 👈 component thì bỏ border bubble
+                                      ? msg.type === "user"
+                                        ? "none"
+                                        : `1px solid ${C.border}`
+                                      : "none",
+                                  boxShadow:
+                                    typeof msg.content === "string" &&
+                                    msg.type === "user"
+                                      ? isDark
+                                        ? "0 8px 22px rgba(8,47,73,0.9)"
+                                        : "0 8px 18px rgba(37,99,235,0.25)"
+                                      : "none",
                                 }}
                               >
                                 {msg.isLoading ? (
@@ -959,7 +978,14 @@ const AIPage = () => {
                                         style={{
                                           margin: 0,
                                           whiteSpace: "pre-wrap",
-                                          color: isDark ? C.text : "#000000",
+                                          color:
+                                            msg.type === "user"
+                                              ? isDark
+                                                ? "#f9fafb" // user dark: chữ trắng
+                                                : "#0f172a" // user light: tối cho dễ đọc
+                                              : isDark
+                                              ? C.text
+                                              : "#0f172a",
                                           fontSize: isMobile ? "14px" : "15px",
                                         }}
                                       >
@@ -1131,20 +1157,32 @@ const AIPage = () => {
                         <div className="flex items-center gap-3">
                           <Tooltip title="Gửi tin nhắn (Enter hoặc Ctrl+Enter)">
                             <Button
-                              type="primary"
                               shape="circle"
-                              icon={
-                                <ArrowUpOutlined
-                                  className={isDark ? "!text-white" : ""}
-                                />
-                              }
-                              onClick={() => handleSendMessage(inputValue)}
                               loading={isLoading}
                               disabled={
                                 isLoading || (!inputValue.trim() && !imageFile)
                               }
-                              className="!size-10"
-                            />
+                              style={{
+                                width: 40,
+                                height: 40,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: 0,
+                                background: isDark ? "#38bdf8" : "#0ea5e9",
+                                border: "none",
+                              }}
+                              onClick={() => handleSendMessage(inputValue)}
+                            >
+                              {!isLoading && (
+                                <ArrowUpOutlined
+                                  style={{
+                                    fontSize: 18,
+                                    color: "#ffffff",
+                                  }}
+                                />
+                              )}
+                            </Button>
                           </Tooltip>
                         </div>
                       </div>
