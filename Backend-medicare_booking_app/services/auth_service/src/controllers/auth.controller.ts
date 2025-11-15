@@ -315,17 +315,12 @@ const postRevokeRefreshTokenApi = async (req: Request, res: Response) => {
   try {
     const refresh_token = req.cookies.refresh_token;
 
-    if (!refresh_token) {
-      res.status(400).json({
-        success: false,
-        message: "Refresh token không tìm thấy trong cookie",
-      });
-      return;
+    // Nếu có refresh token, revoke nó
+    if (refresh_token) {
+      await handleRevokeRefreshToken(refresh_token);
     }
 
-    await handleRevokeRefreshToken(refresh_token);
-
-    // Clear the refresh token cookie
+    // Clear cookie (dù có hay không)
     res.clearCookie("refresh_token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -333,6 +328,7 @@ const postRevokeRefreshTokenApi = async (req: Request, res: Response) => {
       path: "/",
     });
 
+    // Luôn trả success vì mục đích là logout
     res.status(200).json({
       success: true,
       message: "Đăng xuất thành công",
