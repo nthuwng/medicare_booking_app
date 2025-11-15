@@ -98,6 +98,7 @@ const postLoginAPI = async (req: Request, res: Response) => {
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
         path: "/",
+        domain: process.env.NODE_ENV === "production" ? "medicare-booking-app.cloud" : undefined,
       });
 
       const response: LoginResponse = {
@@ -288,6 +289,7 @@ const postRefreshTokenApi = async (req: Request, res: Response) => {
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
+      domain: process.env.NODE_ENV === "production" ? "medicare-booking-app.cloud" : undefined,
     });
 
     const response: RefreshTokenResponse = {
@@ -326,6 +328,7 @@ const postRevokeRefreshTokenApi = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
+      domain: process.env.NODE_ENV === "production" ? "medicare-booking-app.cloud" : undefined,
     });
 
     // Luôn trả success vì mục đích là logout
@@ -442,6 +445,7 @@ const postLoginWithGoogleAPI = async (req: Request, res: Response) => {
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
         path: "/",
+        domain: process.env.NODE_ENV === "production" ? ".medicare-booking-app.cloud" : undefined,
       });
 
       const response: LoginResponse = {
