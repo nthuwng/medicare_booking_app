@@ -11,7 +11,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost",
+      "https://medicare-booking-app.cloud",
+      "http://medicare-booking-app.cloud",
+    ],
     credentials: true,
   })
 );

@@ -12,7 +12,12 @@ const port = process.env.PORT || 9000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost",
+      "https://medicare-booking-app.cloud",
+      "http://medicare-booking-app.cloud",
+    ],
     credentials: true,
   })
 );

@@ -10,7 +10,8 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost",
-      "http://72.61.143.63",
+      "https://medicare-booking-app.cloud",
+      "http://medicare-booking-app.cloud",
     ],
     credentials: true,
   })
