@@ -3,7 +3,7 @@ import { redis } from "src/config/redis";
 // ====================================
 // CONSTANTS
 // ====================================
-const CACHE_TTL_SECONDS = 10; // 10 phút
+const CACHE_TTL_SECONDS = 600; // 10 phút
 const ALL_SPECIALITIES_PREFIX = "specialities:all";
 
 // ====================================
@@ -21,12 +21,9 @@ export type AllSpecialitiesCacheParams = {
 const buildCacheKey = (params: AllSpecialitiesCacheParams): string => {
   const { page, pageSize, specialtyName } = params;
 
-  return [
-    ALL_SPECIALITIES_PREFIX,
-    page,
-    pageSize,
-    specialtyName || "_",
-  ].join(":");
+  return [ALL_SPECIALITIES_PREFIX, page, pageSize, specialtyName || "_"].join(
+    ":"
+  );
 };
 
 /**

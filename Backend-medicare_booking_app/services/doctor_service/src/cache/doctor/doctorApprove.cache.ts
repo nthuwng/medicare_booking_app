@@ -1,7 +1,7 @@
 import { redis } from "src/config/redis";
 
 
-const CACHE_TTL_SECONDS = 10; // 10 phút
+const CACHE_TTL_SECONDS = 600; // 10 phút
 const APPROVED_DOCTORS_PREFIX = "approved_doctors";
 
 export type ApprovedDoctorsCacheParams = {

@@ -3,7 +3,7 @@ import { redis } from "src/config/redis";
 // ====================================
 // CONSTANTS
 // ====================================
-const CACHE_TTL_SECONDS = 10; // 10 phút
+const CACHE_TTL_SECONDS = 600; // 10 phút
 const ALL_CLINICS_PREFIX = "clinics:all";
 
 // ====================================
