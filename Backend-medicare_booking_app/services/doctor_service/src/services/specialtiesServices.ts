@@ -45,7 +45,6 @@ const handleGetAllSpecialties = async (
   };
   const cachedSpecialties = await AllSpecialitiesCache.get<any[]>(cacheParams);
   if (cachedSpecialties) {
-    console.log("✅ Specialities fetched from cache");
     return cachedSpecialties;
   }
 

@@ -88,7 +88,7 @@ const handleGetAllClinics = async (
 
   const cachedClinics = await AllClinicsCache.get<any[]>(cacheParams);
   if (cachedClinics) {
-    return cachedClinics; // clinics là array → controller dùng .length OK
+    return cachedClinics;
   }
 
   const skip = (page - 1) * pageSize;
