@@ -7,6 +7,7 @@ import { initializeAllRabbitMQConsumers } from "./queue/consumers";
 import { startCleanupRefreshTokensJob } from "./jobs/cleanupRefreshTokens.job";
 import initDatabase from "./config/seed";
 import cors from "cors";
+import { redis } from "./config/redis";
 const app = express();
 const port = process.env.PORT || 8086;
 

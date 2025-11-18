@@ -30,6 +30,9 @@ const handleCreateSpecialtiesProfile = async (
       iconPublicId: icon_public_id,
     },
   });
+
+  await AllSpecialitiesCache.clear();
+
   return specialties;
 };
 
@@ -91,6 +94,8 @@ const handleDeleteSpecialty = async (id: string) => {
   await prisma.specialty.delete({
     where: { id: specialtyId },
   });
+
+  await AllSpecialitiesCache.clear();
   return true;
 };
 
@@ -116,6 +121,8 @@ const handleUpdateSpecialty = async (
       iconPublicId: icon_public_id,
     },
   });
+
+  await AllSpecialitiesCache.clear();
   return updatedSpecialty;
 };
 

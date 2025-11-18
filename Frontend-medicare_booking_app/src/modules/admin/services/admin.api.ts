@@ -50,6 +50,11 @@ export const approveDoctor = (doctorId: string) => {
   return axios.put<IBackendRes<IDoctorProfile>>(urlBackend);
 };
 
+export const approveDoctorByAdmin = (doctorId: string, status: string) => {
+  const urlBackend = `/api/doctor/doctors/${doctorId}/status`;
+  return axios.put<IBackendRes<IDoctorProfile>>(urlBackend, { status });
+};
+
 export const markAsReadNotification = (notificationId: string) => {
   const urlBackend = `/api/notification/mark-as-read/${notificationId}`;
   return axios.put(urlBackend);

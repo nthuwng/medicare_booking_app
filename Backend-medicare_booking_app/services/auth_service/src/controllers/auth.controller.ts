@@ -543,7 +543,7 @@ const postForgetPasswordApi = async (req: Request, res: Response) => {
     return;
   }
 
-  res.status(501).json({
+  res.status(200).json({
     success: true,
     message: "OTP đã được gửi đến email của bạn",
   });

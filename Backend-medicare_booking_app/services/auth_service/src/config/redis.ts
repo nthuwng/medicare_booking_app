@@ -13,13 +13,13 @@ export const redis = redisUrl
     });
 
 redis.on("connect", () => {
-  console.log("✅ [Redis] Doctor_service Connected");
+  console.log("✅ [Redis] Auth_service Connected");
 });
 
 redis.on("error", (err) => {
-  console.error("❌ [Redis] Doctor_service Error:", err);
+  console.error("❌ [Redis] Auth_service Error:", err);
 });
 
 redis.on("close", () => {
-  console.log("⚠️ [Redis] Doctor_service Connection closed");
+  console.log("⚠️ [Redis] Auth_service Connection closed");
 });

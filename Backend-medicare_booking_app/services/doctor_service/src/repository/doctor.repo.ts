@@ -1,4 +1,6 @@
 import { ApprovalStatus, Gender, Title } from "@prisma/client";
+import { DoctorsCache } from "src/cache/doctor/doctor.cache";
+import { ApprovedDoctorsCache } from "src/cache/doctor/doctorApprove.cache";
 import { prisma } from "src/config/client";
 
 const createDoctor = async (
@@ -165,6 +167,9 @@ const importDoctorProfiles = async (doctors: any[]) => {
       });
     }
   }
+
+  await ApprovedDoctorsCache.clear();
+  await DoctorsCache.clear();
 
   return {
     success: true,

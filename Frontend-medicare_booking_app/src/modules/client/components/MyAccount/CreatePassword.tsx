@@ -136,6 +136,7 @@ const CreatePassword = (props: Props) => {
     try {
       setSending(true);
       const res = await sendEmailOtpAPI(email);
+      console.log("res send otp:", res);
       if (res?.success === true) {
         setStep(1);
         notification.success({

@@ -113,21 +113,13 @@ const AccountTable = () => {
       },
     },
     {
-      title: "Trạng thái",
+      title: "Hành động",
       dataIndex: "isActive",
       hideInSearch: true,
       width: 220,
       render(_, entity) {
         return (
           <Space size="small" wrap className="!flex !justify-between">
-            <div>
-              {entity.isActive === true ? (
-                <Tag color="green">Đang hoạt động</Tag>
-              ) : (
-                <Tag color="red">Không hoạt động</Tag>
-              )}
-            </div>
-
             <div>
               {entity.isActive ? (
                 <Tooltip title="Khóa tài khoản">

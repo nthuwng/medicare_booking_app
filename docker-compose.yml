@@ -44,7 +44,7 @@ services:
     cpus: "0.30"
     ports:
       - "6379:6379" # để dev local có thể connect nếu cần
-    command: 
+    command:
       - redis-server
       - --appendonly
       - "yes"
@@ -52,10 +52,17 @@ services:
       - "180mb"
       - --maxmemory-policy
       - allkeys-lru
+      - --requirepass
+      - "${REDIS_PASSWORD}"
     volumes:
       - redis_data:/data
     networks:
       - healthcare_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   api-gateway:
     build:

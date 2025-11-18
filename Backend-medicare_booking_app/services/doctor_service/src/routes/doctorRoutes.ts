@@ -8,6 +8,7 @@ import {
   getDoctorByUserIdController,
   specialtyDoctorCheckController,
   updateDoctorAvatarController,
+  updateDoctorStatusByAdminController
 } from "../controllers/doctorController";
 import {
   authenticateToken,
@@ -32,6 +33,8 @@ router.put(
   authenticateToken,
   updateDoctorAvatarController
 );
+
+router.put("/:id/status", authenticateToken, authorizeAdmin, updateDoctorStatusByAdminController);
 
 router.put(
   "/:id",

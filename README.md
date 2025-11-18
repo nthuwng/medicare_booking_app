@@ -38,19 +38,6 @@ Không chạy đồng thời 3 lệnh cùng lúc
 - npm run build
 ```
 
-### ❗ Fix lỗi : Đợi từng terminal chạy xong rồi hãy chạy terminal khác
-
-```
-    Environment variables loaded from .env
-    Prisma schema loaded from prisma\schema.prisma
-    Datasource "db": MySQL database "payment_db" at "localhost:3313"
-    Error: P1001: Can't reach database server at `localhost:3313`
-    Please make sure your database server is running at `localhost:3313`.
-
-```
-
-👉 **_ Cách fix đổi DATABASE_URL trong env của services từ localhost thành 127.0.0.1 _**
-
 ### 🐳 Build & Deploy Docker (Production)
 
 🚧 Build production
@@ -64,8 +51,10 @@ Không chạy đồng thời 3 lệnh cùng lúc
 
 📌 Ghi chú thêm
 
-```
-    up --build -d → build + chạy ngầm
+```sh
+
+    -d chạy ngầm
+    -up --build -d → build + chạy ngầm
     stop → tắt container nhưng không xóa
     down → tắt + xóa container + network
 
@@ -74,5 +63,21 @@ Không chạy đồng thời 3 lệnh cùng lúc
     - docker compose down -v
     - docker volume prune
     - docker system prune --volumes
+
+```
+
+### Tương tác với redis
+
+**_ 👉 1. docker exec -it redis redis-cli _**
+**_ 👉 2. AUTH <password> _**
+**_ 👉 3. các lệnh tiếp theo _**
+
+```sh
+
+    - KEYS * : XEM DANH SÁCH CÁC KEY
+    - TTL <KEY> : XEM GIÂY CÒN LẠI CỦA KEY TRƯỚC KHI BỊ XÓA
+    - DBSIZE : XEM TỔNG CÓ BAO NHIÊU KEY
+    - INFO memory : XEM BỘ NHỚ
+    - DEL <KEY> : XÓA KEYS
 
 ```

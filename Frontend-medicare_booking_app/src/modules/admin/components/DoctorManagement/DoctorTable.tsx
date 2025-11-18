@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import {Button, Tag } from "antd";
+import { useRef, useState } from "react";
+import { Button, Tag, Select, App } from "antd";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import utc from "dayjs/plugin/utc";
@@ -7,13 +7,13 @@ import timezone from "dayjs/plugin/timezone";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-import {
-  ExportOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { ExportOutlined, PlusOutlined, EyeOutlined } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
-import { getAllDoctorsProfile } from "../../services/admin.api";
+import {
+  getAllDoctorsProfile,
+  approveDoctorByAdmin,
+} from "../../services/admin.api";
 import type { IDoctorProfile } from "@/types";
 import DoctorDetail from "./DoctorDetail";
 
@@ -30,10 +30,31 @@ const DoctorTable = () => {
   const [dataViewDetail, setDataViewDetail] = useState<IDoctorProfile | null>(
     null
   );
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const { message } = App.useApp();
 
-  useEffect(() => {
-    console.log("meta", meta);
-  }, [meta]);
+  const handleUpdateStatus = async (doctorId: string, status: string) => {
+    try {
+      setUpdatingId(doctorId);
+      await approveDoctorByAdmin(doctorId, status);
+
+      message.success(
+        status === "Approved"
+          ? "Duyệt bác sĩ thành công!"
+          : status === "Rejected"
+          ? "Từ chối bác sĩ thành công!"
+          : "Chuyển về chờ duyệt thành công!"
+      );
+
+      // Reload lại data bảng (không F5 trang, chỉ call lại API)
+      actionRef.current?.reload();
+    } catch (error) {
+      message.error("Có lỗi xảy ra, vui lòng thử lại!");
+      console.error(error);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const columns: ProColumns<IDoctorProfile>[] = [
     {
@@ -57,21 +78,20 @@ const DoctorTable = () => {
       ellipsis: true,
     },
     {
-      title: "Tên",
+      title: "Tên bác sĩ",
       dataIndex: "fullName",
       ellipsis: true,
+      copyable: true,
       width: 200,
       fieldProps: {
-        placeholder: "Nhập tên để tìm kiếm",
-        style: {
-          width: "180px",
-        },
+        placeholder: "Nhập tên bác sĩ",
       },
     },
     {
       title: "Chức vụ",
       dataIndex: "title",
       valueType: "select",
+      width: 150,
       valueEnum: {
         BS: { text: "Bác sĩ" },
         ThS: { text: "Thạc sĩ" },
@@ -94,23 +114,24 @@ const DoctorTable = () => {
       },
       fieldProps: {
         placeholder: "Chọn chức vụ",
-        style: { width: "150px" },
+        allowClear: true,
       },
     },
     {
-      title: "Số điện thoại:",
+      title: "Số điện thoại",
       dataIndex: "phone",
+      width: 150,
+      copyable: true,
       fieldProps: {
-        placeholder: "Nhập số điện thoại để tìm kiếm",
-        style: {
-          width: "240px",
-        },
+        placeholder: "Nhập số điện thoại",
       },
     },
     {
       title: "Giới tính",
       dataIndex: "gender",
       hideInSearch: true,
+      width: 100,
+      align: "center",
       render(_, entity) {
         return entity.gender === "Male" ? (
           <Tag color="blue">Nam</Tag>
@@ -122,7 +143,79 @@ const DoctorTable = () => {
     {
       title: "Trạng thái",
       dataIndex: "approvalStatus",
+      width: 150,
+      valueType: "select",
+      valueEnum: {
+        Approved: { text: "Đã duyệt", status: "Success" },
+        Rejected: { text: "Từ chối", status: "Error" },
+        Pending: { text: "Chờ duyệt", status: "Warning" },
+      },
+      render(_, entity) {
+        const statusConfig = {
+          Approved: { color: "success", text: "Đã duyệt" },
+          Rejected: { color: "error", text: "Từ chối" },
+          Pending: { color: "warning", text: "Chờ duyệt" },
+        };
+        const config =
+          statusConfig[entity.approvalStatus as keyof typeof statusConfig];
+        return config ? <Tag color={config.color}>{config.text}</Tag> : null;
+      },
+      fieldProps: {
+        placeholder: "Chọn trạng thái",
+        allowClear: true,
+      },
+    },
+    {
+      title: "Hành động",
+      key: "action",
       hideInSearch: true,
+      width: 240,
+      align: "center",
+      fixed: "right",
+      render: (_, entity) => (
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Button
+            type="default"
+            icon={<EyeOutlined />}
+            size="middle"
+            onClick={() => {
+              setDataViewDetail(entity);
+              setOpenViewDetail(true);
+            }}
+          >
+            Xem
+          </Button>
+          <Select
+            size="middle"
+            style={{ width: 140 }}
+            value={entity.approvalStatus}
+            loading={updatingId === entity.id}
+            disabled={updatingId === entity.id}
+            onChange={(value) => handleUpdateStatus(entity.id, value)}
+            options={[
+              {
+                value: "Approved",
+                label: "✓ Đã duyệt",
+              },
+              {
+                value: "Rejected",
+                label: "✗ Từ chối",
+              },
+              {
+                value: "Pending",
+                label: "⏱ Chờ duyệt",
+              },
+            ]}
+          />
+        </div>
+      ),
     },
   ];
 
@@ -133,10 +226,23 @@ const DoctorTable = () => {
         actionRef={actionRef}
         cardBordered
         search={{
-          labelWidth: 0,
-          span: 6,
+          labelWidth: "auto",
+          span: {
+            xs: 24,
+            sm: 12,
+            md: 8,
+            lg: 6,
+            xl: 6,
+            xxl: 6,
+          },
           collapsed: false,
           collapseRender: false,
+          searchText: "Tìm kiếm",
+          resetText: "Làm lại",
+          className: "custom-search-form",
+        }}
+        form={{
+          syncToUrl: false,
         }}
         request={async (params) => {
           let query = "";
@@ -150,6 +256,9 @@ const DoctorTable = () => {
             }
             if (params.title) {
               query += `&title=${params.title}`;
+            }
+            if (params.approvalStatus) {
+              query += `&approvalStatus=${params.approvalStatus}`;
             }
           }
           const res = await getAllDoctorsProfile(query);
@@ -186,7 +295,7 @@ const DoctorTable = () => {
             );
           },
         }}
-        headerTitle="Danh sách thông tin admin"
+        headerTitle="Danh sách thông tin doctors "
         toolBarRender={() => [
           <Button icon={<ExportOutlined />} type="primary">
             Export

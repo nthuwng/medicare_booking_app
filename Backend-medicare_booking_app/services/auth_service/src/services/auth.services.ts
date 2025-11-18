@@ -21,6 +21,7 @@ import {
   sendEmailResetPassword,
 } from "src/queue/publishers/auth.publisher";
 import { randomUUID } from "crypto";
+import { AllUsersCache, AllUsersCacheParams } from "src/cache/auth.cache";
 
 const hashPassword = async (password: string) => {
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -377,6 +378,23 @@ const handleGetAllUsersAPI = async (
   userType: string,
   isActive: string
 ) => {
+  const cacheParams: AllUsersCacheParams = {
+    page,
+    pageSize,
+    email,
+    userType,
+    isActive,
+  };
+
+  const cachedUsers = await AllUsersCache.get<{
+    users: any[];
+    totalItems: number;
+  }>(cacheParams);
+
+  if (cachedUsers) {
+    return cachedUsers;
+  }
+
   const skip = (page - 1) * pageSize;
 
   // Build where conditions
@@ -426,10 +444,14 @@ const handleGetAllUsersAPI = async (
     }),
     countTotalUser(),
   ]);
-  return {
+  const result = {
     users: users,
     totalItems: total,
   };
+
+  await AllUsersCache.set(cacheParams, result);
+
+  return result;
 };
 
 const handleGetAllUsers = async () => {
@@ -778,6 +800,9 @@ const handleUpdateLockUser = async (id: string, isActive: boolean) => {
     where: { id },
     data: { isActive },
   });
+
+  await AllUsersCache.clear();
+
   return {
     success: true,
     message: isActive

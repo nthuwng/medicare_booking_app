@@ -20,6 +20,10 @@ import {
   ApprovedDoctorsCache,
   type ApprovedDoctorsCacheParams,
 } from "src/cache/doctor/doctorApprove.cache";
+import {
+  DoctorsCache,
+  DoctorsCacheParams,
+} from "src/cache/doctor/doctor.cache";
 
 const createDoctorProfile = async (
   body: CreateDoctorProfileData,
@@ -92,6 +96,9 @@ const createDoctorProfile = async (
       publishError
     );
   }
+
+  await ApprovedDoctorsCache.clear();
+  await DoctorsCache.clear();
 
   return {
     ...doctor,
@@ -221,8 +228,28 @@ const handleGetAllDoctors = async (
   pageSize: number,
   fullName: string,
   phone: string,
-  title: string
+  title: string,
+  approvalStatus: string
 ) => {
+  const cacheParams: DoctorsCacheParams = {
+    page,
+    pageSize,
+    fullName,
+    phone,
+    title,
+    approvalStatus,
+  };
+
+  // Try to get from cache
+  const cachedData = await DoctorsCache.get<{
+    doctors: any[];
+    totalItems: number;
+  }>(cacheParams);
+
+  if (cachedData) {
+    return cachedData;
+  }
+
   const skip = (page - 1) * pageSize;
 
   // Build where conditions
@@ -234,6 +261,13 @@ const handleGetAllDoctors = async (
     });
   }
 
+  
+  if (approvalStatus && approvalStatus.trim() !== "") {
+    whereConditions.push({
+      approvalStatus: { equals: approvalStatus as ApprovalStatus },
+    });
+  }
+
   if (phone && phone.trim() !== "") {
     whereConditions.push({
       phone: { contains: phone },
@@ -241,7 +275,6 @@ const handleGetAllDoctors = async (
   }
 
   if (title && title.trim() !== "") {
-    // Map Vietnamese titles to enum values
     const titleMapping: { [key: string]: string } = {
       "bác sĩ": "BS",
       "bac si": "BS",
@@ -257,12 +290,10 @@ const handleGetAllDoctors = async (
 
     let searchTitle = title.trim();
 
-    // Check if it's a Vietnamese title
     if (titleMapping[searchTitle.toLowerCase()]) {
       searchTitle = titleMapping[searchTitle.toLowerCase()];
     }
 
-    // Validate title enum values
     const validTitles = ["BS", "ThS", "TS", "PGS", "GS"];
     if (!validTitles.includes(searchTitle)) {
       throw new Error(
@@ -300,10 +331,14 @@ const handleGetAllDoctors = async (
     return { ...doctor, userInfo };
   });
 
-  return {
+  const result = {
     doctors: doctorsWithUserInfo,
     totalItems: total,
   };
+
+  await DoctorsCache.set(cacheParams, result);
+
+  return result;
 };
 
 const countTotalDoctorPage = async (pageSize: number) => {
@@ -518,6 +553,33 @@ const updateDoctorAvatarService = async (
   return doctorUpdated;
 };
 
+const handleUpdateDoctorStatusByAdminService = async (
+  id: string,
+  status: ApprovalStatus
+) => {
+  const doctor = await findDoctorById(id);
+  if (!doctor) {
+    throw new Error("Doctor không tồn tại");
+  }
+
+  if (
+    status != ApprovalStatus.Approved &&
+    status != ApprovalStatus.Rejected &&
+    status != ApprovalStatus.Pending
+  ) {
+    throw new Error("Trạng thái không hợp lệ");
+  }
+
+  const doctorUpdated = await prisma.doctor.update({
+    where: { id: id },
+    data: { approvalStatus: status as ApprovalStatus },
+  });
+
+  await DoctorsCache.clear();
+  await ApprovedDoctorsCache.clear();
+  return doctorUpdated;
+};
+
 export {
   createDoctorProfile,
   getDoctorByIdService,
@@ -531,4 +593,5 @@ export {
   getUserIdByDoctorIdService,
   handleSpecialtyDoctorCheck,
   updateDoctorAvatarService,
+  handleUpdateDoctorStatusByAdminService,
 };

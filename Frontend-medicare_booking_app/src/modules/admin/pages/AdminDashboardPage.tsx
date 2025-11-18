@@ -14,7 +14,10 @@ import {
   getAllDoctorsProfile,
   getAllPatientsProfile,
   getAllSpecialties,
+  getNotificationByUserId,
 } from "../services/admin.api";
+import axios from "services/axios.customize";
+import { useCurrentApp } from "@/components/contexts/app.context";
 
 const { Title, Text } = Typography;
 
@@ -46,6 +49,15 @@ const AdminDashboardPage = () => {
     activeDoctors: 0,
   });
   const [recentDoctors, setRecentDoctors] = useState<RecentDoctor[]>([]);
+  const currentApp = useCurrentApp();
+
+  // derived quick stats (computed from additional endpoints)
+  const [derivedQuickStats, setDerivedQuickStats] = useState({
+    activeUsersCount: 0,
+    todayAppointments: 0,
+    recentRatings: 0,
+    unreadNotifications: 0,
+  });
 
   useEffect(() => {
     fetchDashboardData();
@@ -55,12 +67,13 @@ const AdminDashboardPage = () => {
     setLoading(true);
     try {
       // Fetch all data in parallel
+      // request more users so we can compute active users count
       const [usersRes, doctorsRes, patientsRes, specialtiesRes] =
         await Promise.all([
-          getAllUsers("current=1&pageSize=1"),
+          getAllUsers("current=1&pageSize=1000"),
           getAllDoctorsProfile("current=1&pageSize=10"),
-          getAllPatientsProfile("current=1&pageSize=1"),
-          getAllSpecialties("current=1&pageSize=1"),
+          getAllPatientsProfile("current=1&pageSize=1000"),
+          getAllSpecialties("current=1&pageSize=1000"),
         ]);
 
       // Calculate stats
@@ -98,6 +111,63 @@ const AdminDashboardPage = () => {
         }));
 
       setRecentDoctors(formattedDoctors);
+
+      // Additional quick-stats: active users, today's appointments, recent ratings, unread notifications
+      try {
+        // active users: count isActive from usersRes
+        const usersList = usersRes.data?.result || [];
+        const activeUsersCount = usersList.filter(
+          (u: any) => u.isActive
+        ).length;
+
+        // today's appointments: try backend filter by date (fall back to 0 on error)
+        let todayAppointments = 0;
+        try {
+          const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+          const apptRes = await axios.get(
+            `/api/appointment/appointments?date=${today}&current=1&pageSize=1`
+          );
+          todayAppointments = apptRes.data?.meta?.total || 0;
+        } catch (err) {
+          // backend may not support date filter; ignore silently
+          todayAppointments = 0;
+        }
+
+        // recent ratings: try a generic ratings list endpoint
+        let recentRatings = 0;
+        try {
+          const ratingRes = await axios.get(
+            `/api/rating?current=1&pageSize=10`
+          );
+          recentRatings =
+            ratingRes.data?.meta?.total || ratingRes.data?.data?.length || 0;
+        } catch (err) {
+          recentRatings = 0;
+        }
+
+        // unread notifications for current admin user
+        let unreadNotifications = 0;
+        try {
+          const currentUser = currentApp?.user;
+          if (currentUser?.id) {
+            const notiRes = await getNotificationByUserId(currentUser.id);
+            const notis = notiRes.data || [];
+            unreadNotifications = notis.filter((n: any) => !n.isRead).length;
+          }
+        } catch (err) {
+          unreadNotifications = 0;
+        }
+
+        // set small derived values into UI areas that previously used hardcoded numbers
+        setDerivedQuickStats({
+          activeUsersCount,
+          todayAppointments,
+          recentRatings,
+          unreadNotifications,
+        });
+      } catch (err) {
+        console.warn("Could not compute some quick-stats:", err);
+      }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -327,25 +397,26 @@ const AdminDashboardPage = () => {
               <div className="flex justify-between items-center">
                 <Text>Người dùng hoạt động:</Text>
                 <Text strong className="text-lg text-green-600">
-                  {Math.floor(stats.totalUsers * 0.75)}
+                  {derivedQuickStats.activeUsersCount ||
+                    Math.floor(stats.totalUsers * 0.75)}
                 </Text>
               </div>
               <div className="flex justify-between items-center">
                 <Text>Lịch hẹn hôm nay:</Text>
                 <Text strong className="text-lg text-blue-600">
-                  24
+                  {derivedQuickStats.todayAppointments || 0}
                 </Text>
               </div>
               <div className="flex justify-between items-center">
                 <Text>Đánh giá mới:</Text>
                 <Text strong className="text-lg text-purple-600">
-                  18
+                  {derivedQuickStats.recentRatings || 0}
                 </Text>
               </div>
               <div className="flex justify-between items-center">
                 <Text>Thông báo chưa đọc:</Text>
                 <Text strong className="text-lg text-orange-600">
-                  5
+                  {derivedQuickStats.unreadNotifications || 0}
                 </Text>
               </div>
             </Space>

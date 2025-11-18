@@ -9,6 +9,7 @@ import {
   handleSpecialtyDoctorCheck,
   getDoctorByUserIdService,
   updateDoctorAvatarService,
+  handleUpdateDoctorStatusByAdminService,
 } from "src/services/doctorServices";
 
 const createDoctorController = async (req: Request, res: Response) => {
@@ -60,7 +61,8 @@ const updateDoctorStatusController = async (req: Request, res: Response) => {
 
 const getAllDoctorsController = async (req: Request, res: Response) => {
   try {
-    const { page, pageSize, fullName, phone, title } = req.query;
+    const { page, pageSize, fullName, phone, title, approvalStatus } =
+      req.query;
     let currentPage = page ? +page : 1;
     if (currentPage <= 0) {
       currentPage = 1;
@@ -72,7 +74,8 @@ const getAllDoctorsController = async (req: Request, res: Response) => {
       parseInt(pageSize as string),
       fullName as string,
       phone as string,
-      title as string
+      title as string,
+      approvalStatus as string
     );
 
     const pages = Math.max(1, Math.ceil(totalItems / size));
@@ -241,9 +244,33 @@ const updateDoctorAvatarController = async (req: Request, res: Response) => {
   }
 };
 
+const updateDoctorStatusByAdminController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const doctor = await handleUpdateDoctorStatusByAdminService(id, status);
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật trạng thái DOCTOR thành công.",
+      data: doctor,
+    });
+  } catch (error: any) {
+    console.error("Error updating doctor status:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Có lỗi xảy ra khi cập nhật trạng thái DOCTOR.",
+      error: error.message,
+    });
+  }
+};
+
 export {
   createDoctorController,
   getDoctorByIdController,
+  updateDoctorStatusByAdminController,
   updateDoctorStatusController,
   getAllDoctorsController,
   getAllApprovedDoctorsController,
