@@ -26,6 +26,10 @@ import {
   createAppointment,
   createAppointmentPatient,
 } from "src/repository/appointment.repo";
+import {
+  AllAppointmentByDoctorCache,
+  AllAppointmentByDoctorCacheParams,
+} from "src/cache/appointmentDoctor.cache";
 
 // Config timezone cho dayjs
 dayjs.extend(utc);
@@ -180,8 +184,10 @@ const createAppointmentService = async (
     appointment.doctorId
   );
 
-  await createPaymentDefaultViaRabbitMQ(appointment.id, String(appointment.totalFee) );
-
+  await createPaymentDefaultViaRabbitMQ(
+    appointment.id,
+    String(appointment.totalFee)
+  );
 
   await publishAppointmentCreatedEvent({
     appointmentId: appointment.id,
@@ -195,6 +201,7 @@ const createAppointmentService = async (
     totalFee: appointment.totalFee,
   });
 
+  await AllAppointmentByDoctorCache.clear();
 
   return {
     appointment: {
@@ -365,6 +372,7 @@ const updateAppointmentStatusService = async (
     },
   });
 
+  await AllAppointmentByDoctorCache.clear();
   return appointment;
 };
 
@@ -405,6 +413,21 @@ const handleAppointmentsByDoctorIdServices = async (
   page: number,
   pageSize: number
 ) => {
+  const cacheParams: AllAppointmentByDoctorCacheParams = {
+    page,
+    pageSize,
+    doctorId,
+  };
+
+  const cachedAppointments = await AllAppointmentByDoctorCache.get<{
+    appointments: any[];
+    totalAppointments: number;
+  }>(cacheParams);
+
+  if (cachedAppointments) {
+    return cachedAppointments;
+  }
+
   const skip = (page - 1) * pageSize;
   const appointments = await prisma.appointment.findMany({
     where: { doctorId: doctorId },
@@ -439,10 +462,14 @@ const handleAppointmentsByDoctorIdServices = async (
     })
   );
 
-  return {
+  const result = {
     appointments: appointmentsWithScheduleInfo,
     totalAppointments: appointments.length,
   };
+
+  await AllAppointmentByDoctorCache.set(cacheParams, result);
+
+  return result;
 };
 
 const handleCancelAppointment = async (appointmentId: string) => {
@@ -505,6 +532,8 @@ const handleCancelAppointment = async (appointmentId: string) => {
       refundRequired: cancelPaymentResult?.refundRequired || false,
     },
   };
+
+  await AllAppointmentByDoctorCache.clear();
 
   return response;
 };

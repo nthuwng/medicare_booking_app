@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Tag, Space, Avatar, Typography, Tooltip } from "antd";
+import {
+  Button,
+  Tag,
+  Space,
+  Avatar,
+  Typography,
+  Tooltip,
+  Select,
+  App,
+} from "antd";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -20,7 +29,10 @@ import {
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
-import { getAllAppointmentsByUserIdDoctor } from "../../services/doctor.api";
+import {
+  getAllAppointmentsByUserIdDoctor,
+  updateAppointmentStatus,
+} from "../../services/doctor.api";
 import type { IAppointment } from "@/types";
 import { useCurrentApp } from "@/components/contexts/app.context";
 import AppointmentDetail from "./detail.appointment";
@@ -33,6 +45,7 @@ const TableAppointment = () => {
   const [dataViewDetail, setDataViewDetail] = useState<IAppointment | null>(
     null
   );
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [meta, setMeta] = useState({
     current: 1,
     pageSize: 10,
@@ -41,6 +54,7 @@ const TableAppointment = () => {
   });
 
   const { user } = useCurrentApp();
+  const { message } = App.useApp();
   useEffect(() => {
     const handler = () => {
       actionRef.current?.reload();
@@ -90,6 +104,29 @@ const TableAppointment = () => {
     }
   };
 
+  const handleUpdateStatus = async (appointmentId: string, status: string) => {
+    try {
+      setUpdatingId(appointmentId);
+      await updateAppointmentStatus(appointmentId, status);
+
+      message.success(
+        status === "Approved"
+          ? "Duyệt bác sĩ thành công!"
+          : status === "Rejected"
+          ? "Từ chối bác sĩ thành công!"
+          : "Chuyển về chờ duyệt thành công!"
+      );
+
+      // Reload lại data bảng (không F5 trang, chỉ call lại API)
+      actionRef.current?.reload();
+    } catch (error) {
+      message.error("Có lỗi xảy ra, vui lòng thử lại!");
+      console.error(error);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   // Hàm tạo màu sắc cho trạng thái thanh toán
   const getPaymentStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
@@ -127,8 +164,8 @@ const TableAppointment = () => {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                // setDataViewDetail(entity);
-                // setOpenViewDetail(true);
+                setDataViewDetail(entity);
+                setOpenViewDetail(true);
               }}
               style={{
                 color: "#1890ff",
@@ -172,7 +209,7 @@ const TableAppointment = () => {
           const fallback = new Date(dob).getUTCFullYear();
           return Number.isNaN(fallback) ? undefined : fallback;
         };
-        const birthYear = extractBirthYear(patient.patientDateOfBirth);;
+        const birthYear = extractBirthYear(patient.patientDateOfBirth);
         let ageYears: number | undefined = undefined;
         if (typeof birthYear === "number") {
           const currentYear = new Date().getFullYear();
@@ -377,23 +414,78 @@ const TableAppointment = () => {
       },
     },
     {
-      title: "Thao tác",
+      title: "Hành động",
       hideInSearch: true,
       render(_, entity) {
         return (
           <Space>
-            <Tooltip title="Xem chi tiết">
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+              }}
+            >
               <Button
-                type="text"
-                size="small"
-                icon={<EyeOutlined style={{ fontSize: "18px" }} />}
+                type="default"
+                icon={<EyeOutlined />}
+                size="middle"
                 onClick={() => {
                   setDataViewDetail(entity);
                   setOpenViewDetail(true);
                 }}
-                style={{ color: "#1890ff" }}
+              >
+                Xem
+              </Button>
+              <Select
+                size="middle"
+                style={{
+                  width: 160,
+                }}
+                value={entity.status}
+                loading={updatingId === entity.id}
+                disabled={
+                  updatingId === entity.id ||
+                  entity.status.toUpperCase() === "CANCELLED" ||
+                  entity.status.toUpperCase() === "COMPLETED"
+                }
+                onChange={(value) => handleUpdateStatus(entity.id, value)}
+                options={(() => {
+                  const baseOptions = [
+                    {
+                      value: "Pending",
+                      label: "⏱ Chờ xác nhận",
+                    },
+                    {
+                      value: "Confirmed",
+                      label: "✓ Đã duyệt",
+                    },
+                  ];
+
+                  // Thêm option hiện tại nếu là Cancelled hoặc Completed để hiển thị đúng label
+                  if (entity.status.toUpperCase() === "CANCELLED") {
+                    return [
+                      ...baseOptions,
+                      {
+                        value: "Cancelled",
+                        label: "✗ Đã hủy",
+                      },
+                    ];
+                  }
+
+                  if (entity.status.toUpperCase() === "COMPLETED") {
+                    return [
+                      ...baseOptions,
+                      {
+                        value: "Completed",
+                        label: "✓ Hoàn thành",
+                      },
+                    ];
+                  }
+
+                  return baseOptions;
+                })()}
               />
-            </Tooltip>
+            </div>
           </Space>
         );
       },
@@ -539,6 +631,7 @@ const TableAppointment = () => {
         setOpenViewDetail={setOpenViewDetail}
         dataViewDetail={dataViewDetail}
         setDataViewDetail={setDataViewDetail}
+        getStatusText={getStatusText}
       />
     </>
   );

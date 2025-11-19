@@ -71,18 +71,19 @@ const AdminDashboardPage = () => {
       const [usersRes, doctorsRes, patientsRes, specialtiesRes] =
         await Promise.all([
           getAllUsers("current=1&pageSize=1000"),
-          getAllDoctorsProfile("current=1&pageSize=10"),
+          getAllDoctorsProfile("current=1&pageSize=100"),
           getAllPatientsProfile("current=1&pageSize=1000"),
           getAllSpecialties("current=1&pageSize=1000"),
         ]);
 
       // Calculate stats
       const doctorsData = doctorsRes.data?.result || [];
+
       const pendingCount = doctorsData.filter(
-        (d: any) => d.status === "pending"
+        (d: any) => d.approvalStatus === "Pending" || d.status === "pending"
       ).length;
       const activeCount = doctorsData.filter(
-        (d: any) => d.status === "approved"
+        (d: any) => d.approvalStatus === "Approved" || d.status === "approved"
       ).length;
 
       setStats({
@@ -94,21 +95,84 @@ const AdminDashboardPage = () => {
         activeDoctors: activeCount,
       });
 
-      // Format recent doctors data
-      const formattedDoctors: RecentDoctor[] = doctorsData
+      // Format recent doctors data - Sắp xếp theo ngày tạo mới nhất
+      const sortedDoctors = [...doctorsData].sort((a: any, b: any) => {
+        const dateA = new Date(a.createdAt || a.created_at || 0).getTime();
+        const dateB = new Date(b.createdAt || b.created_at || 0).getTime();
+        return dateB - dateA; // Sắp xếp giảm dần (mới nhất trước)
+      });
+
+      const formattedDoctors: RecentDoctor[] = sortedDoctors
         .slice(0, 5)
-        .map((doctor: any, index: number) => ({
-          key: doctor.doctor_id || index.toString(),
-          name:
-            `${doctor.user?.first_name || ""} ${
-              doctor.user?.last_name || ""
-            }`.trim() || "N/A",
-          specialty: doctor.specialty?.specialty_name || "N/A",
-          status: doctor.status || "pending",
-          joinDate: doctor.createdAt
-            ? new Date(doctor.createdAt).toLocaleDateString("vi-VN")
-            : "N/A",
-        }));
+        .map((doctor: any, index: number) => {
+          // Lấy tên bác sĩ - thử nhiều trường hợp khác nhau
+          let fullName = "";
+          
+          // Trường hợp 1: fullName đã có sẵn
+          if (doctor.fullName) {
+            fullName = doctor.fullName;
+          }
+          // Trường hợp 2: Lấy từ userInfo
+          else if (doctor.userInfo) {
+            const firstName = doctor.userInfo.first_name || doctor.userInfo.firstName || "";
+            const lastName = doctor.userInfo.last_name || doctor.userInfo.lastName || "";
+            fullName = `${firstName} ${lastName}`.trim();
+          }
+          // Trường hợp 3: Lấy từ user
+          else if (doctor.user) {
+            const firstName = doctor.user.first_name || doctor.user.firstName || "";
+            const lastName = doctor.user.last_name || doctor.user.lastName || "";
+            fullName = `${firstName} ${lastName}`.trim();
+          }
+          // Trường hợp 4: Lấy trực tiếp
+          else {
+            const firstName = doctor.first_name || doctor.firstName || "";
+            const lastName = doctor.last_name || doctor.lastName || "";
+            fullName = `${firstName} ${lastName}`.trim();
+          }
+
+          // Lấy tên chuyên khoa
+          let specialtyName = "Chưa cập nhật";
+          if (doctor.specialty?.specialtyName) {
+            specialtyName = doctor.specialty.specialtyName;
+          } else if (doctor.specialty?.specialty_name) {
+            specialtyName = doctor.specialty.specialty_name;
+          } else if (doctor.specialtyName) {
+            specialtyName = doctor.specialtyName;
+          }
+
+          // Format ngày tham gia
+          let joinDate = "N/A";
+          const dateField = doctor.createdAt || doctor.created_at;
+          if (dateField) {
+            try {
+              const date = new Date(dateField);
+              joinDate = date.toLocaleDateString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              });
+            } catch (e) {
+              joinDate = "N/A";
+            }
+          }
+
+          // Xử lý status
+          let status = "pending";
+          if (doctor.approvalStatus) {
+            status = doctor.approvalStatus.toLowerCase();
+          } else if (doctor.status) {
+            status = doctor.status.toLowerCase();
+          }
+
+          return {
+            key: doctor.id || doctor.doctor_id || index.toString(),
+            name: fullName || "Chưa cập nhật",
+            specialty: specialtyName,
+            status: status,
+            joinDate: joinDate,
+          };
+        });
 
       setRecentDoctors(formattedDoctors);
 
@@ -195,7 +259,8 @@ const AdminDashboardPage = () => {
         let color = "default";
         let text = status;
 
-        switch (status) {
+        const lowerStatus = status.toLowerCase();
+        switch (lowerStatus) {
           case "approved":
             color = "success";
             text = "Đã Duyệt";
@@ -208,6 +273,9 @@ const AdminDashboardPage = () => {
             color = "error";
             text = "Từ Chối";
             break;
+          default:
+            color = "default";
+            text = status || "Không xác định";
         }
 
         return <Tag color={color}>{text}</Tag>;

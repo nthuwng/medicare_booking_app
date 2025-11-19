@@ -22,6 +22,7 @@ interface IProps {
   setOpenViewDetail: (open: boolean) => void;
   dataViewDetail: IAppointment | null;
   setDataViewDetail: (data: IAppointment | null) => void;
+  getStatusText: (status: string) => string;
 }
 
 const AppointmentDetail = (props: IProps) => {
@@ -162,23 +163,15 @@ const AppointmentDetail = (props: IProps) => {
           labelStyle={{ width: 160, color: "#64748b" }}
           contentStyle={{ fontWeight: 500 }}
         >
+      
           <Descriptions.Item label="Mã cuộc hẹn">
-            {dataViewDetail?.id || "-"}
+            <Typography.Text copyable>{dataViewDetail?.id || "-"}</Typography.Text>
           </Descriptions.Item>
           <Descriptions.Item label="Thời gian">
             <Space size={6}>
               <CalendarOutlined />
               {formatDateTime(dataViewDetail?.appointmentDateTime)}
             </Space>
-          </Descriptions.Item>
-          <Descriptions.Item label="Phòng khám">
-            {dataViewDetail?.doctor?.clinicId ?? "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Chuyên khoa">
-            {dataViewDetail?.doctor?.specialtyId ?? "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Khung giờ">
-            {dataViewDetail?.timeSlotId ?? "-"}
           </Descriptions.Item>
         </Descriptions>
 
@@ -237,14 +230,14 @@ const AppointmentDetail = (props: IProps) => {
           <Descriptions.Item label="Trạng thái">
             {renderPaymentTag(dataViewDetail?.paymentStatus)}
           </Descriptions.Item>
+          <Descriptions.Item label="Trạng thái">
+            {renderStatusTag(dataViewDetail?.status)}
+          </Descriptions.Item>
         </Descriptions>
 
         <Divider />
         <Space style={{ width: "100%", justifyContent: "flex-end" }}>
           <Button onClick={onClose}>Đóng</Button>
-          <Button type="primary" disabled>
-            Xác nhận (sắp có)
-          </Button>
         </Space>
       </Space>
     </Drawer>

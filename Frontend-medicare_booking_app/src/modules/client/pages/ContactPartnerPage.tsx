@@ -47,7 +47,7 @@ const ContactPartnerPage = () => {
   };
 
   function buildMailTo(values: any) {
-    const to = "business@medicare.vn";
+    const to = "nguyenthinhhung@gmail.com";
     const subject = encodeURIComponent(
       `[Hợp tác phòng khám] ${values.clinicName}`
     );
@@ -117,7 +117,7 @@ const ContactPartnerPage = () => {
                 <div className="flex items-center gap-2">
                   <MailOutlined />
                   <Text className={theme === "dark" ? "!text-gray-200" : ""}>
-                    business@medicare.vn
+                    nguyenthinhhung@gmail.com
                   </Text>
                 </div>
                 <div className="flex items-center gap-2">

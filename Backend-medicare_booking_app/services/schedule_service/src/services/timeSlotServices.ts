@@ -2,6 +2,7 @@ import { CreateTimeSlotData } from "@shared/index";
 import { prisma } from "src/config/client";
 import { createTimeSlotSchema } from "src/validations/timeSlot.schema";
 import dayjs from "dayjs";
+import { AllTimeSlotCache } from "src/cache/timeslot.cache";
 
 const handleCreateTimeSlot = async (body: CreateTimeSlotData) => {
   const result = createTimeSlotSchema.safeParse(body);
@@ -40,16 +41,37 @@ const handleCreateTimeSlot = async (body: CreateTimeSlotData) => {
     },
   });
 
+  await AllTimeSlotCache.clear();
+
   return timeSlot;
 };
 
 const handleGetAllTimeSlots = async () => {
-  const timeSlots = await prisma.timeSlot.findMany();
+  // Cache key cố định vì không có params
+  const cacheParams = {};
+
+  const cachedTimeSlots = await AllTimeSlotCache.get<any[]>(cacheParams);
+
+  if (cachedTimeSlots) {
+    return cachedTimeSlots;
+  }
+
+  // Query database
+  const timeSlots = await prisma.timeSlot.findMany({
+    orderBy: {
+      startTime: "asc",
+    },
+  });
+
   const formattedTimeSlots = timeSlots.map((slot) => ({
     id: slot.id,
     startTime: dayjs(slot.startTime).format("HH:mm"),
     endTime: dayjs(slot.endTime).format("HH:mm"),
   }));
+
+  // Save to cache
+  await AllTimeSlotCache.set(cacheParams, formattedTimeSlots);
+
   return formattedTimeSlots;
 };
 

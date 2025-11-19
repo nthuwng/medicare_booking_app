@@ -11,6 +11,7 @@ import {
   checkDoctorProfileViaRabbitMQ,
 } from "src/queue/publishers/schedule.publisher";
 import { todayStr, nowTimeStr } from "src/utils/time";
+import { ScheduleByDoctorCache } from "src/cache/scheduleByDoctorId.cache";
 
 type TimeRange =
   | { mode: "exact"; start: Date; end: Date }
@@ -151,6 +152,8 @@ const scheduleService = async (body: CreateScheduleData) => {
     scheduleTimeSlots.push(formattedTimeSlot);
   }
 
+  await ScheduleByDoctorCache.clear();
+
   return {
     schedule,
     timeSlots: scheduleTimeSlots,
@@ -229,18 +232,34 @@ const countTotalSchedulePage = async (pageSize: number) => {
 };
 
 const getScheduleByDoctorId = async (doctorId: string, range: TimeRange) => {
-  let dateCondition: any;
+  // Tạo cache params
+  const cacheParams = {
+    doctorId,
+    mode: range.mode,
+    startDate: dayjs(range.start).format("YYYY-MM-DD"),
+    endDate:
+      range.mode !== "fromToday" && "end" in range
+        ? dayjs(range.end).format("YYYY-MM-DD")
+        : undefined,
+  };
 
+  // Check cache
+  const cachedSchedule = await ScheduleByDoctorCache.get<any[]>(cacheParams);
+  if (cachedSchedule) {
+    return cachedSchedule;
+  }
+
+  // Build date condition for query
+  let dateCondition: any;
   if (range.mode === "exact") {
-    // Tìm trong 1 ngày (>= start và < end+1ms)
     dateCondition = { gte: range.start, lte: range.end };
   } else if (range.mode === "range") {
     dateCondition = { gte: range.start, lte: range.end };
   } else {
-    // từ hôm nay
     dateCondition = { gte: range.start };
   }
 
+  // Query database
   const schedule = await prisma.schedule.findMany({
     where: { doctorId, date: dateCondition },
     orderBy: [{ date: "asc" }],
@@ -265,6 +284,9 @@ const getScheduleByDoctorId = async (doctorId: string, range: TimeRange) => {
       },
     })),
   }));
+
+  // Save to cache
+  await ScheduleByDoctorCache.set(cacheParams, filtered);
 
   return filtered;
 };
