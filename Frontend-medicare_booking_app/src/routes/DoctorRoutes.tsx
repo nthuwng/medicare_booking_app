@@ -9,6 +9,7 @@ import DoctorMessagePage from "@/modules/doctor/pages/DoctorMessagePage";
 import DoctorRatingPage from "@/modules/doctor/pages/DoctorRatingPage";
 import DoctorWaitingApproval from "@/modules/doctor/auth/DoctorWaitingApproval";
 import DoctorChangePasswordPage from "@/modules/doctor/pages/DoctorChangePasswordPage";
+import WeeklyWorkSchedule from "@/modules/doctor/pages/WeeklyWorkSchedule";
 
 const DoctorRoutes = () => {
   return (
@@ -52,6 +53,15 @@ const DoctorRoutes = () => {
           element={
             <DoctorWaitingApproval>
               <DoctorRatingPage />
+            </DoctorWaitingApproval>
+          }
+        />
+
+        <Route
+          path="weekly-work-schedule"
+          element={
+            <DoctorWaitingApproval>
+              <WeeklyWorkSchedule />
             </DoctorWaitingApproval>
           }
         />

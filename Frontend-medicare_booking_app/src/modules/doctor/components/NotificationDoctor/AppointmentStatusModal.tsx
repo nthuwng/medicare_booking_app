@@ -27,11 +27,9 @@ const AppointmentStatusModal = (props: IProps) => {
   const appointmentDateTime = (dataNotificationAppointmentStatus as any)?.data
     ?.data?.appointmentDateTime;
   const appointmentDateTimeVN = appointmentDateTime
-    ? dayjs
-        .utc(appointmentDateTime)
-        .tz("Asia/Ho_Chi_Minh")
-        .format("DD/MM/YYYY HH:mm")
+    ? dayjs.utc(appointmentDateTime).format("DD/MM/YYYY HH:mm")
     : "";
+
   const reason = (dataNotificationAppointmentStatus as any)?.data?.data?.reason;
   const totalFee = (dataNotificationAppointmentStatus as any)?.data?.data
     ?.totalFee;
@@ -41,7 +39,7 @@ const AppointmentStatusModal = (props: IProps) => {
 
   const handleApprove = async () => {
     try {
-       await updateAppointmentStatus(appointmentId, "Confirmed");
+      await updateAppointmentStatus(appointmentId, "Confirmed");
     } catch (error) {
       console.log("error @@@", error);
     }

@@ -7,6 +7,7 @@ import {
   handleAppointmentsByDoctorIdServices,
   countTotalAppointmentPage,
   handleCancelAppointment,
+  handleAppointmentsDisplayScheduleServices,
 } from "src/services/appointment.services";
 import { AppointmentStatus } from "@shared/index";
 import { getDoctorIdByUserIdViaRabbitMQ } from "src/queue/publishers/appointment.publisher";
@@ -14,7 +15,12 @@ import { getDoctorIdByUserIdViaRabbitMQ } from "src/queue/publishers/appointment
 const createAppointmentController = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId || "";
+
     const appointment = await createAppointmentService(req.body, userId);
+    if (appointment.success === false) {
+      res.status(200).json({ success: false, message: appointment.message });
+      return;
+    }
     res.status(201).json({
       success: true,
       message: "Tạo cuộc hẹn thành công.",
@@ -207,6 +213,38 @@ const cancelAppointmentController = async (req: Request, res: Response) => {
   }
 };
 
+const getAllAppointmentsDisplayScheduleByUserIdController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { userId } = req.params;
+    const doctorId = await getDoctorIdByUserIdViaRabbitMQ(userId as string);
+    const appointments = await handleAppointmentsDisplayScheduleServices(
+      doctorId
+    );
+
+    if (appointments.appointments.length === 0) {
+      res.status(200).json({
+        length: 0,
+        success: false,
+        message: "Không có cuộc hẹn nào trong lịch trình.",
+        data: [],
+      });
+      return;
+    }
+    res.status(200).json({
+      length: appointments.appointments.length,
+      success: true,
+      message: "Lấy lịch hẹn thành công.",
+      data: appointments.appointments,
+    });
+  } catch (error: any) {
+    console.error("Error getting appointment schedule:", error.message);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 export {
   createAppointmentController,
   getAppointmentsByUserController,
@@ -214,4 +252,5 @@ export {
   updateAppointmentStatusController,
   getAllAppointmentsByDoctorIdController,
   cancelAppointmentController,
+  getAllAppointmentsDisplayScheduleByUserIdController,
 };

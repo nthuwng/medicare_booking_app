@@ -5,7 +5,8 @@ import {
   getAllAppointmentsByDoctorIdController,
   updateAppointmentStatusController,
   getAppointmentByIdController,
-  cancelAppointmentController
+  cancelAppointmentController,
+  getAllAppointmentsDisplayScheduleByUserIdController,
 } from "src/controller/appointment.controllers";
 import {
   authenticateToken,
@@ -27,6 +28,12 @@ const appointmentRoutes = (app: Express) => {
     "/doctor-appointments/:userId",
     authorizeDoctor,
     getAllAppointmentsByDoctorIdController
+  );
+
+  router.get(
+    "/doctor-appointments/display-schedule/:userId",
+    authorizeDoctor,
+    getAllAppointmentsDisplayScheduleByUserIdController
   );
 
   router.put(

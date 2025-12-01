@@ -24,6 +24,7 @@ import {
   App,
 } from "antd";
 import { Outlet, useLocation } from "react-router-dom";
+import { AiOutlineSchedule } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import type { MenuProps } from "antd";
 import { RiAdminFill } from "react-icons/ri";
@@ -155,6 +156,11 @@ const LayoutDoctor = () => {
     {
       label: <Link to="/doctor/appointments">Appointments</Link>,
       key: "appointments",
+      icon: <AiOutlineSchedule style={{ fontSize: "17px" }} />,
+    },
+    {
+      label: <Link to="/doctor/weekly-work-schedule">Weekly Schedule</Link>,
+      key: "weekly-work-schedule",
       icon: <IoCalendarOutline style={{ fontSize: "17px" }} />,
     },
     {
@@ -205,19 +211,18 @@ const LayoutDoctor = () => {
   };
 
   const getSelectedMenuKey = (pathname: string) => {
-  // 1. Ưu tiên match chính xác
-  if (pathToKeyMap[pathname]) {
-    return pathToKeyMap[pathname];
-  }
+    // 1. Ưu tiên match chính xác
+    if (pathToKeyMap[pathname]) {
+      return pathToKeyMap[pathname];
+    }
 
-  // 2. Nếu không có exact match, tìm prefix dài nhất (cho các route con)
-  const matchedEntry = Object.entries(pathToKeyMap)
-    .sort((a, b) => b[0].length - a[0].length) // path dài trước
-    .find(([path]) => pathname.startsWith(path));
+    // 2. Nếu không có exact match, tìm prefix dài nhất (cho các route con)
+    const matchedEntry = Object.entries(pathToKeyMap)
+      .sort((a, b) => b[0].length - a[0].length) // path dài trước
+      .find(([path]) => pathname.startsWith(path));
 
-  return matchedEntry ? matchedEntry[1] : "dashboard";
-};
-
+    return matchedEntry ? matchedEntry[1] : "dashboard";
+  };
 
   const renderTitleTag = (title: IDoctorProfile["title"]) => {
     const tagStyle = {

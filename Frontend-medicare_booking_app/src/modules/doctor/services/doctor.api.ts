@@ -1,3 +1,4 @@
+import { getMyAppointmentsAPI } from "@/modules/client/services/client.api";
 import axios from "services/axios.customize";
 import type {
   IAppointment,
@@ -230,7 +231,11 @@ const updatePasswordDoctorAPI = (
   });
 };
 
-const updateDoctorAvatarAPI = (userId: string, avatar_url: string, avatar_public_id: string) => {
+const updateDoctorAvatarAPI = (
+  userId: string,
+  avatar_url: string,
+  avatar_public_id: string
+) => {
   const urlBackend = `/api/doctor/doctors/update-avatar/${userId}`;
   return axios.put<IBackendRes<IDoctorProfile>>(urlBackend, {
     avatar_url,
@@ -238,7 +243,13 @@ const updateDoctorAvatarAPI = (userId: string, avatar_url: string, avatar_public
   });
 };
 
+const getMyAppointmentsDisplayScheduleByUserIdAPI = (userId: string) => {
+  const urlBackend = `/api/appointment/appointments/doctor-appointments/display-schedule/${userId}`;
+  return axios.get<IBackendRes<IAppointment[]>>(urlBackend);
+};
+
 export {
+  getMyAppointmentsDisplayScheduleByUserIdAPI,
   getDoctorProfileByUserId,
   fetchRatingByDoctorIdAPI,
   getAllSpecialtiesDoctorProFile,

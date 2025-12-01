@@ -197,12 +197,12 @@ const MakeAppointmentPage = () => {
         });
       } else {
         notification.error({
-          message: "Lỗi",
+          message: "Đặt lịch thất bại",
           description: response.message,
         });
       }
     } catch (e: any) {
-      message.error(e.response?.data?.message || "Có lỗi xảy ra");
+      message.error("Có lỗi xảy ra . Gọi API thất bại, vui lòng thử lại");
     } finally {
       setSubmitting(false);
     }

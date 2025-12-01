@@ -30,6 +30,10 @@ import {
   AllAppointmentByDoctorCache,
   AllAppointmentByDoctorCacheParams,
 } from "src/cache/appointmentDoctor.cache";
+import {
+  AllWeeklyScheduleCache,
+  AllWeeklyScheduleCacheParams,
+} from "src/cache/weeklySchedule.cache";
 
 // Config timezone cho dayjs
 dayjs.extend(utc);
@@ -38,7 +42,7 @@ dayjs.extend(timezone);
 const createAppointmentService = async (
   body: CreateAppointmentInput,
   userId: string
-): Promise<AppointmentResponse> => {
+): Promise<any> => {
   const {
     scheduleId,
     timeSlotId,
@@ -59,20 +63,20 @@ const createAppointmentService = async (
   // Get schedule information (includes doctor info and timeSlots)
   const scheduleResponse = await checkScheduleViaRabbitMQ(scheduleId);
   if (!scheduleResponse || !scheduleResponse.data) {
-    throw new Error("Lịch khám không tồn tại");
+    return { success: false, message: "Lịch khám không tồn tại" };
   }
 
   const { schedule: scheduleArray, doctor } = scheduleResponse.data;
 
   // Schedule is an array, get the first element
   if (!scheduleArray || scheduleArray.length === 0) {
-    throw new Error("Lịch khám không tồn tại");
+    return { success: false, message: "Lịch khám không tồn tại" };
   }
 
   const schedule = scheduleArray[0];
 
   if (!schedule.isAvailable) {
-    throw new Error("Lịch khám không khả dụng");
+    return { success: false, message: "Lịch khám không khả dụng" };
   }
 
   // Extract data from schedule response
@@ -93,7 +97,10 @@ const createAppointmentService = async (
   );
 
   if (!selectedTimeSlot) {
-    throw new Error("Khung giờ này không có trong lịch khám của bác sĩ");
+    return {
+      success: false,
+      message: "Khung giờ này không có trong lịch khám của bác sĩ",
+    };
   }
 
   // Extract appointment time from timeSlot using dayjs
@@ -105,16 +112,20 @@ const createAppointmentService = async (
   for (const timeSlot of schedule.timeSlots) {
     if (timeSlot.timeSlotId === parseInt(timeSlotId)) {
       if (timeSlot.currentBooking >= timeSlot.maxBooking) {
-        throw new Error(
-          "Khung giờ này đã hết chỗ. Vui lòng chọn khung giờ khác"
-        );
+        return {
+          success: false,
+          message: "Khung giờ này đã hết chỗ. Vui lòng chọn khung giờ khác",
+        };
       }
     }
   }
 
   // Validate doctor is approved
   if (!doctor.isApproved) {
-    throw new Error("Bác sĩ chưa được duyệt");
+    return {
+      success: false,
+      message: "Bác sĩ chưa được duyệt",
+    };
   }
 
   // Calculate total fee from doctor's consultation and booking fees
@@ -140,7 +151,10 @@ const createAppointmentService = async (
   });
 
   if (existingAppointment) {
-    throw new Error("Bạn đã có lịch hẹn này rồi");
+    return {
+      success: false,
+      message: "Bạn đã có lịch hẹn này rồi. Vui lòng chọn lịch khác.",
+    };
   }
 
   // Determine booking type based on whether booker info is provided
@@ -202,6 +216,7 @@ const createAppointmentService = async (
   });
 
   await AllAppointmentByDoctorCache.clear();
+  await AllWeeklyScheduleCache.clear();
 
   return {
     appointment: {
@@ -373,6 +388,7 @@ const updateAppointmentStatusService = async (
   });
 
   await AllAppointmentByDoctorCache.clear();
+  await AllWeeklyScheduleCache.clear();
   return appointment;
 };
 
@@ -534,8 +550,39 @@ const handleCancelAppointment = async (appointmentId: string) => {
   };
 
   await AllAppointmentByDoctorCache.clear();
+  await AllWeeklyScheduleCache.clear();
 
   return response;
+};
+
+const handleAppointmentsDisplayScheduleServices = async (doctorId: string) => {
+  const cacheParams: AllWeeklyScheduleCacheParams = {
+    doctorId,
+  };
+
+  const cachedWeeklySchedule = await AllWeeklyScheduleCache.get<{
+    appointments: any[];
+  }>(cacheParams);
+
+  if (cachedWeeklySchedule) {
+    return cachedWeeklySchedule;
+  }
+
+  const appointments = await prisma.appointment.findMany({
+    where: { doctorId: doctorId, status: "Confirmed" },
+    include: {
+      patient: true,
+    },
+    orderBy: {
+      appointmentDateTime: "asc",
+    },
+  });
+
+  await AllWeeklyScheduleCache.set(cacheParams, { appointments });
+
+  return {
+    appointments: appointments,
+  };
 };
 
 export {
@@ -547,4 +594,5 @@ export {
   handleAppointmentsByDoctorIdServices,
   countTotalAppointmentPage,
   handleCancelAppointment,
+  handleAppointmentsDisplayScheduleServices,
 };

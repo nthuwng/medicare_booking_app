@@ -438,7 +438,7 @@ const DoctorProFile = () => {
                           type="default"
                           block
                           className="!h-auto !p-0 shadow-none border-none bg-transparent"
-                          onClick={() => navigate("/doctor/appointments")}
+                          onClick={() => navigate("/doctor/weekly-work-schedule")}
                         >
                           <div className="group w-full flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 hover:border-emerald-500 hover:bg-emerald-50 transition-all duration-200">
                             <div className="flex items-center justify-center w-9 h-9 rounded-full bg-emerald-50 group-hover:bg-emerald-100 transition-colors">
@@ -446,10 +446,10 @@ const DoctorProFile = () => {
                             </div>
                             <div className="flex-1 text-left">
                               <div className="text-sm font-semibold text-gray-800">
-                                Cuộc hẹn
+                                Lịch làm việc
                               </div>
                               <div className="text-xs text-gray-500">
-                                Xem & quản lý cuộc hẹn
+                                Xem lịch làm việc theo tuần
                               </div>
                             </div>
                           </div>
