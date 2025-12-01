@@ -1,4 +1,4 @@
-import { getMyAppointmentsAPI } from "@/modules/client/services/client.api";
+
 import axios from "services/axios.customize";
 import type {
   IAppointment,
