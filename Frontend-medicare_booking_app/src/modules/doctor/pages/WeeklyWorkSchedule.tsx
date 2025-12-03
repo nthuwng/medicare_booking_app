@@ -14,6 +14,7 @@ import {
 } from "antd";
 import { CiUser } from "react-icons/ci";
 import { AiOutlineMail, AiOutlinePhone } from "react-icons/ai";
+import { PiCity } from "react-icons/pi";
 import { IoMdTime } from "react-icons/io";
 import {
   LeftOutlined,
@@ -31,6 +32,7 @@ interface IPatient {
   patientPhone: string;
   patientEmail: string;
   patientGender: string;
+  patientCity: string;
 }
 
 interface IAppointment {
@@ -272,6 +274,7 @@ const WeeklyWorkSchedule = () => {
                                 apt.patient?.patientName || "Unknown patient";
                               const phone = apt.patient?.patientPhone || "N/A";
                               const email = apt.patient?.patientEmail || "N/A";
+                              const city = apt.patient?.patientCity || "N/A";
                               const gender =
                                 apt.patient?.patientGender || "N/A";
 
@@ -282,6 +285,9 @@ const WeeklyWorkSchedule = () => {
                                     <div className="text-xs space-y-1">
                                       <div>
                                         <strong>Name:</strong> {patientName}
+                                      </div>
+                                      <div>
+                                        <strong>City:</strong> {city}
                                       </div>
                                       <div>
                                         <strong>Phone:</strong> {phone}
@@ -341,6 +347,12 @@ const WeeklyWorkSchedule = () => {
                                               <AiOutlineMail size={18} />
                                               <span className="ml-1">
                                                 {email}
+                                              </span>
+                                            </Text>
+                                            <Text className="block text-[11px] text-gray-400 flex">
+                                              <PiCity size={18} />
+                                              <span className="ml-1">
+                                                {city}
                                               </span>
                                             </Text>
                                           </div>

@@ -8,6 +8,9 @@ import {
   Tooltip,
   Select,
   App,
+  Card,
+  Form,
+  DatePicker,
 } from "antd";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -26,6 +29,8 @@ import {
   UserOutlined,
   DollarOutlined,
   ClockCircleOutlined,
+  FilterOutlined,
+  ClearOutlined,
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
@@ -45,6 +50,21 @@ const TableAppointment = () => {
   const [dataViewDetail, setDataViewDetail] = useState<IAppointment | null>(
     null
   );
+
+  // ====== STATE FILTER ======
+  const [filterType, setFilterType] = useState<"date" | "range">("date");
+  const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<
+    string | undefined
+  >();
+  const [dateRange, setDateRange] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null]
+  >([null, null]);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [form] = Form.useForm();
+  // ==========================
+
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [meta, setMeta] = useState({
     current: 1,
@@ -55,6 +75,7 @@ const TableAppointment = () => {
 
   const { user } = useCurrentApp();
   const { message } = App.useApp();
+
   useEffect(() => {
     const handler = () => {
       actionRef.current?.reload();
@@ -67,6 +88,31 @@ const TableAppointment = () => {
   const refreshTable = () => {
     actionRef.current?.reload();
   };
+
+  // ====== HANDLER FILTER ======
+  const handleFilterTypeChange = (value: "date" | "range") => {
+    setFilterType(value);
+    setSelectedDate(null);
+    setDateRange([null, null]);
+    setStatusFilter(undefined);
+    setPaymentStatusFilter(undefined);
+    form.resetFields();
+  };
+
+  const handleApplyFilters = () => {
+    actionRef.current?.reload();
+  };
+
+  const handleClearFilters = () => {
+    setSelectedDate(null);
+    setDateRange([null, null]);
+    setStatusFilter(undefined);
+    setPaymentStatusFilter(undefined);
+
+    form.resetFields();
+    actionRef.current?.reload();
+  };
+  // ============================
 
   // Hàm tạo màu sắc cho trạng thái cuộc hẹn
   const getStatusColor = (status: string) => {
@@ -97,8 +143,6 @@ const TableAppointment = () => {
         return "Hoàn thành";
       case "CANCELLED":
         return "Đã hủy";
-      case "NO_SHOW":
-        return "Không đến";
       default:
         return status;
     }
@@ -117,7 +161,6 @@ const TableAppointment = () => {
           : "Chuyển về chờ duyệt thành công!"
       );
 
-      // Reload lại data bảng (không F5 trang, chỉ call lại API)
       actionRef.current?.reload();
     } catch (error) {
       message.error("Có lỗi xảy ra, vui lòng thử lại!");
@@ -187,18 +230,15 @@ const TableAppointment = () => {
         const patient = entity.patient;
         if (!patient) return <Text type="secondary">Không có thông tin</Text>;
 
-        // Tính tuổi đơn giản dựa trên NĂM sinh (đúng theo yêu cầu)
         const extractBirthYear = (dob?: string): number | undefined => {
           if (!dob) return undefined;
-          // ISO
           if (dob.includes("T")) {
             const d = new Date(dob);
             const y = d.getUTCFullYear();
             return Number.isNaN(y) ? undefined : y;
           }
-          // YYYY-MM-DD
           const ymd = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/;
-          const dmy = /^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/; // DD/MM/YYYY
+          const dmy = /^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/;
           let m: RegExpMatchArray | null = null;
           if ((m = dob.match(ymd))) {
             return parseInt(m[1], 10);
@@ -269,7 +309,6 @@ const TableAppointment = () => {
       hideInSearch: true,
       render(_, entity) {
         const d = new Date(entity.appointmentDateTime);
-        // Vietnam timezone-safe formatting
         const dateText = new Intl.DateTimeFormat("vi-VN", {
           timeZone: "UTC",
           year: "numeric",
@@ -393,7 +432,6 @@ const TableAppointment = () => {
               {dayjs(entity.createdAt).format("DD/MM/YYYY")}
             </Text>
             <br />
-
             <div
               style={{
                 display: "flex",
@@ -461,7 +499,6 @@ const TableAppointment = () => {
                     },
                   ];
 
-                  // Thêm option hiện tại nếu là Cancelled hoặc Completed để hiển thị đúng label
                   if (entity.status.toUpperCase() === "CANCELLED") {
                     return [
                       ...baseOptions,
@@ -494,48 +531,246 @@ const TableAppointment = () => {
 
   return (
     <>
+      {/* ====== BỘ LỌC LỊCH HẸN ====== */}
+      <Card
+        style={{ marginBottom: 16 }}
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <FilterOutlined style={{ color: "#1890ff" }} />
+            <span style={{ fontWeight: 600 }}>Bộ lọc cuộc hẹn</span>
+          </div>
+        }
+        extra={
+          <Button type="link" onClick={() => setShowFilters((v) => !v)}>
+            {showFilters ? "Ẩn bộ lọc" : "Hiển thị bộ lọc"}
+          </Button>
+        }
+      >
+        {showFilters && (
+          <Form form={form} layout="vertical">
+            <Space
+              size="large"
+              style={{ width: "100%", flexWrap: "wrap", marginBottom: 8 }}
+            >
+              <Form.Item label="Loại bộ lọc">
+                <Select
+                  value={filterType}
+                  onChange={handleFilterTypeChange}
+                  style={{ minWidth: 180 }}
+                  options={[
+                    { label: "Theo ngày cụ thể", value: "date" },
+                    { label: "Theo khoảng ngày", value: "range" },
+                  ]}
+                />
+              </Form.Item>
+
+              {filterType === "date" && (
+                <>
+                  <Form.Item label="Chọn ngày">
+                    <DatePicker
+                      value={selectedDate}
+                      onChange={(date) => setSelectedDate(date)}
+                      format="DD/MM/YYYY"
+                      placeholder="Chọn ngày"
+                      style={{ width: 200 }}
+                    />
+                  </Form.Item>
+                </>
+              )}
+
+              {filterType === "range" && (
+                <>
+                  <Form.Item label="Từ ngày">
+                    <DatePicker
+                      value={dateRange[0]}
+                      onChange={(date) => setDateRange([date, dateRange[1]])}
+                      format="DD/MM/YYYY"
+                      placeholder="Từ ngày"
+                      style={{ width: 200 }}
+                    />
+                  </Form.Item>
+                  <Form.Item label="Đến ngày">
+                    <DatePicker
+                      value={dateRange[1]}
+                      onChange={(date) => setDateRange([dateRange[0], date])}
+                      format="DD/MM/YYYY"
+                      placeholder="Đến ngày"
+                      style={{ width: 200 }}
+                      disabledDate={(current) => {
+                        if (!dateRange[0]) return false;
+                        return !!current && current < dateRange[0];
+                      }}
+                    />
+                  </Form.Item>
+                </>
+              )}
+            </Space>
+
+            {/* Thông tin filter hiện tại */}
+            {(filterType === "date" && selectedDate) ||
+            (filterType === "range" && dateRange[0] && dateRange[1]) ? (
+              <div
+                style={{
+                  background: "#f0f5ff",
+                  padding: 8,
+                  borderRadius: 6,
+                  marginBottom: 12,
+                }}
+              >
+                <Text strong style={{ color: "#1d39c4" }}>
+                  Bộ lọc hiện tại:{" "}
+                </Text>
+                {filterType === "date" && selectedDate && (
+                  <Text>Ngày {selectedDate.format("DD/MM/YYYY")}</Text>
+                )}
+                {filterType === "range" && dateRange[0] && dateRange[1] && (
+                  <Text>
+                    Từ {dateRange[0].format("DD/MM/YYYY")} đến{" "}
+                    {dateRange[1].format("DD/MM/YYYY")}
+                  </Text>
+                )}
+              </div>
+            ) : null}
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 8,
+              }}
+            >
+              <Button
+                icon={<ClearOutlined />}
+                onClick={handleClearFilters}
+                type="default"
+              >
+                Xóa bộ lọc
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleApplyFilters}
+                disabled={
+                  (filterType === "date" && !selectedDate) ||
+                  (filterType === "range" && (!dateRange[0] || !dateRange[1]))
+                }
+              >
+                Áp dụng
+              </Button>
+            </div>
+          </Form>
+        )}
+      </Card>
+      {/* ============================ */}
+
+      {/* ====== QUICK FILTER TRẠNG THÁI ====== */}
+      <div
+        style={{
+          marginBottom: 12,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Text strong style={{ fontSize: 14 }}>
+          Lọc nhanh theo trạng thái
+        </Text>
+
+        <Space size="middle" wrap>
+          <Select
+            allowClear
+            placeholder="Trạng thái cuộc hẹn"
+            style={{ minWidth: 200 }}
+            value={statusFilter}
+            onChange={(val) => {
+              setStatusFilter(val);
+              actionRef.current?.reload(); // reload bảng khi đổi filter
+            }}
+            options={[
+              { label: "Chờ xác nhận", value: "Pending" },
+              { label: "Đã xác nhận", value: "Confirmed" },
+              { label: "Hoàn thành", value: "Completed" },
+              { label: "Đã hủy", value: "Cancelled" },
+            ]}
+          />
+
+          <Select
+            allowClear
+            placeholder="Trạng thái thanh toán"
+            style={{ minWidth: 220 }}
+            value={paymentStatusFilter}
+            onChange={(val) => {
+              setPaymentStatusFilter(val);
+              actionRef.current?.reload(); // reload khi đổi
+            }}
+            options={[
+              { label: "Đã thanh toán", value: "Paid" },
+              { label: "Chưa thanh toán", value: "Unpaid" },
+            ]}
+          />
+
+          <Button
+            icon={<ClearOutlined />}
+            onClick={() => {
+              setStatusFilter(undefined);
+              setPaymentStatusFilter(undefined);
+              actionRef.current?.reload();
+            }}
+          >
+            Xóa lọc trạng thái
+          </Button>
+        </Space>
+      </div>
+      {/* ==================================== */}
+
       <ProTable<IAppointment>
         columns={columns}
         actionRef={actionRef}
         cardBordered
         scroll={{ x: 1200 }}
         size="middle"
-        search={{
-          labelWidth: 120,
-          searchText: "Tìm kiếm",
-          resetText: "Làm mới",
-          collapseRender: (collapsed) => (collapsed ? "Mở rộng" : "Thu gọn"),
-          optionRender: (formProps) => [
-            <Button
-              key="search"
-              type="primary"
-              onClick={() => formProps?.form?.submit()}
-              style={{ marginRight: 8 }}
-            >
-              Tìm kiếm
-            </Button>,
-            <Button key="reset" onClick={() => formProps?.form?.resetFields()}>
-              Làm mới
-            </Button>,
-          ],
-        }}
+        search={false}
         request={async (params) => {
-          let query = "";
-          if (params) {
-            query += `${user?.id}?page=${params.current}&pageSize=${params.pageSize}`;
+          const page = params.current ?? 1;
+          const pageSize = params.pageSize ?? 10;
 
-            // Thêm tham số tìm kiếm nếu có
-            if (params.patientName) {
-              query += `&patientName=${encodeURIComponent(params.patientName)}`;
-            }
+          const filters: {
+            date?: string;
+            from?: string;
+            to?: string;
+            page?: number;
+            pageSize?: number;
+            status?: string;
+            paymentStatus?: string;
+          } = {
+            page,
+            pageSize,
+          };
+
+          if (filterType === "date" && selectedDate) {
+            filters.date = selectedDate.format("YYYY-MM-DD");
+          } else if (filterType === "range" && dateRange[0] && dateRange[1]) {
+            filters.from = dateRange[0].format("YYYY-MM-DD");
+            filters.to = dateRange[1].format("YYYY-MM-DD");
           }
-          const res = await getAllAppointmentsByUserIdDoctor(query);
+
+          if (statusFilter) {
+            filters.status = statusFilter;
+          }
+          if (paymentStatusFilter) {
+            filters.paymentStatus = paymentStatusFilter;
+          }
+
+          const res = await getAllAppointmentsByUserIdDoctor(
+            user?.id as string,
+            filters
+          );
+
           if (res.data) {
             setMeta(res.data.meta);
           }
+
           return {
             data: res.data?.result ?? [],
-            page: 1,
             success: true,
             total: res.data?.meta.total,
           };
@@ -549,8 +784,8 @@ const TableAppointment = () => {
           pageSizeOptions: ["10", "20", "50", "100"],
           showQuickJumper: true,
           showTotal: (total, range) => (
-            <div style={{ color: "#666", fontSize: "14px" }}>
-              Hiển thị {range[0]}-{range[1]} trong tổng số {total} cuộc hẹn
+            <div>
+              {range[0]}-{range[1]} trên {total} rows
             </div>
           ),
         }}
@@ -585,28 +820,6 @@ const TableAppointment = () => {
             Làm mới
           </Button>,
         ]}
-        tableAlertRender={({ selectedRowKeys, onCleanSelected }) => (
-          <Space size={16}>
-            <span>Đã chọn {selectedRowKeys.length} cuộc hẹn</span>
-            <Button size="small" onClick={onCleanSelected}>
-              Bỏ chọn
-            </Button>
-          </Space>
-        )}
-        tableAlertOptionRender={({ selectedRowKeys }) => (
-          <Space size={8}>
-            <Button
-              size="small"
-              type="primary"
-              disabled={selectedRowKeys.length === 0}
-            >
-              Xác nhận hàng loạt
-            </Button>
-            <Button size="small" danger disabled={selectedRowKeys.length === 0}>
-              Hủy hàng loạt
-            </Button>
-          </Space>
-        )}
         rowSelection={{
           type: "checkbox",
           preserveSelectedRowKeys: true,

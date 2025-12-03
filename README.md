@@ -79,5 +79,6 @@ Không chạy đồng thời 3 lệnh cùng lúc
     - DBSIZE : XEM TỔNG CÓ BAO NHIÊU KEY
     - INFO memory : XEM BỘ NHỚ
     - DEL <KEY> : XÓA KEYS
+    - FLUSHDB : XÓA TẤT CẢ KEYS
 
 ```

@@ -48,6 +48,17 @@ const AppointmentStatusModal = (props: IProps) => {
     window.dispatchEvent(new CustomEvent("doctor:appointment-refresh"));
   };
 
+  const handleReject = async () => {
+    try {
+      await updateAppointmentStatus(appointmentId, "Cancelled");
+    } catch (error) {
+      console.log("error @@@", error);
+    }
+    setOpenModalAppointmentStatus(false);
+
+    window.dispatchEvent(new CustomEvent("doctor:appointment-refresh"));
+  };
+
   return (
     <>
       <Modal
@@ -110,7 +121,7 @@ const AppointmentStatusModal = (props: IProps) => {
             danger
             size="large"
             icon={<CloseOutlined />}
-            onClick={() => {}}
+            onClick={handleReject}
             className="flex-1 h-12 rounded-lg border border-red-500 bg-white text-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md"
           >
             Từ chối

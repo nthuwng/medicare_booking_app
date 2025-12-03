@@ -11,6 +11,12 @@ import {
 } from "src/services/appointment.services";
 import { AppointmentStatus } from "@shared/index";
 import { getDoctorIdByUserIdViaRabbitMQ } from "src/queue/publishers/appointment.publisher";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import tz from "dayjs/plugin/timezone";
+dayjs.extend(utc);
+dayjs.extend(tz);
+const APP_TZ = "Asia/Ho_Chi_Minh";
 
 const createAppointmentController = async (req: Request, res: Response) => {
   try {
@@ -126,7 +132,7 @@ const getAllAppointmentsByDoctorIdController = async (
   try {
     const { userId } = req.params;
 
-    const { page, pageSize } = req.query;
+    const { page, pageSize , status , paymentStatus } = req.query;
     let currentPage = page ? +page : 1;
     if (currentPage <= 0) {
       currentPage = 1;
@@ -135,12 +141,70 @@ const getAllAppointmentsByDoctorIdController = async (
       parseInt(pageSize as string)
     );
 
+    const { date, from, to } = req.query as {
+          date?: string;
+          from?: string;
+          to?: string;
+        };
+    
+        // Validate định dạng YYYY-MM-DD (rất chặt để tránh sai TZ)
+        const isYMD = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+    
+        if (date && !isYMD(date)) {
+          res
+            .status(400)
+            .json({ success: false, message: "date phải dạng YYYY-MM-DD" });
+          return;
+        }
+        if ((from && !isYMD(from)) || (to && !isYMD(to))) {
+          res
+            .status(400)
+            .json({ success: false, message: "from/to phải dạng YYYY-MM-DD" });
+          return;
+        }
+        if (from && to && dayjs(from).isAfter(dayjs(to))) {
+          res
+            .status(400)
+            .json({ success: false, message: "from không được lớn hơn to" });
+          return;
+        }
+
     const doctorId = await getDoctorIdByUserIdViaRabbitMQ(userId as string);
+
+    let range:
+      | { mode: "exact"; start: Date; end: Date }
+      | { mode: "range"; start: Date; end: Date }
+      | { mode: "fromToday"; start: Date };
+
+    if (date) {
+      const start = dayjs.tz(`${date} 00:00:00`, APP_TZ).utc().toDate();
+      const end = dayjs.tz(`${date} 23:59:59.999`, APP_TZ).utc().toDate();
+      range = { mode: "exact", start, end };
+    } else if (from || to) {
+      const start = dayjs
+        .tz(`${from ?? to} 00:00:00`, APP_TZ)
+        .utc()
+        .toDate();
+      const end = dayjs
+        .tz(`${to ?? from} 23:59:59.999`, APP_TZ)
+        .utc()
+        .toDate();
+      range = { mode: "range", start, end };
+    } else {
+      const start = dayjs
+        .tz(dayjs().format("YYYY-MM-DD") + " 00:00:00", APP_TZ)
+        .utc()
+        .toDate();
+      range = { mode: "fromToday", start };
+    }
     const { appointments, totalAppointments } =
       await handleAppointmentsByDoctorIdServices(
         doctorId,
         currentPage,
-        parseInt(pageSize as string)
+        parseInt(pageSize as string),
+        range,
+        status as string | undefined,
+        paymentStatus as string | undefined
       );
 
     if (appointments.length === 0) {

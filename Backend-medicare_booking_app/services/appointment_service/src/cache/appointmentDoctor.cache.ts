@@ -7,15 +7,25 @@ export type AllAppointmentByDoctorCacheParams = {
   page: number;
   pageSize: number;
   doctorId: string;
+  mode: "exact" | "range" | "fromToday";
+  startDate: string; // YYYY-MM-DD format
+  endDate?: string; // YYYY-MM-DD format (optional for fromToday mode)
+  status?: string;
+  paymentStatus?: string;
 };
 
 const buildCacheKey = (params: AllAppointmentByDoctorCacheParams): string => {
-  const { page, pageSize, doctorId } = params;
+  const { page, pageSize, doctorId, mode, startDate, endDate, status, paymentStatus } = params;
   return [
     ALL_APPOINTMENTS_BY_DOCTOR_PREFIX,
     page,
     pageSize,
     doctorId || "_",
+    mode,
+    startDate,
+    endDate || "_",
+    status || "_",
+    paymentStatus || "_",
   ].join(":");
 };
 

@@ -154,6 +154,38 @@ const MakeAppointmentPage = () => {
     setCurrentStep(1);
   };
 
+  // ngay sau phần state
+const handleChangeDate = (dateStr: string) => {
+  setCurrentSelectedDate(dateStr);
+
+  if (!doctor) return;
+
+  // tìm schedule tương ứng với ngày vừa chọn
+  const schedule = (doctor as any).scheduleByDoctorId?.find(
+    (s: any) => s.date === dateStr
+  );
+
+  if (schedule) {
+    const slots: TimeSlot[] = schedule.timeSlots.map((t: any) => ({
+      id: t.timeSlotId,
+      startTime: t.timeSlot.startTime,
+      endTime: t.timeSlot.endTime,
+      status: t.status,
+      scheduleId: schedule.id,
+    }));
+
+    setAvailableTimeSlots(slots);
+  } else {
+    // ngày này không có lịch
+    setAvailableTimeSlots([]);
+  }
+
+  // reset khung giờ đã chọn
+  setSelectedTimeSlotId(null);
+  form.setFieldsValue({ timeSlotId: undefined });
+};
+
+
   const handleConfirmBooking = async () => {
     if (!formData) return;
     setSubmitting(true);
@@ -454,7 +486,7 @@ const MakeAppointmentPage = () => {
                     <Select
                       size="large"
                       value={currentSelectedDate || undefined}
-                      onChange={(v) => setCurrentSelectedDate(v)}
+                      onChange={handleChangeDate}
                       className={cls(
                         "w-full rounded-lg",
                         isDark && "select-dark"

@@ -1,4 +1,3 @@
-
 import axios from "services/axios.customize";
 import type {
   IAppointment,
@@ -137,9 +136,47 @@ const updateExpiredTimeSlots = () => {
   return axios.patch<IBackendRes<any>>(urlBackend);
 };
 
-const getAllAppointmentsByUserIdDoctor = (query: string) => {
-  const urlBackend = `/api/appointment/appointments/doctor-appointments/${query}`;
-  return axios.get<IBackendRes<IModelPaginate<IAppointment>>>(urlBackend);
+const getAllAppointmentsByUserIdDoctor = (
+  userId: string,
+  filters?: {
+    date?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+    status?: string;
+    paymentStatus?: string;
+  }
+) => {
+  const urlBackend = `/api/appointment/appointments/doctor-appointments/${userId}`;
+  const params = new URLSearchParams();
+
+  if (filters?.date) {
+    params.append("date", filters.date);
+  }
+  if (filters?.from) {
+    params.append("from", filters.from);
+  }
+  if (filters?.to) {
+    params.append("to", filters.to);
+  }
+  if (typeof filters?.page === "number") {
+    params.append("page", String(filters.page));
+  }
+  if (typeof filters?.pageSize === "number") {
+    params.append("pageSize", String(filters.pageSize));
+  }
+  if (filters?.status) {
+    params.append("status", filters.status);
+  }
+  if (filters?.paymentStatus) {
+    params.append("paymentStatus", filters.paymentStatus);
+  }
+
+  const queryString = params.toString();
+  const fullUrl = queryString ? `${urlBackend}?${queryString}` : urlBackend;
+
+  return axios.get<IBackendRes<IModelPaginate<IAppointment>>>(fullUrl);
 };
 
 const getAllConversationsDoctorAPI = (doctorId: string) => {

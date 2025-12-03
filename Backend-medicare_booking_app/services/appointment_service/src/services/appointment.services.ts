@@ -35,6 +35,11 @@ import {
   AllWeeklyScheduleCacheParams,
 } from "src/cache/weeklySchedule.cache";
 
+type TimeRange =
+  | { mode: "exact"; start: Date; end: Date }
+  | { mode: "range"; start: Date; end: Date }
+  | { mode: "fromToday"; start: Date };
+
 // Config timezone cho dayjs
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -424,29 +429,68 @@ const countTotalAppointmentPage = async (pageSize: number) => {
   return totalPages;
 };
 
+const countTotalAppointments = async () => {
+  const totalItems = await prisma.appointment.count();
+  return totalItems;
+};
+
 const handleAppointmentsByDoctorIdServices = async (
   doctorId: string,
   page: number,
-  pageSize: number
+  pageSize: number,
+  range: TimeRange,
+  status?: string,
+  paymentStatus?: string
 ) => {
   const cacheParams: AllAppointmentByDoctorCacheParams = {
     page,
     pageSize,
     doctorId,
+    mode: range.mode,
+    startDate: dayjs(range.start).format("YYYY-MM-DD"),
+    endDate:
+      range.mode !== "fromToday" && "end" in range
+        ? dayjs(range.end).format("YYYY-MM-DD")
+        : undefined,
+    status,
+    paymentStatus,
   };
 
-  const cachedAppointments = await AllAppointmentByDoctorCache.get<{
-    appointments: any[];
-    totalAppointments: number;
-  }>(cacheParams);
+  const cachedAppointments = await AllAppointmentByDoctorCache.get<any>(cacheParams);
 
   if (cachedAppointments) {
     return cachedAppointments;
   }
 
+    // Build date condition for query
+  let dateCondition: any;
+  if (range.mode === "exact") {
+    dateCondition = { gte: range.start, lte: range.end };
+  } else if (range.mode === "range") {
+    dateCondition = { gte: range.start, lte: range.end };
+  } else {
+    dateCondition = { gte: range.start };
+  }
+
+  // Build where condition
+  const whereCondition: any = { doctorId };
+  whereCondition.appointmentDateTime = dateCondition;
+
+  // Add status filter if provided and valid
+  if (status && status.trim() !== "") {
+    const normalizedStatus = status.trim();
+    whereCondition.status = normalizedStatus;
+  }
+
+  // Add paymentStatus filter if provided and valid
+  if (paymentStatus && paymentStatus.trim() !== "") {
+    const normalizedPaymentStatus = paymentStatus.trim();
+    whereCondition.paymentStatus = normalizedPaymentStatus;
+  }
+
   const skip = (page - 1) * pageSize;
   const appointments = await prisma.appointment.findMany({
-    where: { doctorId: doctorId },
+    where: whereCondition,
     include: {
       patient: true,
     },
@@ -478,9 +522,12 @@ const handleAppointmentsByDoctorIdServices = async (
     })
   );
 
+  const totalAppointments = await countTotalAppointments();
+
   const result = {
     appointments: appointmentsWithScheduleInfo,
-    totalAppointments: appointments.length,
+    totalAppointments: totalAppointments,
+    
   };
 
   await AllAppointmentByDoctorCache.set(cacheParams, result);
