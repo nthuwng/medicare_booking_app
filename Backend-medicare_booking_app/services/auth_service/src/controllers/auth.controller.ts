@@ -67,7 +67,7 @@ const postRegisterAPI = async (req: Request, res: Response) => {
         message: result.success === false ? result.message : "Đăng ký thất bại",
         data: null,
       };
-      res.status(400).json(response);
+      res.status(200).json(response);
     }
   } catch (error) {
     res.status(500).json({
