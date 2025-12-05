@@ -332,21 +332,6 @@ const RegisterPage = () => {
                 >
                   Đăng ký
                 </Button>
-                <Button
-                  icon={<GoogleOutlined />}
-                  size="large"
-                  onClick={handleSignupWithGoogle}
-                  block
-                  style={{
-                    height: 40,
-                    fontWeight: 500,
-                    background: isDark ? "#111827" : "#fff",
-                    color: isDark ? "#e5e7eb" : "#111827",
-                    borderColor: isDark ? "#1f2937" : "#d1d5db",
-                  }}
-                >
-                  Đăng ký với Google
-                </Button>
               </Space>
 
               <Divider
