@@ -162,6 +162,27 @@ const createAppointmentService = async (
     };
   }
 
+   const existingAppointmentDate = await prisma.appointment.findFirst({
+    where: {
+      userId,
+      doctorId,
+      appointmentDateTime: {
+        gte: new Date(appointmentDate + "T00:00:00.000Z"),
+        lt: new Date(appointmentDate + "T23:59:59.999Z"),
+      },
+      status: {
+        in: ["Pending", "Confirmed"],
+      },
+    },
+  });
+
+  if (existingAppointmentDate) {
+    return {
+      success: false,
+      message: "Bạn đã có lịch hẹn với bác sĩ này trong ngày. Vui lòng chọn ngày khác.",
+    };
+  }
+
   // Determine booking type based on whether booker info is provided
   const bookingType = bookerName && bookerPhone ? "Relative" : "Self";
 
@@ -486,7 +507,7 @@ const handleAppointmentsByDoctorIdServices = async (
   }
 
   const skip = (page - 1) * pageSize;
-   const [appointments, totalAppointments] = await Promise.all([
+  const [appointments, totalAppointments] = await Promise.all([
     prisma.appointment.findMany({
       where: whereCondition,
       include: {
