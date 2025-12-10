@@ -305,7 +305,7 @@ const PaymentReturnPage = () => {
                     type="primary"
                     size="large"
                     icon={<CalendarOutlined />}
-                    onClick={() => navigate("/profile/appointments")}
+                    onClick={() => navigate("/my-appointments")}
                     style={{ minWidth: 140 }}
                   >
                     Xem lịch khám
