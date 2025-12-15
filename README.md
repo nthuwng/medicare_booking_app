@@ -6,8 +6,8 @@
 		<a href="#gioi-thieu">📘 Giới Thiệu</a> -
 		<a href="#cong-nghe-su-dung">📚 Công nghệ sử dụng</a> -
 		<a href="#so-do-he-thong">📑 Sơ đồ hệ thống</a> -
-		<a href="#sơ-đồ-class">✏️ Sơ đồ class</a> -
-		<a href="#sơ-đồ-database">📂 Sơ đồ database</a> -
+		<a href="#so-do-use-case">✏️ Sơ đồ Use Case</a> -
+		<a href="#so-do-database">📂 Sơ đồ database</a> -
 		<a href="#kiến-trúc-phần-mềm">📐 Kiến trúc phần mềm</a> - 
 		<a href="#hiện-thực">📺 Hiện Thực</a> -
 		<a href="#thành-viên-thực-hiện">👪 Thành viên thực hiện</a>
@@ -62,11 +62,15 @@ MEDICARE là hệ thống web hỗ trợ đặt lịch khám bệnh trực tuy�
 <a id="so-do-he-thong"></a>
 
 <h2><p>📑 Sơ đồ hệ thống</p></h2>
-<h4><b>🔹Use Case Diagram</b></h4>
+
+<a id="so-do-use-case"></a>
+
+<h3><b>🔹Use Case Diagram</b></h3>
 
 ![SƠ ĐỒ USE CASE](./medicare_booking_app_images/usecase.png)
 
-<h4><b>🔹Database Schema Diagram</b></h4>
+<a id="so-do-database"></a>
+
+<h3><b>🔹Database Schema Diagram</b></h3>
 
 ![SƠ ĐỒ USE CASE](./medicare_booking_app_images/Database_Diagram.png)
-
