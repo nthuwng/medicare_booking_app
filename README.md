@@ -4,7 +4,7 @@
     <h3>🏥 Medicare - Ứng dụng đặt lịch khám và quản lý sức khỏe thông minh 🏥</h3>
 	<p align="center">
 		<a href="#gioi-thieu">📘 Giới Thiệu</a> -
-		<a href="#công-nghệ-sử-dụng">📚 Công nghệ sử dụng</a> -
+		<a href="#cong-nghe-su-dung">📚 Công nghệ sử dụng</a> -
 		<a href="#sơ-đồ-use-case">📑 Sơ đồ use-case</a> -
 		<a href="#sơ-đồ-class">✏️ Sơ đồ class</a> -
 		<a href="#sơ-đồ-database">📂 Sơ đồ database</a> -
@@ -21,12 +21,40 @@ MEDICARE là hệ thống web hỗ trợ đặt lịch khám bệnh trực tuy�
 
 Đối tượng sử dụng:
 
-👨‍⚕️ Bác sĩ: quản lý lịch khám, hồ sơ bệnh nhân
+👨‍⚕️ Bác sĩ: quản lý lịch khám, nhắn tin bệnh nhân , xem đánh giá , nhận thông báo
 
-🧑‍🤝‍🧑 Bệnh nhân: đặt lịch, thanh toán, nhận thông báo
+🧑‍🤝‍🧑 Bệnh nhân: đặt lịch, thanh toán, nhận thông báo , nhắn tin bác sĩ
 
 🛠 Admin: quản lý hệ thống, doanh thu, tài khoản
 
----
+<a id="cong-nghe-su-dung"></a>
+## 📚 Công nghệ sử dụng
+Frontend
+
+⚛️ ReactJS
+
+🎨 Ant Design
+
+🔌 Socket.io (Realtime)
+
+Backend
+
+🟢 Node.js + Express
+
+🧩 Microservices Architecture
+
+🔐 JWT Authentication
+
+📨 RabbitMQ (Message Queue)
+
+Database
+
+🐬 MySQL (User, Appointment, Payment,...)
+
+🔷 Prisma ORM
+
+DevOps
+
+🐳 Docker & Docker Compose
 
 ![SƠ ĐỒ USE CASE](./medicare_booking_app_images/usecase.png)
