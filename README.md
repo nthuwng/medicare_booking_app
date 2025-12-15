@@ -1,3 +1,4 @@
-![MEDICARE](./medicare_booking_app_images/LOGO_MEDICARE.png.png)
+MEDICARE
+![MEDICARE](./medicare_booking_app_images/LOGO_MEDICARE.png)
 
 ![SƠ ĐỒ USE CASE](./medicare_booking_app_images/usecase.png)
