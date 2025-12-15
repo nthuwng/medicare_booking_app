@@ -73,4 +73,5 @@ MEDICARE là hệ thống web hỗ trợ đặt lịch khám bệnh trực tuy�
 
 <h3><b>🔹Database Schema Diagram</b></h3>
 
-![SƠ ĐỒ USE CASE](./medicare_booking_app_images/Database_Diagram.png)
+![SƠ ĐỒ USE CASE](./medicare_booking_app_images/Database_Diagram1.png)
+![alt text](image.png)
