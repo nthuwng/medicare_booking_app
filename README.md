@@ -15,7 +15,7 @@
 </div>
 
 <a id="gioi-thieu"></a>
-## 📘 Giới thiệu
+<b>📘 Giới thiệu</b>
 
 MEDICARE là hệ thống web hỗ trợ đặt lịch khám bệnh trực tuyến, quản lý bác sĩ, bệnh nhân, lịch làm việc và thanh toán online. Ứng dụng hướng tới việc số hóa quy trình khám chữa bệnh, giảm tải cho bệnh viện và nâng cao trải nghiệm người dùng.
 
@@ -28,8 +28,8 @@ MEDICARE là hệ thống web hỗ trợ đặt lịch khám bệnh trực tuy�
 🛠 Admin: quản lý hệ thống, doanh thu, tài khoản
 
 <a id="cong-nghe-su-dung"></a>
-## 📚 Công nghệ sử dụng
-Frontend
+<b>📚 Công nghệ sử dụng</b>
+<b>Frontend</b>
 
 ⚛️ ReactJS
 
@@ -37,7 +37,7 @@ Frontend
 
 🔌 Socket.io (Realtime)
 
-Backend
+<b>Backend</b>
 
 🟢 Node.js + Express
 
@@ -47,13 +47,13 @@ Backend
 
 📨 RabbitMQ (Message Queue)
 
-Database
+<b>Database</b>
 
 🐬 MySQL (User, Appointment, Payment,...)
 
 🔷 Prisma ORM
 
-DevOps
+<b>DevOps</b>
 
 🐳 Docker & Docker Compose
 
