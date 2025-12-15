@@ -82,3 +82,4 @@ Không chạy đồng thời 3 lệnh cùng lúc
     - FLUSHDB : XÓA TẤT CẢ KEYS
 
 ```
+![SƠ ĐỒ USE CASE](./medicare_booking_app_images/usecase.png)
